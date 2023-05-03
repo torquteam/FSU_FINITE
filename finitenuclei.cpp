@@ -25,12 +25,12 @@ const double e0_unitless = e0_e2permevfm*r0_fm*enscale_mev;
 //const double qwn = -0.9821; // weak vector-charge of the neutron
 
 // 208Pb
-//const double qwp = 0.0713;  // weak vector-charge of the proton
-//const double qwn = -0.9821; // weak vector-charge of the neutron
+const double qwp = 0.0713;  // weak vector-charge of the proton
+const double qwn = -0.9821; // weak vector-charge of the neutron
 
 // 48Ca
-const double qwp = 0.0713;  // weak vector-charge of the proton
-const double qwn = -0.9795; // weak vector-charge of the neutron
+//const double qwp = 0.0713;  // weak vector-charge of the proton
+//const double qwn = -0.9795; // weak vector-charge of the neutron
 
 data2 dm2;
 
@@ -1353,7 +1353,6 @@ void WEAK_formfactors(double WGE_pn[2], double WGM_pn[2], double q) {
     WGM_pn[1] = qwp*GM_pn[1]+qwn*GM_pn[0];  // GE_weak (neutron)
 }
 
-// seems good
 void vector_formfactor(double** densities_svtnp_unitless, double q_unitless, int nrows, double vFF_pn[2]) {
 
     double r_unitless_a, r_unitless_b, r_unitless_ab2, vectordens_unitless_n_a, vectordens_unitless_n_b, vectordens_unitless_n_ab2, fa, fb, fab2;
@@ -1390,7 +1389,6 @@ void vector_formfactor(double** densities_svtnp_unitless, double q_unitless, int
     //cout << q_unitless << "  " << vFF_pn[0] << "  " << vFF_pn[1] << endl;
 }
 
-// seems good
 void tensor_formfactor(double** densities_svtnp_unitless, double q_unitless, int nrows, double tFF_pn[2]) {
     
     double r_unitless_a, r_unitless_b, tensordens_unitless_n_a, tensordens_unitless_n_b, fa, fb, r_unitless_ab2, tensordens_unitless_n_ab2, fab2;
@@ -1452,7 +1450,6 @@ double charge_formfactor(double q_unitless, double** densities_svtnp_unitless, i
     return cFF/Z;
 }
 
-// not important right now
 double weak_formfactor(double q_unitless, double** densities_svtnp_unitless, int nrows, int A, int Z) {
     double q_ifm = q_unitless/r0_fm;
     double WGE_pn[2] = {0, 0};
@@ -1685,7 +1682,7 @@ void hartee_method(double gs2, double gw2, double gp2, double b, double c, doubl
     cout << "Proton Radius: " << sqrt(Radii2_N_P_fm2[1]) << endl;
     cout << "Charge Radius: " << sqrt(Radii2_C_W_fm2[0]) << endl;
     cout << "Weak Radius: " << sqrt(Radii2_C_W_fm2[1]) << endl;
-    cout << "Neutron Skin Thickness: " << sqrt(Radii2_N_P_fm2[0]) - sqrt(Radii2_N_P_fm2[1]) << endl;
+    cout << "Rn - Rp: " << sqrt(Radii2_N_P_fm2[0]) - sqrt(Radii2_N_P_fm2[1]) << endl;
     cout << "Rch - Rwk: " << sqrt(Radii2_C_W_fm2[0]) - sqrt(Radii2_C_W_fm2[1]) << endl;
 
     Observables[0] = BA_mev; Observables[1] = sqrt(Radii2_N_P_fm2[0]);
