@@ -32,7 +32,10 @@ const double qwn = -0.9821; // weak vector-charge of the neutron
 //const double qwp = 0.0713;  // weak vector-charge of the proton
 //const double qwn = -0.9795; // weak vector-charge of the neutron
 
+const double fp = 0.0001;
+
 data2 dm2;
+nummeth nm;
 
 
 // proton scalar density given proton wave functions (unitless)
@@ -121,6 +124,7 @@ void init_rho(int npoints, double V_mev, double R_fm, double a_fm, double** &arr
 
     double stp = (r_final_unitless-r_init_unitless)/(npoints-1);
     double r_unitless = r_init_unitless;
+    double dydx1, dydx2;
 
     V_unitless = V_unitless*sqrt(gp2);
     // fill grid for rho field
@@ -129,6 +133,18 @@ void init_rho(int npoints, double V_mev, double R_fm, double a_fm, double** &arr
         array[i][1] = V_unitless/(1.0+exp((r_unitless-R_unitless)/a_unitless));
         r_unitless = r_unitless+stp;
     }
+
+    // get the derivative
+    array[0][2] = (array[1][1] - array[0][1])/(array[1][0] - array[0][0]);
+    array[1][2] = (array[2][1] - array[0][1])/(array[2][0] - array[0][0]);
+    for (int i=2; i<(npoints-2); ++i) {
+        dydx1 = (array[i+1][1] - array[i-1][1])/(array[i+1][0] - array[i-1][0]);
+        dydx2 = (array[i+2][1] - array[i-2][1])/(array[i+2][0] - array[i-2][0]);
+        array[i][2] = 0.5*(dydx1 + dydx2);
+    }
+    array[npoints-2][2] = (array[npoints-1][1] - array[npoints-3][1])/(array[npoints-1][0] - array[npoints-3][0]);
+    array[npoints-1][2] = (array[npoints-1][1] - array[npoints-2][1])/(array[npoints-1][0] - array[npoints-2][0]);
+
 }
 
 // obtain a grid of the initial coulomb field (r,V(r)) (ouput is unitless)
@@ -157,39 +173,39 @@ void init_coulomb(int npoints, double R_fm, double** &array, double r_init_fm, d
 }
 
 // input is unitless (r/r0, en/Econv)
-double dGdr(double r_unitless, double alpha, double En_unitless, double gs_sigma_r_unitless, double gw_omega_r_unitless, double gp_rho_r_unitless, double Fn_r_unitless, double Gn_r_unitless) {
+double dGdr(double r_unitless, double alpha, double En_unitless, double gs_sigma_r_unitless, double gw_omega_r_unitless, double gp_rho_r_unitless, double Fn_r_unitless, double Gn_r_unitless, double dgp_rho_dr_r_unitless) {
     double res;
     double mN_unitless = mN_mev/enscale_mev;
-    res = -r0_fm*enscale_mev*fm_to_inversemev*(En_unitless - gw_omega_r_unitless + 0.5*gp_rho_r_unitless - mN_unitless + gs_sigma_r_unitless)*Fn_r_unitless - alpha*Gn_r_unitless/r_unitless;
+    res = -r0_fm*enscale_mev*fm_to_inversemev*(En_unitless - gw_omega_r_unitless + 0.5*gp_rho_r_unitless - mN_unitless + gs_sigma_r_unitless)*Fn_r_unitless - alpha*Gn_r_unitless/r_unitless - fp/(4.0*mN_unitless)*Gn_r_unitless*dgp_rho_dr_r_unitless;
     return res;
 }
 
 // input is unitless (r/r0, en/Econv)
-double dFdr(double r_unitless, double alpha, double En_unitless, double gs_sigma_r_unitless, double gw_omega_r_unitless, double gp_rho_r_unitless, double Fn_r_unitless, double Gn_r_unitless) {
+double dFdr(double r_unitless, double alpha, double En_unitless, double gs_sigma_r_unitless, double gw_omega_r_unitless, double gp_rho_r_unitless, double Fn_r_unitless, double Gn_r_unitless, double dgp_rho_dr_r_unitless) {
     double res;
     double mN_unitless = mN_mev/enscale_mev;
-    res = -r0_fm*enscale_mev*fm_to_inversemev*(-En_unitless + gw_omega_r_unitless - 0.5*gp_rho_r_unitless - mN_unitless + gs_sigma_r_unitless)*Gn_r_unitless + alpha*Fn_r_unitless/r_unitless;
+    res = -r0_fm*enscale_mev*fm_to_inversemev*(-En_unitless + gw_omega_r_unitless - 0.5*gp_rho_r_unitless - mN_unitless + gs_sigma_r_unitless)*Gn_r_unitless + alpha*Fn_r_unitless/r_unitless + fp/(4.0*mN_unitless)*Fn_r_unitless*dgp_rho_dr_r_unitless;
     return res;
 }
 
-double dBdr(double r_unitless, double alpha, double Ep_unitless, double gs_sigma_r_unitless, double gw_omega_r_unitless, double gp_rho_r_unitless, double e_coulomb_r_unitless, double Ap_r_unitless, double Bp_r_unitless) {
+double dBdr(double r_unitless, double alpha, double Ep_unitless, double gs_sigma_r_unitless, double gw_omega_r_unitless, double gp_rho_r_unitless, double e_coulomb_r_unitless, double Ap_r_unitless, double Bp_r_unitless, double dgp_rho_dr_r_unitless) {
     double res;
     double mP_unitless = mP_mev/enscale_mev;
-    res = -r0_fm*enscale_mev*fm_to_inversemev*(Ep_unitless - gw_omega_r_unitless - 0.5*gp_rho_r_unitless - e_coulomb_r_unitless - mP_unitless + gs_sigma_r_unitless)*Ap_r_unitless - alpha*Bp_r_unitless/r_unitless;
+    res = -r0_fm*enscale_mev*fm_to_inversemev*(Ep_unitless - gw_omega_r_unitless - 0.5*gp_rho_r_unitless - e_coulomb_r_unitless - mP_unitless + gs_sigma_r_unitless)*Ap_r_unitless - alpha*Bp_r_unitless/r_unitless - fp/(4.0*mP_unitless)*Bp_r_unitless*dgp_rho_dr_r_unitless;
     return res;
 }
 
 // input is unitless (r/r0, en/Econv)
-double dAdr(double r_unitless, double alpha, double Ep_unitless, double gs_sigma_r_unitless, double gw_omega_r_unitless, double gp_rho_r_unitless, double e_coulomb_r_unitless, double Ap_r_unitless, double Bp_r_unitless) {
+double dAdr(double r_unitless, double alpha, double Ep_unitless, double gs_sigma_r_unitless, double gw_omega_r_unitless, double gp_rho_r_unitless, double e_coulomb_r_unitless, double Ap_r_unitless, double Bp_r_unitless, double dgp_rho_dr_r_unitless) {
     double res;
     double mP_unitless = mP_mev/enscale_mev;
-    res = -r0_fm*enscale_mev*fm_to_inversemev*(-Ep_unitless + gw_omega_r_unitless + 0.5*gp_rho_r_unitless + e_coulomb_r_unitless - mP_unitless + gs_sigma_r_unitless)*Bp_r_unitless + alpha*Ap_r_unitless/r_unitless;
+    res = -r0_fm*enscale_mev*fm_to_inversemev*(-Ep_unitless + gw_omega_r_unitless + 0.5*gp_rho_r_unitless + e_coulomb_r_unitless - mP_unitless + gs_sigma_r_unitless)*Bp_r_unitless + alpha*Ap_r_unitless/r_unitless + fp/(4.0*mP_unitless)*Ap_r_unitless*dgp_rho_dr_r_unitless;
     return res;
 }
 
 void rk4_n(double r_init_unitless, double r_final_unitless, int nsteps, double alpha, double en_unitless, double FG_unitless[2], double** gs_sigma_unitless, double** gw_omega_unitless, double** gp_rho_unitless, int nrows, char direction, double** &Fn_unitless, double** &Gn_unitless) {
     double k1, k2, k3, k4, l1, l2, l3, l4;
-    double gs_sigma_r_unitless, gw_omega_r_unitless, gp_rho_r_unitless;
+    double gs_sigma_r_unitless, gw_omega_r_unitless, gp_rho_r_unitless, dgp_rho_dr_r_unitless;
     double h = abs(r_final_unitless-r_init_unitless)/(nsteps-1);
 
     // need initial conditions for Fn_r, Gn_r
@@ -210,14 +226,15 @@ void rk4_n(double r_init_unitless, double r_final_unitless, int nsteps, double a
             gs_sigma_r_unitless = gs_sigma_unitless[i-1][1];
             gw_omega_r_unitless = gw_omega_unitless[i-1][1];
             gp_rho_r_unitless = gp_rho_unitless[i-1][1];
-            k1 = h*dFdr(r_unitless, alpha, en_unitless, gs_sigma_r_unitless, gw_omega_r_unitless, gp_rho_r_unitless, Fn_r_unitless, Gn_r_unitless);
-            l1 = h*dGdr(r_unitless, alpha, en_unitless, gs_sigma_r_unitless, gw_omega_r_unitless, gp_rho_r_unitless, Fn_r_unitless, Gn_r_unitless);
-            k2 = h*dFdr(r_unitless+h/2.0, alpha, en_unitless, gs_sigma_r_unitless, gw_omega_r_unitless, gp_rho_r_unitless, Fn_r_unitless+k1/2.0, Gn_r_unitless+l1/2.0);
-            l2 = h*dGdr(r_unitless+h/2.0, alpha, en_unitless, gs_sigma_r_unitless, gw_omega_r_unitless, gp_rho_r_unitless, Fn_r_unitless+k1/2.0, Gn_r_unitless+l1/2.0);
-            k3 = h*dFdr(r_unitless+h/2.0, alpha, en_unitless, gs_sigma_r_unitless, gw_omega_r_unitless, gp_rho_r_unitless, Fn_r_unitless+k2/2.0, Gn_r_unitless+l2/2.0);
-            l3 = h*dGdr(r_unitless+h/2.0, alpha, en_unitless, gs_sigma_r_unitless, gw_omega_r_unitless, gp_rho_r_unitless, Fn_r_unitless+k2/2.0, Gn_r_unitless+l2/2.0);
-            k4 = h*dFdr(r_unitless+h, alpha, en_unitless, gs_sigma_r_unitless, gw_omega_r_unitless, gp_rho_r_unitless, Fn_r_unitless+k3, Gn_r_unitless+l3);
-            l4 = h*dGdr(r_unitless+h, alpha, en_unitless, gs_sigma_r_unitless, gw_omega_r_unitless, gp_rho_r_unitless, Fn_r_unitless+k3, Gn_r_unitless+l3);
+            dgp_rho_dr_r_unitless = gp_rho_unitless[i-1][2];
+            k1 = h*dFdr(r_unitless, alpha, en_unitless, gs_sigma_r_unitless, gw_omega_r_unitless, gp_rho_r_unitless, Fn_r_unitless, Gn_r_unitless, dgp_rho_dr_r_unitless);
+            l1 = h*dGdr(r_unitless, alpha, en_unitless, gs_sigma_r_unitless, gw_omega_r_unitless, gp_rho_r_unitless, Fn_r_unitless, Gn_r_unitless, dgp_rho_dr_r_unitless);
+            k2 = h*dFdr(r_unitless+h/2.0, alpha, en_unitless, gs_sigma_r_unitless, gw_omega_r_unitless, gp_rho_r_unitless, Fn_r_unitless+k1/2.0, Gn_r_unitless+l1/2.0, dgp_rho_dr_r_unitless);
+            l2 = h*dGdr(r_unitless+h/2.0, alpha, en_unitless, gs_sigma_r_unitless, gw_omega_r_unitless, gp_rho_r_unitless, Fn_r_unitless+k1/2.0, Gn_r_unitless+l1/2.0, dgp_rho_dr_r_unitless);
+            k3 = h*dFdr(r_unitless+h/2.0, alpha, en_unitless, gs_sigma_r_unitless, gw_omega_r_unitless, gp_rho_r_unitless, Fn_r_unitless+k2/2.0, Gn_r_unitless+l2/2.0, dgp_rho_dr_r_unitless);
+            l3 = h*dGdr(r_unitless+h/2.0, alpha, en_unitless, gs_sigma_r_unitless, gw_omega_r_unitless, gp_rho_r_unitless, Fn_r_unitless+k2/2.0, Gn_r_unitless+l2/2.0, dgp_rho_dr_r_unitless);
+            k4 = h*dFdr(r_unitless+h, alpha, en_unitless, gs_sigma_r_unitless, gw_omega_r_unitless, gp_rho_r_unitless, Fn_r_unitless+k3, Gn_r_unitless+l3, dgp_rho_dr_r_unitless);
+            l4 = h*dGdr(r_unitless+h, alpha, en_unitless, gs_sigma_r_unitless, gw_omega_r_unitless, gp_rho_r_unitless, Fn_r_unitless+k3, Gn_r_unitless+l3, dgp_rho_dr_r_unitless);
             Fn_r_unitless = Fn_r_unitless + 1.0/6.0*(k1 + 2.0*k2 + 2.0*k3 + k4);
             Gn_r_unitless = Gn_r_unitless + 1.0/6.0*(l1 + 2.0*l2 + 2.0*l3 + l4);
             r_unitless = gs_sigma_unitless[i][0];
@@ -234,14 +251,15 @@ void rk4_n(double r_init_unitless, double r_final_unitless, int nsteps, double a
             gs_sigma_r_unitless = gs_sigma_unitless[nrows-1-i][1];
             gw_omega_r_unitless = gw_omega_unitless[nrows-1-i][1];
             gp_rho_r_unitless = gp_rho_unitless[nrows-1-i][1];
-            k1 = h*dFdr(r_unitless, alpha, en_unitless, gs_sigma_r_unitless, gw_omega_r_unitless, gp_rho_r_unitless, Fn_r_unitless, Gn_r_unitless);
-            l1 = h*dGdr(r_unitless, alpha, en_unitless, gs_sigma_r_unitless, gw_omega_r_unitless, gp_rho_r_unitless, Fn_r_unitless, Gn_r_unitless);
-            k2 = h*dFdr(r_unitless+h/2.0, alpha, en_unitless, gs_sigma_r_unitless, gw_omega_r_unitless, gp_rho_r_unitless, Fn_r_unitless+k1/2.0, Gn_r_unitless+l1/2.0);
-            l2 = h*dGdr(r_unitless+h/2.0, alpha, en_unitless, gs_sigma_r_unitless, gw_omega_r_unitless, gp_rho_r_unitless, Fn_r_unitless+k1/2.0, Gn_r_unitless+l1/2.0);
-            k3 = h*dFdr(r_unitless+h/2.0, alpha, en_unitless, gs_sigma_r_unitless, gw_omega_r_unitless, gp_rho_r_unitless, Fn_r_unitless+k2/2.0, Gn_r_unitless+l2/2.0);
-            l3 = h*dGdr(r_unitless+h/2.0, alpha, en_unitless, gs_sigma_r_unitless, gw_omega_r_unitless, gp_rho_r_unitless, Fn_r_unitless+k2/2.0, Gn_r_unitless+l2/2.0);
-            k4 = h*dFdr(r_unitless+h, alpha, en_unitless, gs_sigma_r_unitless, gw_omega_r_unitless, gp_rho_r_unitless, Fn_r_unitless+k3, Gn_r_unitless+l3);
-            l4 = h*dGdr(r_unitless+h, alpha, en_unitless, gs_sigma_r_unitless, gw_omega_r_unitless, gp_rho_r_unitless, Fn_r_unitless+k3, Gn_r_unitless+l3);
+            dgp_rho_dr_r_unitless = gp_rho_unitless[nrows-1-i][2];
+            k1 = h*dFdr(r_unitless, alpha, en_unitless, gs_sigma_r_unitless, gw_omega_r_unitless, gp_rho_r_unitless, Fn_r_unitless, Gn_r_unitless, dgp_rho_dr_r_unitless);
+            l1 = h*dGdr(r_unitless, alpha, en_unitless, gs_sigma_r_unitless, gw_omega_r_unitless, gp_rho_r_unitless, Fn_r_unitless, Gn_r_unitless, dgp_rho_dr_r_unitless);
+            k2 = h*dFdr(r_unitless+h/2.0, alpha, en_unitless, gs_sigma_r_unitless, gw_omega_r_unitless, gp_rho_r_unitless, Fn_r_unitless+k1/2.0, Gn_r_unitless+l1/2.0, dgp_rho_dr_r_unitless);
+            l2 = h*dGdr(r_unitless+h/2.0, alpha, en_unitless, gs_sigma_r_unitless, gw_omega_r_unitless, gp_rho_r_unitless, Fn_r_unitless+k1/2.0, Gn_r_unitless+l1/2.0, dgp_rho_dr_r_unitless);
+            k3 = h*dFdr(r_unitless+h/2.0, alpha, en_unitless, gs_sigma_r_unitless, gw_omega_r_unitless, gp_rho_r_unitless, Fn_r_unitless+k2/2.0, Gn_r_unitless+l2/2.0, dgp_rho_dr_r_unitless);
+            l3 = h*dGdr(r_unitless+h/2.0, alpha, en_unitless, gs_sigma_r_unitless, gw_omega_r_unitless, gp_rho_r_unitless, Fn_r_unitless+k2/2.0, Gn_r_unitless+l2/2.0, dgp_rho_dr_r_unitless);
+            k4 = h*dFdr(r_unitless+h, alpha, en_unitless, gs_sigma_r_unitless, gw_omega_r_unitless, gp_rho_r_unitless, Fn_r_unitless+k3, Gn_r_unitless+l3, dgp_rho_dr_r_unitless);
+            l4 = h*dGdr(r_unitless+h, alpha, en_unitless, gs_sigma_r_unitless, gw_omega_r_unitless, gp_rho_r_unitless, Fn_r_unitless+k3, Gn_r_unitless+l3, dgp_rho_dr_r_unitless);
             Fn_r_unitless = Fn_r_unitless + 1.0/6.0*(k1 + 2.0*k2 + 2.0*k3 + k4);
             Gn_r_unitless = Gn_r_unitless + 1.0/6.0*(l1 + 2.0*l2 + 2.0*l3 + l4);
             r_unitless = gs_sigma_unitless[nrows-1-i][0];
@@ -256,7 +274,7 @@ void rk4_n(double r_init_unitless, double r_final_unitless, int nsteps, double a
 
 void rk4_p(double r_init_unitless, double r_final_unitless, int nsteps, double alpha, double en_unitless, double AB_unitless[2], double** gs_sigma_unitless, double** gw_omega_unitless, double** gp_rho_unitless, double** e_coulomb_unitless, int nrows, char direction, double** &Ap_unitless, double** &Bp_unitless) {
     double k1, k2, k3, k4, l1, l2, l3, l4;
-    double gs_sigma_r_unitless, gw_omega_r_unitless, gp_rho_r_unitless, e_coulomb_r_unitless;
+    double gs_sigma_r_unitless, gw_omega_r_unitless, gp_rho_r_unitless, e_coulomb_r_unitless, dgp_rho_dr_r_unitless;
     double h = abs(r_final_unitless-r_init_unitless)/(nsteps-1);
 
     // need initial conditions for Ap_r, Bp_r
@@ -278,14 +296,15 @@ void rk4_p(double r_init_unitless, double r_final_unitless, int nsteps, double a
             gw_omega_r_unitless = gw_omega_unitless[i-1][1];
             gp_rho_r_unitless = gp_rho_unitless[i-1][1];
             e_coulomb_r_unitless = e_coulomb_unitless[i-1][1];
-            k1 = h*dAdr(r_unitless, alpha, en_unitless, gs_sigma_r_unitless, gw_omega_r_unitless, gp_rho_r_unitless, e_coulomb_r_unitless, Ap_r_unitless, Bp_r_unitless);
-            l1 = h*dBdr(r_unitless, alpha, en_unitless, gs_sigma_r_unitless, gw_omega_r_unitless, gp_rho_r_unitless, e_coulomb_r_unitless, Ap_r_unitless, Bp_r_unitless);
-            k2 = h*dAdr(r_unitless+h/2.0, alpha, en_unitless, gs_sigma_r_unitless, gw_omega_r_unitless, gp_rho_r_unitless, e_coulomb_r_unitless, Ap_r_unitless+k1/2.0, Bp_r_unitless+l1/2.0);
-            l2 = h*dBdr(r_unitless+h/2.0, alpha, en_unitless, gs_sigma_r_unitless, gw_omega_r_unitless, gp_rho_r_unitless, e_coulomb_r_unitless, Ap_r_unitless+k1/2.0, Bp_r_unitless+l1/2.0);
-            k3 = h*dAdr(r_unitless+h/2.0, alpha, en_unitless, gs_sigma_r_unitless, gw_omega_r_unitless, gp_rho_r_unitless, e_coulomb_r_unitless, Ap_r_unitless+k2/2.0, Bp_r_unitless+l2/2.0);
-            l3 = h*dBdr(r_unitless+h/2.0, alpha, en_unitless, gs_sigma_r_unitless, gw_omega_r_unitless, gp_rho_r_unitless, e_coulomb_r_unitless, Ap_r_unitless+k2/2.0, Bp_r_unitless+l2/2.0);
-            k4 = h*dAdr(r_unitless+h, alpha, en_unitless, gs_sigma_r_unitless, gw_omega_r_unitless, gp_rho_r_unitless, e_coulomb_r_unitless, Ap_r_unitless+k3, Bp_r_unitless+l3);
-            l4 = h*dBdr(r_unitless+h, alpha, en_unitless, gs_sigma_r_unitless, gw_omega_r_unitless, gp_rho_r_unitless, e_coulomb_r_unitless, Ap_r_unitless+k3, Bp_r_unitless+l3);
+            dgp_rho_dr_r_unitless = gp_rho_unitless[i-1][2];
+            k1 = h*dAdr(r_unitless, alpha, en_unitless, gs_sigma_r_unitless, gw_omega_r_unitless, gp_rho_r_unitless, e_coulomb_r_unitless, Ap_r_unitless, Bp_r_unitless, dgp_rho_dr_r_unitless);
+            l1 = h*dBdr(r_unitless, alpha, en_unitless, gs_sigma_r_unitless, gw_omega_r_unitless, gp_rho_r_unitless, e_coulomb_r_unitless, Ap_r_unitless, Bp_r_unitless, dgp_rho_dr_r_unitless);
+            k2 = h*dAdr(r_unitless+h/2.0, alpha, en_unitless, gs_sigma_r_unitless, gw_omega_r_unitless, gp_rho_r_unitless, e_coulomb_r_unitless, Ap_r_unitless+k1/2.0, Bp_r_unitless+l1/2.0, dgp_rho_dr_r_unitless);
+            l2 = h*dBdr(r_unitless+h/2.0, alpha, en_unitless, gs_sigma_r_unitless, gw_omega_r_unitless, gp_rho_r_unitless, e_coulomb_r_unitless, Ap_r_unitless+k1/2.0, Bp_r_unitless+l1/2.0, dgp_rho_dr_r_unitless);
+            k3 = h*dAdr(r_unitless+h/2.0, alpha, en_unitless, gs_sigma_r_unitless, gw_omega_r_unitless, gp_rho_r_unitless, e_coulomb_r_unitless, Ap_r_unitless+k2/2.0, Bp_r_unitless+l2/2.0, dgp_rho_dr_r_unitless);
+            l3 = h*dBdr(r_unitless+h/2.0, alpha, en_unitless, gs_sigma_r_unitless, gw_omega_r_unitless, gp_rho_r_unitless, e_coulomb_r_unitless, Ap_r_unitless+k2/2.0, Bp_r_unitless+l2/2.0, dgp_rho_dr_r_unitless);
+            k4 = h*dAdr(r_unitless+h, alpha, en_unitless, gs_sigma_r_unitless, gw_omega_r_unitless, gp_rho_r_unitless, e_coulomb_r_unitless, Ap_r_unitless+k3, Bp_r_unitless+l3, dgp_rho_dr_r_unitless);
+            l4 = h*dBdr(r_unitless+h, alpha, en_unitless, gs_sigma_r_unitless, gw_omega_r_unitless, gp_rho_r_unitless, e_coulomb_r_unitless, Ap_r_unitless+k3, Bp_r_unitless+l3, dgp_rho_dr_r_unitless);
             Ap_r_unitless = Ap_r_unitless + 1.0/6.0*(k1 + 2.0*k2 + 2.0*k3 + k4);
             Bp_r_unitless = Bp_r_unitless + 1.0/6.0*(l1 + 2.0*l2 + 2.0*l3 + l4);
             r_unitless = gs_sigma_unitless[i][0];
@@ -303,14 +322,15 @@ void rk4_p(double r_init_unitless, double r_final_unitless, int nsteps, double a
             gw_omega_r_unitless = gw_omega_unitless[nrows-1-i][1];
             gp_rho_r_unitless = gp_rho_unitless[nrows-1-i][1];
             e_coulomb_r_unitless = e_coulomb_unitless[nrows-1-i][1];
-            k1 = h*dAdr(r_unitless, alpha, en_unitless, gs_sigma_r_unitless, gw_omega_r_unitless, gp_rho_r_unitless, e_coulomb_r_unitless, Ap_r_unitless, Bp_r_unitless);
-            l1 = h*dBdr(r_unitless, alpha, en_unitless, gs_sigma_r_unitless, gw_omega_r_unitless, gp_rho_r_unitless, e_coulomb_r_unitless, Ap_r_unitless, Bp_r_unitless);
-            k2 = h*dAdr(r_unitless+h/2.0, alpha, en_unitless, gs_sigma_r_unitless, gw_omega_r_unitless, gp_rho_r_unitless, e_coulomb_r_unitless, Ap_r_unitless+k1/2.0, Bp_r_unitless+l1/2.0);
-            l2 = h*dBdr(r_unitless+h/2.0, alpha, en_unitless, gs_sigma_r_unitless, gw_omega_r_unitless, gp_rho_r_unitless, e_coulomb_r_unitless, Ap_r_unitless+k1/2.0, Bp_r_unitless+l1/2.0);
-            k3 = h*dAdr(r_unitless+h/2.0, alpha, en_unitless, gs_sigma_r_unitless, gw_omega_r_unitless, gp_rho_r_unitless, e_coulomb_r_unitless, Ap_r_unitless+k2/2.0, Bp_r_unitless+l2/2.0);
-            l3 = h*dBdr(r_unitless+h/2.0, alpha, en_unitless, gs_sigma_r_unitless, gw_omega_r_unitless, gp_rho_r_unitless, e_coulomb_r_unitless, Ap_r_unitless+k2/2.0, Bp_r_unitless+l2/2.0);
-            k4 = h*dAdr(r_unitless+h, alpha, en_unitless, gs_sigma_r_unitless, gw_omega_r_unitless, gp_rho_r_unitless, e_coulomb_r_unitless, Ap_r_unitless+k3, Bp_r_unitless+l3);
-            l4 = h*dBdr(r_unitless+h, alpha, en_unitless, gs_sigma_r_unitless, gw_omega_r_unitless, gp_rho_r_unitless, e_coulomb_r_unitless, Ap_r_unitless+k3, Bp_r_unitless+l3);
+            dgp_rho_dr_r_unitless = gp_rho_unitless[nrows-1-i][2];
+            k1 = h*dAdr(r_unitless, alpha, en_unitless, gs_sigma_r_unitless, gw_omega_r_unitless, gp_rho_r_unitless, e_coulomb_r_unitless, Ap_r_unitless, Bp_r_unitless, dgp_rho_dr_r_unitless);
+            l1 = h*dBdr(r_unitless, alpha, en_unitless, gs_sigma_r_unitless, gw_omega_r_unitless, gp_rho_r_unitless, e_coulomb_r_unitless, Ap_r_unitless, Bp_r_unitless, dgp_rho_dr_r_unitless);
+            k2 = h*dAdr(r_unitless+h/2.0, alpha, en_unitless, gs_sigma_r_unitless, gw_omega_r_unitless, gp_rho_r_unitless, e_coulomb_r_unitless, Ap_r_unitless+k1/2.0, Bp_r_unitless+l1/2.0, dgp_rho_dr_r_unitless);
+            l2 = h*dBdr(r_unitless+h/2.0, alpha, en_unitless, gs_sigma_r_unitless, gw_omega_r_unitless, gp_rho_r_unitless, e_coulomb_r_unitless, Ap_r_unitless+k1/2.0, Bp_r_unitless+l1/2.0, dgp_rho_dr_r_unitless);
+            k3 = h*dAdr(r_unitless+h/2.0, alpha, en_unitless, gs_sigma_r_unitless, gw_omega_r_unitless, gp_rho_r_unitless, e_coulomb_r_unitless, Ap_r_unitless+k2/2.0, Bp_r_unitless+l2/2.0, dgp_rho_dr_r_unitless);
+            l3 = h*dBdr(r_unitless+h/2.0, alpha, en_unitless, gs_sigma_r_unitless, gw_omega_r_unitless, gp_rho_r_unitless, e_coulomb_r_unitless, Ap_r_unitless+k2/2.0, Bp_r_unitless+l2/2.0, dgp_rho_dr_r_unitless);
+            k4 = h*dAdr(r_unitless+h, alpha, en_unitless, gs_sigma_r_unitless, gw_omega_r_unitless, gp_rho_r_unitless, e_coulomb_r_unitless, Ap_r_unitless+k3, Bp_r_unitless+l3, dgp_rho_dr_r_unitless);
+            l4 = h*dBdr(r_unitless+h, alpha, en_unitless, gs_sigma_r_unitless, gw_omega_r_unitless, gp_rho_r_unitless, e_coulomb_r_unitless, Ap_r_unitless+k3, Bp_r_unitless+l3, dgp_rho_dr_r_unitless);
             Ap_r_unitless = Ap_r_unitless + 1.0/6.0*(k1 + 2.0*k2 + 2.0*k3 + k4);
             Bp_r_unitless = Bp_r_unitless + 1.0/6.0*(l1 + 2.0*l2 + 2.0*l3 + l4);
             r_unitless = gs_sigma_unitless[nrows-1-i][0];
@@ -1131,10 +1151,10 @@ void get_nonlinear_meson_fields(double** &gs_sigma_unitless, double** &gw_omega_
     double** oldfield_sigma; double** oldfield_omega; double** oldfield_rho;
     dm2.create(oldfield_sigma,npoints_meson,2);
     dm2.create(oldfield_omega,npoints_meson,2);
-    dm2.create(oldfield_rho,npoints_meson,2);
+    dm2.create(oldfield_rho,npoints_meson,3);
     dm2.copy_pointer(gs_sigma_unitless,oldfield_sigma,npoints_meson,2);
     dm2.copy_pointer(gw_omega_unitless,oldfield_omega,npoints_meson,2);
-    dm2.copy_pointer(gp_rho_unitless,oldfield_rho,npoints_meson,2);
+    dm2.copy_pointer(gp_rho_unitless,oldfield_rho,npoints_meson,3);
 
     // Convergence for the Sigma Field
     for (int k=0; k<MAX_ITER; ++k) {
@@ -1203,6 +1223,18 @@ void get_nonlinear_meson_fields(double** &gs_sigma_unitless, double** &gw_omega_
         }
     }
     meson_interpolator(npoints_meson,space,gs_sigma_unitless,gw_omega_unitless,gp_rho_unitless,e_coulomb_unitless,densities);
+
+    // get the derivative for the rho
+    double dydx1,dydx2;
+    gp_rho_unitless[0][2] = (gp_rho_unitless[1][1] - gp_rho_unitless[0][1])/(gp_rho_unitless[1][0] - gp_rho_unitless[0][0]);
+    gp_rho_unitless[1][2] = (gp_rho_unitless[2][1] - gp_rho_unitless[0][1])/(gp_rho_unitless[2][0] - gp_rho_unitless[0][0]);
+    for (int i=2; i<(npoints-2); ++i) {
+        dydx1 = (gp_rho_unitless[i+1][1] - gp_rho_unitless[i-1][1])/(gp_rho_unitless[i+1][0] - gp_rho_unitless[i-1][0]);
+        dydx2 = (gp_rho_unitless[i+2][1] - gp_rho_unitless[i-2][1])/(gp_rho_unitless[i+2][0] - gp_rho_unitless[i-2][0]);
+        gp_rho_unitless[i][2] = 0.5*(dydx1 + dydx2);
+    }
+    gp_rho_unitless[npoints-2][2] = (gp_rho_unitless[npoints-1][1] - gp_rho_unitless[npoints-3][1])/(gp_rho_unitless[npoints-1][0] - gp_rho_unitless[npoints-3][0]);
+    gp_rho_unitless[npoints-1][2] = (gp_rho_unitless[npoints-1][1] - gp_rho_unitless[npoints-2][1])/(gp_rho_unitless[npoints-1][0] - gp_rho_unitless[npoints-2][0]);
     
     dm2.cleanup(oldfield_sigma,npoints_meson);
     dm2.cleanup(oldfield_omega,npoints_meson);
@@ -1640,7 +1672,7 @@ void hartee_method(double gs2, double gw2, double gp2, double b, double c, doubl
     // Create Initial Meson Fields
     dm2.create(gs_sigma_unitless,npoints_meson,2);
     dm2.create(gw_omega_unitless,npoints_meson,2);
-    dm2.create(gp_rho_unitless,npoints_meson,2);
+    dm2.create(gp_rho_unitless,npoints_meson,3);
     dm2.create(e_coulomb_unitless,npoints_meson,2); 
     init_sigma(npoints_meson,41,R_fm,a_fm,gs_sigma_unitless,r_init_fm,r_final_fm,gs2);
     init_omega(npoints_meson,25,R_fm,a_fm,gw_omega_unitless,r_init_fm,r_final_fm,gw2);
