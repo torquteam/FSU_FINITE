@@ -13,12 +13,13 @@ data2 dm3;
 int main() {
 
     auto start = chrono :: high_resolution_clock::now();     
-    int A = 60;
-    int Z = 26;
+    int A = 48;
+    int Z = 20;
 
     double gs2, gw2, gp2, b, c, h, lambda, mSigma_mev, mOmega_mev, mRho_mev;
     double Observables[5];
-    /* //FSUGarnet+R
+    /*
+    //FSUGarnet+R
     gs2 = 109.130;
 	gw2 = 186.481;
 	gp2 = 142.966;
@@ -26,7 +27,23 @@ int main() {
 	c = -0.003285/6.0;
 	h = 0.023812/6.0;
 	lambda = 0.038274*2.0;
+    mSigma_mev = 495.633;
+    mOmega_mev = 782.5;
+    mRho_mev = 763.0;
     */
+    //FSUGarnet+R
+    gs2 = 110.349;
+	gw2 = 187.695;
+	gp2 = 192.927;
+	b = 3.26/(2.0*939.0);
+	c = -0.003551/6.0;
+	h = 0.0235/6.0;
+	lambda = 0.043377*2.0;
+    mSigma_mev = 496.939;
+    mOmega_mev = 782.5;
+    mRho_mev = 763.0;
+    
+    /*
     // FSUGold2+R
     gs2 = 103.760;
 	gw2 = 169.410;
@@ -38,6 +55,7 @@ int main() {
     mSigma_mev = 501.611;
     mOmega_mev = 782.5;
     mRho_mev = 763.0;
+    */
 
     int field_grid = 4000;
     int meson_grid = 2000; // field_grid/meson_grid must be an integer

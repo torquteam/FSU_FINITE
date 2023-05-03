@@ -32,7 +32,7 @@ const double qwn = -0.9821; // weak vector-charge of the neutron
 //const double qwp = 0.0713;  // weak vector-charge of the proton
 //const double qwn = -0.9795; // weak vector-charge of the neutron
 
-const double fp = 0.0001;
+const double fp = 110.0;
 
 data2 dm2;
 nummeth nm;
