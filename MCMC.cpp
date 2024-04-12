@@ -1,6 +1,8 @@
 #include "NumMethods.hpp"
 #include "finitenuclei.hpp"
+#include "infinitematter.hpp"
 #include "MCMC.hpp"
+
 #include <cmath>
 #include <iostream>
 #include <fstream>
@@ -11,16 +13,21 @@
 using namespace std;
 data2 dm1;
 nummeth nm1;
+bulks bulkmc;
+tools toolmc;
 
 const double pi = 4.0*atan(1.0);
 const double mP = 939; //938.27231;    // Mass of proton (MeV)
 const double mN = 939; //939.56542052;
-const double mNuc = (mP+mN)/2.0;
-const double mOmega = 782.5;
-const double mRho = 763.0;
+const double mNuc_mev = (mP+mN)/2.0;
+const double mE = 0.511;
+const double mMU = 105.7;
 
-const int field_grid = 2000;
-const int meson_grid = 1000; // field_grid/meson_grid must be an integer
+const double hbar_mevfm = 197.32698; // MeV fm
+const double r0_fm = 1.25; //fm (arbitrary)
+const double enscale_mev = pow(hbar_mevfm,2)/(2.0*mNuc_mev*pow(r0_fm,2)); // arbitrary
+
+const int gridsize = 401;
 
 double rand_uniform(double cntr, double w) {
     double x,y;
@@ -29,454 +36,595 @@ double rand_uniform(double cntr, double w) {
     return y;
 }
 
-// Calculate (g_rho/m_rho)^2 Analytically
-double get_gpomp2(double kf, double asym, double L, double gss, double gsoms2, double gww, double gwomw2, double h, double b, double c) {
-    double gpomp2,z1,z2, mstarp,mstarn,rn,rp,intp,intn,integral,gsdsdk,gwdwdk,alpha,beta,ap,an,gamma;
-    mstarp = mP - gss; mstarn = mN - gss;   // effective masses
+//Box muller method
+// returns a value from the normal distribution centered at some mean and stddev
+double rand_normal(double mean, double stddev) {
+    static double n2 = 0.0;
+    static int n2_cached = 0;
+    if (!n2_cached)
+    {
+        double x, y, r;
+        do
+        {
+            x = 2.0*rand()/RAND_MAX - 1;
+            y = 2.0*rand()/RAND_MAX - 1;
 
-    // convenient quantities to define (makes expressions easier to read)
-    rn = sqrt(pow(kf,2) + pow(mstarn,2)); rp = sqrt(pow(kf,2) + pow(mstarp,2));
-    z2 = pow(kf,3.0)/(12.0*pow(pi,2.0)); z1 = pow(kf,2.0)/12.0*(1.0/rp + 1.0/rn);
-
-    // integrals for proton and neutron
-    intp = (0.5*pow(kf,3.0) + 3.0/2.0*kf*pow(mstarp,2.0))/rp + 3.0*pow(mstarp,2.0)/2.0*log(abs(mstarp/(kf+rp)));
-    intn = (0.5*pow(kf,3.0) + 3.0/2.0*kf*pow(mstarn,2.0))/rn + 3.0*pow(mstarn,2.0)/2.0*log(abs(mstarn/(kf+rn)));
-    integral = intp + intn;
-
-    // g_sigma*dsigma/dk and g_omega*d_omega/dk
-    gsdsdk = 2.0/pow(pi,2.0)*pow(kf,2.0)* gsoms2/2.0*(mstarp/rp + mstarn/rn)*pow(1.0+ gsoms2*(2.0*b*mNuc*gss + 3.0*c*pow(gss,2.0) + 1.0/pow(pi,2.0)*integral),-1.0);
-    gwdwdk = gwomw2*2.0*pow(kf/pi,2.0)/(1.0 + 3.0*gwomw2*h*pow(gww,2.0));
-
-    // more convenient quantities to define (no physical meaning)
-    alpha = 1.0/z2*pow(rn*rp,3.0)*gwdwdk*pow(kf,4.0)*pow(asym-z1,2.0);
-    beta = asym*pow(rp*rn*kf,3.0)*(-1.5*gww+gwdwdk*kf);
-    ap = pow(rp,3.0)*gww*z2*pow(pi*kf,2.0)*(-pow(rn,2.0) + 0.5*pow(kf,2.0) - 0.5*kf*mstarn*gsdsdk);
-    an = pow(rn,3.0)*gww*z2*pow(pi*kf,2.0)*(-pow(rp,2.0) + 0.5*pow(kf,2.0) - 0.5*kf*mstarp*gsdsdk);
-    gamma = pow(rp*rn,3.0)*(1.5*gww*pow(kf,3.0)*z1 - gwdwdk*pow(kf,4.0)*z1 + 6.0*pow(pi,2.0)*gww*L*z2);
-    
-    gpomp2 = alpha/(beta+ap+an+gamma);
-    return gpomp2;
+            r = x*x + y*y;
+        }
+        while (r == 0.0 || r > 1.0);
+        {
+            double d = sqrt(-2.0*log(r)/r);
+            double n1 = x*d;
+            n2 = y*d;
+            double result = n1*stddev + mean;
+            n2_cached = 1;
+            return result;
+        }
+    }
+    else
+    {
+        n2_cached = 0;
+        return n2*stddev + mean;
+    }
 }
 
-// Get the energy density for the FSU model
-double get_en(double kf, double t, double gss, double gsoms2, double gww, double gwomw2, double gpp, double gpomp2, double b, double c, double h, double lambda) {
-    double integralp = 0; double integraln = 0; double res,mss2,mww2,mpp2,mstrp,mstrn,kfn,kfp,rn,rp;
+double get_lkl_prior(double* proposed_params, double** prior_covariance, double** prior_DATA) {
+    double vec[7];
+    double chisq = 0;
 
-    mss2 = pow(gss,2.0)/gsoms2;  // (m_sigma*sigma)^2
-    mww2 = pow(gww,2.0)/gwomw2;  // (m_omgea*omega)^2
-    mpp2 = pow(gpp,2.0)/gpomp2;  // (m_rho*rho)^2
-    mstrp = mP-gss; mstrn = mN-gss;   // effective masses
-    kfn = kf*pow(1.0+t,1.0/3.0); kfp = kf*pow(1.0-t,1.0/3.0);     // define the fermi momentum for the proton and neutron given t
-    rn = sqrt(pow(kfn,2) + pow(mstrn,2)); rp = sqrt(pow(kfp,2) + pow(mstrp,2));       // convenient quanitity to define since used a lot
-
-    // integrals for the energy density
-    integralp = kfp*pow(rp,3)/4.0 - pow(mstrp,2)*kfp*rp/8.0 - pow(mstrp,4)/8.0*log(kfp+rp) + pow(mstrp,4)/8.0*log(abs(mstrp));
-    integraln = kfn*pow(rn,3)/4.0 - pow(mstrn,2)*kfn*rn/8.0 - pow(mstrn,4)/8.0*log(kfn+rn) + pow(mstrn,4)/8.0*log(abs(mstrn));
+    // initialize the temp arrays and get the prior distribution X^2 = (x-mu)^T Cov (x-mu)
+    vec[0] = 0; vec[1] = 0; vec[2] = 0; vec[3] = 0; vec[4] = 0; vec[5] = 0; vec[6] = 0;
+    for (int i=0; i<7; ++i) {
+        for (int j=0; j<7; ++j) {
+            vec[i] = vec[i] + prior_covariance[i][j]*(proposed_params[j]-prior_DATA[j][2]);
+        }
+        chisq = chisq + vec[i]*(proposed_params[i]-prior_DATA[i][2]);
+    }
     
-    // add free contributions
-    res = 0.5*mss2 + 0.5*mww2 + +0.5*mpp2 + 1.0/3.0*b*mNuc*pow(gss,3.0) + 0.25*c*pow(gss,4.0) + 0.75*h*pow(gww,4.0) + 1.5*lambda*pow(gpp,2.0)*pow(gww,2.0)
-            + 1.0/pow(pi,2)*integralp + 1.0/pow(pi,2)*integraln;
-    return res;
+    double prior = exp(-chisq/2.0);
+    return prior;
 }
 
-// Calculate the compressibility 
-double get_K(double kf, double gss, double gwomw2, double gsoms2, double b, double c, double h, double gww) {
-    double integralp = 0; double integraln = 0; double integral = 0; double res, mstrp,mstrn,rn,rp;
+//Make sure proposed changes are physical (add Ksym)
+int rho_mass_check(double* proposed_params, double** prior_DATA, double masses[4], int gd_sol_type,bool delta_coupling) {
+    double BA, p0, kf, J, mstar, K, L, Ksym, zeta,xi,lambda_s, fw, fp;   // bulk parameters
+    double fin_couplings[15];
 
-    mstrp = mP-gss; mstrn = mN-gss;   // effective masses
-    rn = sqrt(pow(kf,2) + pow(mstrn,2)); rp = sqrt(pow(kf,2) + pow(mstrp,2));     // convenient quanitity to define since used a lot
+    BA = proposed_params[0]*prior_DATA[0][3]; 
+    kf = proposed_params[1]*prior_DATA[1][3]; 
+    mstar = proposed_params[2]*prior_DATA[2][3]*mNuc_mev; 
+    K = proposed_params[3]*prior_DATA[3][3]; 
+    J = proposed_params[4]*prior_DATA[4][3]; 
+    L = proposed_params[5]*prior_DATA[5][3]; 
+    Ksym = proposed_params[6]*prior_DATA[6][3];
+    zeta = proposed_params[7]*prior_DATA[7][3];
+    xi = proposed_params[8]*prior_DATA[8][3];
+    lambda_s = proposed_params[9]*prior_DATA[9][3];
+    fw = proposed_params[10]*prior_DATA[10][3];
+    fp = proposed_params[11]*prior_DATA[11][3];
 
-    integralp = (0.5*pow(kf,3.0) + 3.0/2.0*kf*pow(mstrp,2.0))/rp + 3.0*pow(mstrp,2.0)/2.0*log(abs(mstrp/(kf+rp)));
-    integraln = (0.5*pow(kf,3.0) + 3.0/2.0*kf*pow(mstrn,2.0))/rn + 3.0*pow(mstrn,2.0)/2.0*log(abs(mstrn/(kf+rn)));
-    integral = integralp + integraln;
-    res = gwomw2/(1.0 + 3.0*gwomw2*h*pow(gww,2.0))*6.0*pow(kf,3)/pow(pi,2) + 3.0/2.0*pow(kf,2.0)*(1.0/rp + 1.0/rn) 
-            - 3.0/2.0*gsoms2*pow(kf,3.0)/pow(pi,2.0)*pow(mstrp/rp + mstrn/rn,2.0)*pow(1.0+gsoms2*(2.0*b*mNuc*gss + 3.0*c*pow(gss,2.0) + 1.0/pow(pi,2.0)*integral),-1.0);
-    return res;
+    p0 = 2.0/(3.0*pow(pi,2.0))*pow(kf,3.0);
+    bulkmc.get_parameters(BA,p0,J,mstar,K,L,Ksym,zeta,xi,lambda_s,fw,fp,masses,fin_couplings,true,gd_sol_type,delta_coupling);     // solve for parameters given bulk properties
+    // Check if lambda is negative (eff rho mass is imaginary)
+    if (fin_couplings[7] < 0 || fin_couplings[6] < 0) {
+        return -1;
+    } else {
+        return 0;
+    }
 }
 
-// Calculate the symmetry energy at saturation (J)
-double get_J(double kf, double gss, double gpomp2, double gww, double lambda) {
-    double res,mstarp,mstarn,rn,rp;
-    
-    mstarp = mP - gss; mstarn = mN - gss; // effective masses
-    rn = sqrt(pow(kf,2) + pow(mstarn,2)); rp = sqrt(pow(kf,2) + pow(mstarp,2));   // convenient quanitity to define since used a lot
-    res = pow(kf,2.0)/12.0*(1.0/rp + 1.0/rn) + 1.0/(12.0*pow(pi,2.0))*gpomp2/(1.0+gpomp2*pow(gww,2.0)*lambda)*pow(kf,3.0);
-    return res;
+// count the number of parameters that are going to be varied (just counts 1s that appear)
+// return an array with the parameter indicies
+int counter(double** priorDATA, int n_params, double* &index_array, int toggle_col) {
+    int count = 0;
+    for (int i=0; i<n_params; ++i) {
+        count = count + priorDATA[i][toggle_col];
+    }
+
+    index_array = new double[count];
+    int subcounter = 0;
+    for (int i=0; i<n_params; ++i) {
+        if (priorDATA[i][toggle_col] == 1) {
+            index_array[subcounter] = i;
+            subcounter = subcounter + 1;
+        }
+    }
+
+    return count;
 }
 
-// Calculate the drivative of the symmetry energy at saturatiob (L)
-double get_L(double kf, double gss, double gsoms2, double gww, double gwomw2, double gpomp2, double h, double lambda, double b, double c) {
-    double res, mstarp,mstarn,rn,rp,intp,intn,integral,gsdsdk,gwdwdk;
+int excel_calibrate(double** init_DATA, string outname, int gd_sol_type, bool delta_coupling) {
+    // Initialization
+    int n_params = 16;  //(BA,kf,mstar,K,J,L,Ksym,zeta,xi,fw,fp,lambda_s,ms,mw,mp,md)
+    double* index_array;
+    int n_varied_params = counter(init_DATA, n_params, index_array,2);   // get the number of varied params and fill index array
+    int code;
+    double stds[n_varied_params];
+    ofstream out(outname);
+    double fin_couplings[n_params];
+    double Observables[7];
 
-    mstarp = mP - gss; mstarn = mN - gss; // effective masses
-    rn = sqrt(pow(kf,2) + pow(mstarn,2)); rp = sqrt(pow(kf,2) + pow(mstarp,2));   // convenient quanitity to define since used a lot
-    intp = (0.5*pow(kf,3.0) + 3.0/2.0*kf*pow(mstarp,2.0))/rp + 3.0*pow(mstarp,2.0)/2.0*log(abs(mstarp/(kf+rp)));    // proton integral
-    intn = (0.5*pow(kf,3.0) + 3.0/2.0*kf*pow(mstarn,2.0))/rn + 3.0*pow(mstarn,2.0)/2.0*log(abs(mstarn/(kf+rn)));    // neutron integral
-    integral = intp + intn;
+    double base_params[n_params];
+    double low_params[n_params];
+    double high_params[n_params];
+    for (int i=0; i<n_params; ++i) {
+        base_params[i] = init_DATA[i][0];
+    }
 
-    // g_sigma*dsigma/dk
-    gsdsdk = 2.0/pow(pi,2.0)*pow(kf,2.0)* gsoms2/2.0*(mstarp/rp + mstarn/rn)*pow(1.0+ gsoms2*(2.0*b*mNuc*gss + 3.0*c*pow(gss,2.0) + 1.0/pow(pi,2.0)*integral),-1.0);
-    
-    // g_omega*domega/dk
-    gwdwdk = gwomw2*2.0*pow(kf/pi,2.0)/(1.0 + 3.0*gwomw2*h*pow(gww,2.0));
-    
-    res = pow(kf,2.0)/6.0*(1.0/rp+1.0/rn) + pow(kf,3.0)/12.0*( (mstarp*gsdsdk - kf)/pow(rp,3.0) + (mstarn*gsdsdk - kf)/pow(rn,3.0) ) 
-        + pow(kf,3.0)/(4.0*pow(pi,2.0))*gpomp2/(1.0+gpomp2*pow(gww,2.0)*lambda) - pow(kf,4.0)/(6.0*pow(pi,2.0))*pow(gpomp2,2.0)*gww*lambda*gwdwdk/pow(1.0 + gpomp2*lambda*pow(gww,2.0),2.0);
-    return res;
-}
+    int index;
+    for (int i=0; i<n_varied_params; ++i) {
+        index = index_array[i];
+        stds[i] = init_DATA[index][1];
+    }
 
-int get_parameters(double BA, double p0, double J, double mstar, double K, double L, double h, double mSigma, double fp, double params[9], bool flag) {
-    double a1,a2,a3,b1,b2,b3,c1,c2,c3,g1,g2,g3,z1,z2,m1,m2,m3,m4,n1,n2,n3,n4;
-    double kf,gss,mstarp,mstarn,gww,gwomw2,rn,rp,sdensn,sdensp,sdens,gsoms2,b,c,gpomp2,gpp,lambda,pintegralK,nintegralK,integralK;
+    double masses[4];
+    masses[0] = base_params[0];
+    masses[1] = base_params[1];
+    masses[2] = base_params[2];
+    masses[3] = base_params[3];
 
-    p0 = p0*pow(197.32698,3); // convert density from 1/fm3 to MeV^3;
-    kf = pow(3.0/2.0*pow(pi,2)*p0,1.0/3.0); // get fermi momentum
+    double BA = base_params[4]; 
+    double kf = base_params[5]; 
+    double mstar = base_params[9]*mNuc_mev;
+    double K = base_params[10]; 
+    double J_tilde = base_params[6]; 
+    double L = base_params[7]; 
+    double Ksym = base_params[8];
+    double zeta = base_params[14];
+    double xi = base_params[15];
+    double fw = base_params[11];
+    double fp = base_params[12];
+    double lambda_s = base_params[13];
+    cout << masses[0] << "  " << masses[1] << "  " << masses[2] << "  " << masses[3] << endl;
+    cout << BA << "  " << kf << "  " << mstar << "  " << K << "  " << J_tilde << "  " << L << "  " << Ksym << "  " << zeta << "  " << fw << "  " << fp << "  " << lambda_s << "  " << xi << endl;
 
-    gss = mNuc - mstar; // given mstar get gss
-    mstarp = mP - gss;  mstarn = mN - gss;  // get effective masses (technically redundant since mN = mP)
-    gww = mNuc + BA - 0.5*sqrt(pow(kf,2) + pow(mstarp,2)) - 0.5*sqrt(pow(kf,2) + pow(mstarn,2));    // get gww at saturation
-    rn = sqrt(pow(kf,2) + pow(mstarn,2)); rp = sqrt(pow(kf,2) + pow(mstarp,2)); // convenient quantities to define
-    
-    // check to see if the coupling constants are realistic 
-    if (p0/pow(gww,3.0) < h) {
-        cout << "unrealistic: limit is: " << p0/pow(gww,3.0) << " input is: " << h << "  " << gww << endl;
-        if (flag == true) {
+    double p0 = 2.0/(3.0*pow(pi,2.0))*pow(kf,3.0); // get density
+    bulkmc.get_parameters(BA,p0,J_tilde,mstar,K,L,Ksym,zeta,xi,lambda_s,fw,fp,masses,fin_couplings,true,gd_sol_type,delta_coupling);
+    cout << " gd2 = " << fin_couplings[3] << endl;
+
+    // print out the excel format and calculate several configurations for base
+    out << masses[0] << "," << BA << "," << kf << "," << Ksym << "," << mstar/mNuc_mev << "," << K << "," << fw << "," << fp << "," << lambda_s << endl;
+
+    code = hartree_method(fin_couplings,40,20,20,gridsize,2,Observables,1.2,false,false);
+    if (code == 0) {
+        out << "0," << Observables[0] << ",";
+    } else {
+        exit(0);
+    }
+    code = hartree_method(fin_couplings,48,20,20,gridsize,2,Observables,1.2,false,false);
+    if (code == 0) {
+        out << Observables[0] << "," << Observables[3] << "," << Observables[5] << ",";
+    } else {
+        exit(0);
+    }
+    code = hartree_method(fin_couplings,208,82,20,gridsize,2,Observables,1.3,false,false);
+    if (code == 0) {
+        out << Observables[0] << "," << Observables[3] << "," << Observables[5] << "," << fin_couplings[3] << "," << Observables[6] << endl;
+    } else {
+        exit(0);
+    }
+
+    // do the same for the low and high configurations
+    for (int i=0; i<n_varied_params; ++i) {
+        for (int j=0; j<n_params; ++j) {
+            low_params[j] = base_params[j];
+            high_params[j] = base_params[j];
+        }
+
+
+        index = index_array[i]; // get index of the parameter to change
+        low_params[index] = base_params[index] - stds[i]; // get low limit of param
+        high_params[index] = base_params[index] + stds[i];
+
+        masses[0] = low_params[0];
+        masses[1] = low_params[1];
+        masses[2] = low_params[2];
+        masses[3] = low_params[3];
+        BA = low_params[4]; 
+        kf = low_params[5]; 
+        mstar = low_params[9]*mNuc_mev;
+        K = low_params[10]; 
+        J_tilde = low_params[6]; 
+        L = low_params[7]; 
+        Ksym = low_params[8];
+        zeta = low_params[14];
+        xi = low_params[15];
+        fw = low_params[11];
+        fp = low_params[12];
+        lambda_s = low_params[13];
+
+        p0 = 2.0/(3.0*pow(pi,2.0))*pow(kf,3.0); // get density
+        bulkmc.get_parameters(BA,p0,J_tilde,mstar,K,L,Ksym,zeta,xi,lambda_s,fw,fp,masses,fin_couplings,true,gd_sol_type,delta_coupling);
+
+        // print out the excel format and calculate several configurations for base
+        code = hartree_method(fin_couplings,40,20,20,gridsize,2,Observables,1.2,false,false);
+        if (code == 0) {
+            out << low_params[index] << "," << Observables[0] << ",";
+        } else {
+            exit(0);
+        }
+        code = hartree_method(fin_couplings,48,20,20,gridsize,2,Observables,1.2,false,false);
+        if (code == 0) {
+            out << Observables[0] << "," << Observables[3] << "," << Observables[5] << ",";
+        } else {
+            exit(0);
+        }
+        code = hartree_method(fin_couplings,208,82,20,gridsize,2,Observables,1.3,false,false);
+        if (code == 0) {
+            out << Observables[0] << "," << Observables[3] << "," << Observables[5] << "," << fin_couplings[3] << "," << Observables[6] << endl;
+        } else {
+            exit(0);
+        }
+
+        masses[0] = high_params[0];
+        masses[1] = high_params[1];
+        masses[2] = high_params[2];
+        masses[3] = high_params[3];
+        BA = high_params[4]; 
+        kf = high_params[5]; 
+        mstar = high_params[9]*mNuc_mev;
+        K = high_params[10]; 
+        J_tilde = high_params[6]; 
+        L = high_params[7]; 
+        Ksym = high_params[8];
+        zeta = high_params[14];
+        xi = high_params[15];
+        fw = high_params[11];
+        fp = high_params[12];
+        lambda_s = high_params[13];
+
+        p0 = 2.0/(3.0*pow(pi,2.0))*pow(kf,3.0); // get density
+        bulkmc.get_parameters(BA,p0,J_tilde,mstar,K,L,Ksym,zeta,xi,lambda_s,fw,fp,masses,fin_couplings,true,gd_sol_type,delta_coupling);
+
+        // print out the excel format and calculate several configurations for base
+        // print out the excel format and calculate several configurations for base
+        code = hartree_method(fin_couplings,40,20,20,gridsize,2,Observables,1.2,false,false);
+        if (code == 0) {
+            out << high_params[index] << "," << Observables[0] << ",";
+        } else {
+            exit(0);
+        }
+        code = hartree_method(fin_couplings,48,20,20,gridsize,2,Observables,1.2,false,false);
+        if (code == 0) {
+            out << Observables[0] << "," << Observables[3] << "," << Observables[5] << ",";
+        } else {
+            exit(0);
+        }
+        code = hartree_method(fin_couplings,208,82,20,gridsize,2,Observables,1.3,false,false);
+        if (code == 0) {
+            out << Observables[0] << "," << Observables[3] << "," << Observables[5] << "," << fin_couplings[3] << "," << Observables[6] << endl;
+        } else {
             exit(0);
         }
     }
-
-    gwomw2 = gww/(p0-h*pow(gww,3.0));   // get (gw/mw)^2
-
-    // proton and neutron integrals
-    pintegralK = (0.5*pow(kf,3.0) + 3.0/2.0*kf*pow(mstarp,2.0))/rp + 3.0*pow(mstarp,2.0)/2.0*log(abs(mstarp/(kf+rp)));
-    nintegralK = (0.5*pow(kf,3.0) + 3.0/2.0*kf*pow(mstarn,2.0))/rn + 3.0*pow(mstarn,2.0)/2.0*log(abs(mstarn/(kf+rn)));
-    integralK = pintegralK + nintegralK;
-
-    // algebraically convenient expressions
-    n1 = 6.0*pow(kf,3.0)/pow(pi,2.0)*gwomw2/(1.0+ 3.0*gwomw2*h*pow(gww,2.0));
-    n2 = 3.0/2.0*pow(kf,2.0)*(1.0/rp + 1.0/rn);
-    n3 = 3.0/2.0*pow(kf,3.0)/pow(pi,2.0)*pow(mstarp/rp + mstarn/rn,2.0);    
-    n4 = 1.0/pow(pi,2.0)*integralK;
-    a1 = gss;
-    a2 = mNuc*pow(gss,2.0);
-    a3 = pow(gss,3.0);
-    b1 = K - n1 - n2;
-    b2 = 2.0*mNuc*gss*(K-n1-n2);
-    b3 = 3.0*pow(gss,2.0)*(K-n1-n2);
-    g1 = 0.5*pow(gss,2.0);
-    g2 = 1.0/3.0*mNuc*pow(gss,3.0);
-    g3 = 0.25*pow(gss,4.0);
-    m1 = 1.0/pow(pi,2.0)* (kf*pow(rp,3)/4.0 - pow(mstarp,2)*kf*rp/8.0 - pow(mstarp,4)/8.0*log(kf+rp) + pow(mstarp,4)/8.0*log(abs(mstarp)));
-    m2 = 1.0/pow(pi,2.0)* (kf*pow(rn,3)/4.0 - pow(mstarn,2)*kf*rn/8.0 - pow(mstarn,4)/8.0*log(kf+rn) + pow(mstarn,4)/8.0*log(abs(mstarn)));
-    m3 = 0.5*pow(gwomw2,-1.0)*pow(gww,2.0);
-    m4 = 0.75*h*pow(gww,4.0);
-
-    // scalar densities
-    sdensp = 1.0/pow(pi,2)*mstarp*(kf*rp/2.0 - pow(mstarp,2)/2.0*log(abs(kf+rp)) + pow(mstarp,2)/2.0*log(abs(mstarp)) );
-    sdensn = 1.0/pow(pi,2)*mstarn*(kf*rn/2.0 - pow(mstarn,2)/2.0*log(abs(kf+rn)) + pow(mstarn,2)/2.0*log(abs(mstarn)) );
-    sdens = sdensp + sdensn;
-
-    // algebraically convenient expressions continued
-    c1 = sdens;
-    c2 = -n3 - n4*(K-n1-n2);
-    c3 = p0*(mNuc+BA)-m1-m2-m3-m4;
-
-    // algebraic expressions for the sigma coupling constants
-    gsoms2 = (a3*b2*g1-a2*b3*g1-a3*b1*g2+a1*b3*g2+a2*b1*g3-a1*b2*g3)/(c3*a3*b2-c3*a2*b3-c2*a3*g2+c1*b3*g2+c2*a2*g3-c1*b2*g3);
-    b = (c3*a3*b1-c3*a1*b3-c2*a3*g1+c1*b3*g1+c2*a1*g3-c1*b1*g3)/(-a3*b2*g1+a2*b3*g1+a3*b1*g2-a1*b3*g2-a2*b1*g3+a1*b2*g3);
-    c = (c3*a2*b1-c3*a1*b2-c2*a2*g1+c1*b2*g1+c2*a1*g2-c1*b1*g2)/(a3*b2*g1-a2*b3*g1-a3*b1*g2+a1*b3*g2+a2*b1*g3-a1*b2*g3);
-    
-    // get(gp/mp)^2
-    gpomp2 = get_gpomp2(kf,J,L,gss,gsoms2,gww,gwomw2,h,b,c);
-    gpp = 0.0;   // valid at saturation
-
-    z2 = pow(kf,3.0)/(12.0*pow(pi,2.0));
-    z1 = pow(kf,2.0)/12.0*(1.0/rp + 1.0/rn);
-    lambda = 1.0/(gpomp2*pow(gww,2.0))*(z2*gpomp2/(J-z1) - 1.0);  // calculate last remaining coupling
-
-    params[0] = gsoms2*pow(mSigma,2.0);
-    params[1] = gwomw2*pow(mOmega,2.0);
-    params[2] = gpomp2*pow(mRho,2.0);
-    params[3] = b;
-    params[4] = c;
-    params[5] = h;
-    params[6] = lambda;
-    params[7] = mSigma;
-    params[8] = fp;
-
     return 0;
 }
 
-// target liklihood function for the calibration of models to finite nuclei observables
-// takes in the proposed bulk properties and the old bulk properties to compute a chi square value
-double targetNuclei(double* props, double* olds, double** cov, double** DATA, bool flag) {
-    double chisqp = 0; double chisq0 = 0;   // chisq of prior
-    double vec1[7]; double vec2[7];         // temporary arrays for matrix mulitplication
-    double BA, p0, kf, J, mstar, K, L, h, mSigma, fp, res;   // bulk parameters
-    double gs2, gw2, gp2, b, c, lambda;
-    double oldparams[9]; double newparams[9];       // arrays for the calculated parameters
-    double lkl0, lklp, max0, maxp;
-    int A, Z;
-    double Observables[5]; double RnRp48o, RnRp208o, RnRp48p, RnRp208p;
+// #############################################################################################
+// ################################################################################################
+// RBM Calibration Stuff
 
-    //Make sure proposed changes are physical
-    BA = props[0]*DATA[0][3]; kf = props[1]*DATA[1][3]; mstar = props[2]*DATA[2][3]*mNuc; 
-    K = props[3]*DATA[3][3]; J = props[4]*DATA[4][3]; L = props[5]*DATA[5][3]; h = props[6]*DATA[6][3];
-    mSigma = props[7]*DATA[7][3]; fp = props[8]*DATA[8][3];
-    p0 = 2.0/(3.0*pow(pi,2.0))*pow(kf,3.0);
-    get_parameters(BA,p0,J,mstar,K,L,h,mSigma,fp,newparams,flag);     // solve for parameters given bulk properties
-    // Check if lambda is negative (eff rho mass is imaginary)
-    if (newparams[6] < 0 || newparams[5] < 0) {
-        return -1.0;
+// output set of wave functions and fields for a given parameter set and nucleus
+int RBM_generate_fields(int A, int Z, string params_file) {
+
+    // import parameters to be used in RBM sample
+    double** param_set; string** narray; string** parray;
+    dm1.importdata(params_file, param_set);
+    int num_param_sets = dm1.rowcount(params_file);
+
+    // variable declarations
+    int nstates_n, nstates_p;
+    double Observables[7]; 
+    double fin_couplings[16];
+    int ncols_meson = 8;
+    int npoints_meson = gridsize;
+
+    // initialize the arrays for meson fields, energies, and wave functions
+    double** Fn_unitless; double** Gn_unitless;
+    double** Ap_unitless; double** Bp_unitless;
+    double** meson_fields_unitless;
+
+    for (int k=0; k<16; ++k) {
+        fin_couplings[k] = param_set[0][k];
     }
 
-    // initialize the temp arrays and get the prior distribution X^2 = (x-mu)^T Cov (x-mu)
-    vec1[0] = 0; vec1[1] = 0; vec1[2] = 0; vec1[3] = 0; vec1[4] = 0; vec1[5] = 0; vec1[6] = 0;
-    vec2[0] = 0; vec2[1] = 0; vec2[2] = 0; vec2[3] = 0; vec2[4] = 0; vec2[5] = 0; vec2[6] = 0;
-    for (int i=0; i<7; ++i) {
-        for (int j=0; j<7; ++j) {
-            vec1[i] = vec1[i] + cov[i][j]*(olds[j]-DATA[j][2]);
-            vec2[i] = vec2[i] + cov[i][j]*(props[j]-DATA[j][2]);
+    int exit_code = hartree_method(fin_couplings,A,Z,20,gridsize,3,Observables,1.2,false,true);
+    if(exit_code != 0) {
+        exit(0);
+    }
+    
+
+    nstates_n = dm1.rowcount("neutron_spectrum.txt");
+    nstates_p = dm1.rowcount("proton_spectrum.txt");
+    dm1.importdata_string("neutron_spectrum.txt",narray);
+    dm1.importdata_string("proton_spectrum.txt",parray);
+
+    for (int k=0; k<nstates_n; ++k) {
+        ofstream fout("/home/msals97/Desktop/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data" + "/neutron/f_wave/state" + narray[k][6] + ".txt",ios::out);
+        ofstream gout("/home/msals97/Desktop/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data" + "/neutron/g_wave/state" + narray[k][6] + ".txt",ios::out);
+        fout.close();
+        gout.close();
+    }
+
+    for (int k=0; k<nstates_p; ++k) {
+        ofstream aout("/home/msals97/Desktop/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data" + "/proton/c_wave/state" + parray[k][6] + ".txt",ios::out);
+        ofstream bout("/home/msals97/Desktop/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data" + "/proton/d_wave/state" + parray[k][6]+ ".txt",ios::out);
+        aout.close();
+        bout.close();
+    }
+
+    // initialize the output files
+    ofstream sout("/home/msals97/Desktop/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data/meson_fields/" + "sigma.txt");
+    ofstream oout("/home/msals97/Desktop/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data/meson_fields/" + "omega.txt");
+    ofstream rout("/home/msals97/Desktop/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data/meson_fields/" + "rho.txt");
+    ofstream dout("/home/msals97/Desktop/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data/meson_fields/" + "delta.txt");
+    ofstream aout("/home/msals97/Desktop/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data/meson_fields/" + "coulomb.txt");
+    
+    ofstream enout("/home/msals97/Desktop/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data/neutron/energies.txt");
+    ofstream epout("/home/msals97/Desktop/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data/proton/energies.txt");
+    ofstream rvecout("/home/msals97/Desktop/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data/rvec.txt");
+    
+    dm1.importdata("Fn.txt",Fn_unitless);
+    rvecout << 0.0 << endl;
+    for (int i=1; i<gridsize; ++i) {
+        rvecout << scientific << setprecision(5) << Fn_unitless[i][0] << endl;
+    }
+
+    dm1.cleanup_string(narray,nstates_n);
+    dm1.cleanup_string(parray,nstates_p);
+    // loop through each nuclei and solve the high fidelity problem
+    for (int i=0; i<num_param_sets; ++i) {
+        for (int k=0; k<16; ++k) {
+            fin_couplings[k] = param_set[i][k];
         }
-        chisq0 = chisq0 + vec1[i]*(olds[i]-DATA[i][2]);
-        chisqp = chisqp + vec2[i]*(props[i]-DATA[i][2]);
+
+        exit_code = hartree_method(fin_couplings,A,Z,20,gridsize,3,Observables,1.2,false,true);
+        if(exit_code != 0) {
+            exit(0);
+        }
+
+        nstates_n = dm1.rowcount("neutron_spectrum.txt");
+        nstates_p = dm1.rowcount("proton_spectrum.txt");
+        dm1.importdata_string("neutron_spectrum.txt",narray);
+        dm1.importdata_string("proton_spectrum.txt",parray);
+        dm1.importdata("Fn.txt",Fn_unitless);
+        dm1.importdata("Gn.txt",Gn_unitless);
+        dm1.importdata("Ap.txt",Ap_unitless);
+        dm1.importdata("Bp.txt",Bp_unitless);
+
+        for (int k=0; k<nstates_n; ++k) {
+            ofstream fout("/home/msals97/Desktop/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data" + "/neutron/f_wave/state" + narray[k][6] + ".txt", ios::app);
+            ofstream gout("/home/msals97/Desktop/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data" + "/neutron/g_wave/state" + narray[k][6] + ".txt", ios::app);
+            gout << 0.0 << "  ";
+            fout << 0.0 << "  ";
+            for (int j=1; j<gridsize; ++j) {
+                fout << scientific << setprecision(10) << Fn_unitless[j][k+1] << "  ";
+                gout << scientific << setprecision(10) << Gn_unitless[j][k+1] << "  ";
+            }
+            fout << endl;
+            gout << endl;
+        }
+
+        for (int k=0; k<nstates_p; ++k) {
+            ofstream aout("/home/msals97/Desktop/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data" + "/proton/c_wave/state" + parray[k][6] + ".txt", ios::app);
+            ofstream bout("/home/msals97/Desktop/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data" + "/proton/d_wave/state" + parray[k][6] + ".txt", ios::app);
+            aout << 0.0 << "  ";
+            bout << 0.0 << "  ";
+            for (int j=1; j<gridsize; ++j) {
+                aout << scientific << setprecision(10) << Ap_unitless[j][k+1] << "  ";
+                bout << scientific << setprecision(10) << Bp_unitless[j][k+1] << "  ";
+            }
+            aout << endl;
+            bout << endl;
+        }
+
+        dm1.importdata("meson_fields.txt",meson_fields_unitless);
+        dm1.convert_array(meson_fields_unitless,npoints_meson,ncols_meson,0,1.0/r0_fm);
+        dm1.convert_array(meson_fields_unitless,npoints_meson,ncols_meson,1,1.0/enscale_mev);
+        dm1.convert_array(meson_fields_unitless,npoints_meson,ncols_meson,2,1.0/enscale_mev);
+        dm1.convert_array(meson_fields_unitless,npoints_meson,ncols_meson,3,1.0/enscale_mev);
+        dm1.convert_array(meson_fields_unitless,npoints_meson,ncols_meson,4,1.0/enscale_mev);
+        dm1.convert_array(meson_fields_unitless,npoints_meson,ncols_meson,5,1.0/enscale_mev);
+        remove("meson_fields.txt");
+        cout << "pass: " << i+1 << endl;
+
+        for (int j=0; j<npoints_meson; ++j) {
+            sout << scientific << setprecision(10) << meson_fields_unitless[j][1] << "  ";
+            oout << scientific << setprecision(10) << meson_fields_unitless[j][2] << "  ";
+            rout << scientific << setprecision(10) << meson_fields_unitless[j][3] << "  ";
+            dout << scientific << setprecision(10) << meson_fields_unitless[j][4] << "  ";
+            aout << scientific << setprecision(10) << meson_fields_unitless[j][5] << "  ";
+        }
+        sout << endl;
+        oout << endl;
+        rout << endl;
+        dout << endl;
+        aout << endl;
+
+        for (int k=0; k<nstates_n; ++k) {
+            enout << scientific << setprecision(10) << narray[k][0] << "  ";
+        }
+        enout << endl;
+
+        for (int k=0; k<nstates_p; ++k) {
+            epout << scientific << setprecision(10) << parray[k][0] << "  ";
+        }
+        epout << endl;
+
+        // cleanup
+        dm1.cleanup(meson_fields_unitless,npoints_meson);
+    
+        // cleanup
+        dm1.cleanup(Fn_unitless,gridsize);
+        dm1.cleanup(Gn_unitless,gridsize);
+        dm1.cleanup(Ap_unitless,gridsize);
+        dm1.cleanup(Bp_unitless,gridsize); 
+        dm1.cleanup_string(narray,nstates_n);
+        dm1.cleanup_string(parray,nstates_p);  
     }
-    double prior = exp(chisq0/2.0 - chisqp/2.0);
+
+    dm1.importdata_string("neutron_spectrum.txt",narray);
+    dm1.importdata_string("proton_spectrum.txt",parray);
+
+    for (int k=0; k<nstates_n; ++k) {
+        dm1.transpose_file("/home/msals97/Desktop/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data" + "/neutron/f_wave/state" + narray[k][6] + ".txt");
+        dm1.transpose_file("/home/msals97/Desktop/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data" + "/neutron/g_wave/state" + narray[k][6] + ".txt");
+
+    }
+
+    for (int k=0; k<nstates_p; ++k) {
+        dm1.transpose_file("/home/msals97/Desktop/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data" + "/proton/c_wave/state" + parray[k][6] + ".txt");
+        dm1.transpose_file("/home/msals97/Desktop/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data" + "/proton/d_wave/state" + parray[k][6] + ".txt");
     
-    // BEGIN PARALLEL
-    //#pragma omp parallel sections private(BA,kf,J,mstar,K,L,h,mSigma,fp,p0,gs2,gw2,b,c,lambda,A,Z) 
-    //{
-    //#pragma omp section
-    //{
-    BA = olds[0]*DATA[0][3]; kf = olds[1]*DATA[1][3]; mstar = olds[2]*DATA[2][3]*mNuc;      // get bulk properties by rescaling 
-    K = olds[3]*DATA[3][3]; J = olds[4]*DATA[4][3]; L = olds[5]*DATA[5][3]; h = olds[6]*DATA[6][3];
-    mSigma = olds[7]*DATA[7][3]; fp = olds[8]*DATA[8][3];
-    p0 = 2.0/(3.0*pow(pi,2.0))*pow(kf,3.0); // get density
-    //cout << BA << "  " << kf << "  " << mstar << "  " << K << "  " << J << "  " << L << "  " << h << "  " << mSigma << "  " << fp << endl;
-    get_parameters(BA,p0,J,mstar,K,L,h,mSigma,fp,oldparams,flag);     // solve for parameters given bulk properties
-    
-    gs2 = oldparams[0];
-    gw2 = oldparams[1];
-    gp2 = oldparams[2];
-    b = oldparams[3];
-    c = oldparams[4];
-    h = oldparams[5];
-    lambda = oldparams[6];
-    mSigma = oldparams[7];
-    fp = oldparams[8];
-    
-    A = 48; Z = 20; // Ca48
-    hartee_method(gs2,gw2,gp2,b,c,h,lambda,mSigma,mOmega,mRho,fp,A,Z,25,field_grid,meson_grid,2,Observables);
-    RnRp48o = sqrt(Observables[1]) - sqrt(Observables[2]);
+    }      
 
-    A = 208; Z = 82; // Pb208
-    hartee_method(gs2,gw2,gp2,b,c,h,lambda,mSigma,mOmega,mRho,fp,A,Z,25,field_grid,meson_grid,2,Observables);
-    RnRp208o = sqrt(Observables[1]) - sqrt(Observables[2]);
+    // transpose the meson fields into column vectors
+    dm1.transpose_file("/home/msals97/Desktop/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data/meson_fields/" + "sigma.txt");
+    dm1.transpose_file("/home/msals97/Desktop/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data/meson_fields/" + "omega.txt");
+    dm1.transpose_file("/home/msals97/Desktop/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data/meson_fields/" + "rho.txt");
+    dm1.transpose_file("/home/msals97/Desktop/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data/meson_fields/" + "delta.txt");
+    dm1.transpose_file("/home/msals97/Desktop/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data/meson_fields/" + "coulomb.txt");
 
-    //}
-    //#pragma omp section
-    //{
-    // Proposed change
-    BA = props[0]*DATA[0][3]; kf = props[1]*DATA[1][3]; mstar = props[2]*DATA[2][3]*mNuc; 
-    K = props[3]*DATA[3][3]; J = props[4]*DATA[4][3]; L = props[5]*DATA[5][3]; h = props[6]*DATA[6][3];
-    mSigma = props[7]*DATA[7][3]; fp = props[8]*DATA[8][3];
-    p0 = 2.0/(3.0*pow(pi,2.0))*pow(kf,3.0);
-    get_parameters(BA,p0,J,mstar,K,L,h,mSigma,fp,newparams,flag);     // solve for parameters given bulk properties
-
-    gs2 = newparams[0];
-    gw2 = newparams[1];
-    gp2 = newparams[2];
-    b = newparams[3];
-    c = newparams[4];
-    h = newparams[5];
-    lambda = newparams[6];
-    mSigma = newparams[7];
-    fp = newparams[8];
-    cout << gs2 << "  " << gw2 << "  " << gp2 << "  " << b << "  " << c << "  " << h << "  " << lambda << "  " << mSigma << "  " << fp << endl;
-    
-    A = 48; Z = 20; // Ca48
-    hartee_method(gs2,gw2,gp2,b,c,h,lambda,mSigma,mOmega,mRho,fp,A,Z,25,field_grid,meson_grid,2,Observables);
-    RnRp48p = sqrt(Observables[1]) - sqrt(Observables[2]);
-
-    A = 208; Z = 82; // Pb208
-    hartee_method(gs2,gw2,gp2,b,c,h,lambda,mSigma,mOmega,mRho,fp,A,Z,25,field_grid,meson_grid,2,Observables);
-    RnRp208p = sqrt(Observables[1]) - sqrt(Observables[2]);
-    //}
-    //}   // END PARALLEL
-
-    lkl0 = lkl0*exp(-0.5*pow((0.121 - RnRp48o)/0.026,2.0))*exp(-0.5*pow((0.283 - RnRp208o)/0.071,2.0));
-    lklp = lklp*exp(-0.5*pow((0.121 - RnRp48p)/0.026,2.0))*exp(-0.5*pow((0.283 - RnRp208p)/0.071,2.0));
-
-    res = prior*lklp/lkl0;
-    return res;
+    dm1.cleanup(param_set,num_param_sets);
+    dm1.cleanup_string(narray,nstates_n);
+    dm1.cleanup_string(parray,nstates_p); 
+    return 0;
 }
 
-// DATA matrix specifies the current means of the model and appropriate scaling factors for the bulk properties along with good starting guesses and widths for MCMC
-// output is of the form (BA, kf, mstar, K, J, L, h, mSigma, fp)
-int Optimize(int runs, string covdata, double** DATA, int burnin, string outname) {
-    srand(time(0));
-    int counts[9]; double stds[9]; double arate[9]; double agoal[9]; double paramtest[9];
-    double r, a, BA, kf, J, mstar, K, L, h, p0, mSigma, fp;
-    ofstream out(outname);
-    ofstream lout("lastpoint.txt");
-    double *olds = new double[9];      // (bulks, radius1, radius2, ... , icp1, icp2, ... , TD1, TD2,  ... , Mmax, icpmax)
-    double *cands = new double[9];     // (bulks, radius1, radius2, ... , icp1, icp2, ... , TD1, TD2,  ... , Mmax, icpmax)
+int generate_sample(double params[16], double** start_data) {
+    double BA,p0,J,mstar,K,L,Ksym,zeta,xi,lambda_s,fw,fp;
+    double bulks[16];
 
-    double** cov;
-    dm1.importdata(covdata,cov);    // import covariance matrix
-
-    // acceptance rate goals, starting point for bulk properties and their widths, acceptance counter, averages
-    for (int i=0; i<9; ++i) {
-        agoal[i] = 0.5;
-        counts[i] = 0;
-        olds[i] = DATA[i][0];
-        stds[i] = DATA[i][1];
-    }
-
-    // rescale the bulk properties
-    BA = olds[0]*DATA[0][3]; kf = olds[1]*DATA[1][3]; mstar = olds[2]*DATA[2][3]*mNuc; 
-    K = olds[3]*DATA[3][3]; J = olds[4]*DATA[4][3]; L = olds[5]*DATA[5][3]; h = olds[6]*DATA[6][3];
-    mSigma = olds[7]*DATA[7][3]; fp = olds[8]*DATA[8][3];
-    
-    // make sure theres no issue with initial guess for params
-    p0 = 2.0/(3.0*pow(pi,2.0))*pow(kf,3.0);
-    get_parameters(BA,p0,J,mstar,K,L,h,mSigma,fp,paramtest,true);
-    if (paramtest[6] < 0 || paramtest[5] < 0) {
-        cout << "problem" << endl;
-        dm1.cleanup(cov,9);
-        dm1.cleanup(DATA,9);
-        delete olds;
-        delete cands;
-        return 0;
-    } 
-
-    // Burn in phase
-    for (int i=0; i<burnin; ++i) {
-        cout << i << "  " << endl;
-        // go through each bulk parameter and suggest a random change
-        for (int j=0; j<9; ++j) {
-            // candidate points = old points
-            for (int k=0; k<9; ++k) {
-                cands[k] = olds[k];
-            }
-
-            cands[j] = rand_uniform(olds[j],stds[j]); // generate candidate point centered at old point within +- stdav
-            a = targetNuclei(cands,olds,cov,DATA,true);   // probability of accepance
-            if (a>1.0) {    // probability shouldnt be greater than 1
-                a = 1.0;        
-            }
-
-            r = 1.0*rand()/RAND_MAX;    // generate random number from 0 to 1
-            if (r <= a) {   // accept candidate with probability a 
-                olds[j] = cands[j];
-                counts[j] = counts[j] + 1;      // add 1 to the accpetance count
-            }
-
-            // monitor the rate every 50 points
-            if ((i+1)%10 == 0) {
-                
-                arate[j] = 1.0*counts[j]/10.0;
-                counts[j] = 0;
-                
-                if (arate[j] < agoal[j]) {
-                    stds[j] = 0.9*stds[j];                 // if acceptance rate is too low then decrease the range
-                } else if (arate[j] > agoal[j]) {
-                    stds[j] = 1.1*stds[j];                 // if acceptance rate is too high then increase the range
-                }
-                
-                // save arate, stds, olds every 50 iterations (in case of code breaking or computer freezing can be deleted with better computer)
-                for (int k=0; k<9; ++k) {
-                    lout << "arate: " << arate[k] << "  ";
-                }
-                lout << endl;
-                for (int k=0; k<9; ++k) {
-                    lout << "stds: " << stds[k] << "  ";
-                }
-                lout << endl;
-                for (int k=0; k<9; ++k) {
-                    lout << "olds: " << olds[k] << "  ";
-                }
-                lout << endl;
-            }
-        }
-        // print the rate, width, and bulk values every run
-        cout << "arate: ";
-        for (int k=0; k<9; ++k) {
-            cout << arate[k] << "  ";
-        }
-        cout << endl;
-        cout << "stds: ";
-        for (int k=0; k<9; ++k) {
-            cout << stds[k] << "  ";
-        }
-        cout << endl;
-        cout << "olds: ";
-        for (int k=0; k<9; ++k) {
-            cout << olds[k] << "  ";
-        }
-        cout << endl;
-        
-        // save MCMC runs
-        out << setprecision(10);
-        for (int k=0; k<9; ++k) {                   // print params
-            out << olds[k]*DATA[k][3] << "  ";
-        }
-        out << endl;
-    }
-
-    // print out the bulk properties values and widths at end of burn in
-    cout << "--------------------------------------------------------------------" << endl;
-    out << "---------------------------------------------------------------------" << endl;
-    out << olds[0] << "  " << olds[1] << "  " << olds[2] << "  " << olds[3] << "  " << olds[4] << "  " << olds[5] << "  " << olds[6] << "  " << olds[7] << "  " << olds[8] << endl;
-    out << stds[0] << "  " << stds[1] << "  " << stds[2] << "  " << stds[3] << "  " << stds[4] << "  " << stds[5] << "  " << stds[6] << "  " << stds[7] << "  " << stds[8] << endl;
-    cout << "--------------------------------------------------------------------" << endl;
-    out << "---------------------------------------------------------------------" << endl;
-    
-    // MCMC RUN
-    for (int i=0; i<runs; ++i) {
-        // go through each bulk parameter and suggest a random change
-        for (int j=0; j<7; ++j) {
-            // candidate points = old points
-            for (int k=0; k<9; ++k) {
-                cands[k] = olds[k];
-            }
-
-            cands[j] = rand_uniform(olds[j],stds[j]); // generate candidate point centered at old point within +- stdav
-            a = targetNuclei(cands,olds,cov,DATA,true);         // probability of acceptance
-            if (a>1.0) {    // probability shouldnt be greater than 1
-                a = 1.0;        
-            }
-
-            r = 1.0*rand()/RAND_MAX;    // generate random number from 0 to 1
-            if (r <= a) {   // accept candidate with probability a 
-                olds[j] = cands[j];
-                counts[j] = counts[j] + 1;      // add 1 to the accpetance count
-            }
-        }
-        
-        cout << "olds: ";
-        for (int k=0; k<9; ++k) {
-            cout << olds[k]*DATA[k][3] << "  ";
-        }
-        cout << endl;
-
-        // save MCMC runs
-        out << setprecision(10);
-        for (int k=0; k<9; ++k) {
-            out << olds[k]*DATA[k][3] << "  ";
+    // randomnly sample parameter space
+    for (int i=0; i<16; ++i) {
+        bulks[i] = start_data[i][0];
+        if (start_data[i][1] == 1) {
+            bulks[i] = rand_normal(start_data[i][0], start_data[i][2]);
         }
     }
-    
-    // print out final rate
-    cout << "arate: ";
-    for (int k=0; k<9; ++k) {
-        cout << 1.0*counts[k]/runs << "  ";
+
+    // meson masses
+    double masses[4];
+    for (int i=0; i<4; ++i) {
+        masses[i] = bulks[12+i];
+    }
+    bulkmc.get_parameters(bulks[0],bulks[1],bulks[4],bulks[2]*mNuc_mev,bulks[3],bulks[5],bulks[6],bulks[7],bulks[8],bulks[9],bulks[10],bulks[11],masses,params,false,1,false);
+
+    for (int i=0; i<16; ++i) {
+        cout << params[i] << "  ";
     }
     cout << endl;
     
-    dm1.cleanup(cov,7);
-    delete olds;
-    delete cands;
-    
+    for (int i=0; i<16; ++i) {
+        cout << bulks[i] << "  ";
+    }
+    cout << endl;
     return 0;
+}
+
+double sample_param_space(int num_sets, string startfile) {
+    double fin_couplings[16]; double Observables[7];
+    bool physical_check;
+    int n_params = 8;
+    int exit_code;
+    srand(time(0)); // random seed
+
+    ofstream out("param_sets.txt");
+
+    double** start_data;
+    dm1.importdata(startfile,start_data);
+
+    for (int i=0; i<num_sets; ++i) {
+        // Generate a random set of couplings and make sure gp2 and lambda_v > 0
+        generate_sample(fin_couplings,start_data);
+        while (fin_couplings[8]<0 || fin_couplings[2]<0) {
+            generate_sample(fin_couplings,start_data);
+        }
+
+        exit_code = hartree_method(fin_couplings,16,8,20,gridsize,3,Observables,1.2,false,false);
+        if (exit_code != 0) {
+            dm1.cleanup(start_data,16);
+            exit(0);
+        }
+
+        exit_code = hartree_method(fin_couplings,48,20,20,gridsize,3,Observables,1.2,false,false);
+        if (exit_code != 0) {
+            dm1.cleanup(start_data,16);
+            exit(0);
+        }
+
+        exit_code = hartree_method(fin_couplings,208,82,20,gridsize,3,Observables,1.2,false,false);
+        if (exit_code != 0) {
+            dm1.cleanup(start_data,16);
+            exit(0);
+        }
+
+        for (int j=0; j<16; ++j) {
+            out << fin_couplings[j] << "  ";
+        }
+        out << endl;
+    }
+    dm1.cleanup(start_data,16);
+    return 0;
+}
+
+void get_Observables(string param_set, int A, int Z) {
+    ofstream observ_out(to_string(A)+ "," + to_string(Z) + "Observables.txt");
+    ofstream enout(to_string(A) + "," + to_string(Z) + "energies_n.txt");
+    ofstream epout(to_string(A) + "," + to_string(Z) + "energies_p.txt");
+
+    double** param_set_arr;
+    string** narray; string** parray; string** nref; string** pref;
+    dm1.importdata(param_set,param_set_arr);
+    int n_sets = dm1.rowcount(param_set);
+    double fin_couplings[16];
+    double Observables[7];
+
+    int exit_code;
+    int nstates_n, nstates_p;
+
+    for (int i=0; i<n_sets; ++i) {
+        for (int j=0; j<16; ++j) {
+            fin_couplings[j] = param_set_arr[i][j];
+        }
+        
+        exit_code = hartree_method(fin_couplings,A,Z,20,gridsize,3,Observables,1.2,false,false);
+        nstates_n = dm1.rowcount("neutron_spectrum.txt");
+        nstates_p = dm1.rowcount("proton_spectrum.txt");
+        dm1.importdata_string("neutron_spectrum.txt",narray);
+        dm1.importdata_string("proton_spectrum.txt",parray);
+        dm1.importdata_string("nspectrum_ref.txt",nref);
+        dm1.importdata_string("pspectrum_ref.txt",pref);
+
+        for (int k=0; k<nstates_n; ++k) {
+            for (int l=0; l<nstates_n; ++l) {
+                if (narray[l][6] == nref[k][0]) {
+                    enout << scientific << setprecision(10) << narray[l][0] << "  ";
+                    break;
+                }
+            }
+        }
+        enout << endl;
+
+        for (int k=0; k<nstates_p; ++k) {
+            for (int l=0; l<nstates_p; ++l) {
+                if (parray[l][6] == pref[k][0]) {
+                    epout << scientific << setprecision(10) << parray[l][0] << "  ";
+                    break;
+                }
+            }
+        }
+        epout << endl;
+        if(exit_code != 0) {
+            dm1.cleanup(param_set_arr,n_sets);
+            dm1.cleanup_string(narray,nstates_n);
+            dm1.cleanup_string(parray,nstates_p);  
+            exit(0);
+        }
+        observ_out << Observables[0] << "  " << Observables[3] << "  " << Observables[5] << endl;
+        dm1.cleanup_string(narray,nstates_n);
+        dm1.cleanup_string(parray,nstates_p);  
+    }
+
+    dm1.cleanup(param_set_arr,n_sets);
 }

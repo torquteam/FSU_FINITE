@@ -28,6 +28,8 @@ const double mS = 95.0;         // Mass of strange quark (MeV)
 const double mP = 938.27231;    // Mass of proton (MeV)
 const double mMU = 105.6583745; // Mass of muon (MeV)
 
+#define SIGN(a,b) ((b) >= 0.0 ? fabs(a) : -fabs(a))
+
 // Data Manipulation class
 //*********************************************************************************
 //*********************************************************************************
@@ -161,6 +163,48 @@ void data2 :: importdata(string txtfile, double ** &array) {
     }
 };
 
+// import data into an array
+void data2 :: importdata_string(string txtfile, string ** &array) {
+    int numrows = rowcount(txtfile);            // Get the number of rows
+    int numcols = colcount(txtfile);            // Get the number of cols
+    string type = filetype(txtfile);            // Get the file type
+    ifstream in(txtfile);
+    
+    // Initialize array size
+    array = new string*[numrows];
+    for (int i = 0; i<numrows; i++) {
+        array[i] = new string[numcols];
+    }
+    
+    if (type == "TXT") {                        // Import data for txt
+        for (int j=0; j<numrows; ++j) {
+            for (int i=0; i<numcols; ++i) {
+                in >> array[j][i];
+            }
+        }
+        in.close();
+    }
+    if (type == "CSV") {                        // Import data for csv
+        ifstream file;
+        string line;
+        int i=0;
+        int j=0;
+        file.open(txtfile);
+        while(getline(file,line)) {
+            stringstream linestream(line);
+            string value;
+            while(getline(linestream,value,',')) {
+                //cout << i << "  " << j << endl;
+                array[i][j] = stod(value);
+                j=j+1;
+            }
+            i=i+1;
+            j=0;
+        }
+        in.close();
+    }
+};
+
 //----------------------------------------------------------------------------------------
 
 // Print out an array
@@ -182,6 +226,14 @@ void data2 :: print(double** &array, int numrows, int numcols, bool file, string
         }
     }
 };
+
+// Print out an array
+void data2 :: convert_array(double** &array, int numrows, int numcols, int col_to_convert, double conv_factor) {
+    for (int i=0; i<numrows; ++i) {
+        array[i][col_to_convert] = conv_factor*array[i][col_to_convert];
+    }
+};
+//------
 //----------------------------------------------------------------------------------------
 
 // Interpolate a value in an array
@@ -296,6 +348,120 @@ double data2 :: interpolate(int numrows, int numcols, double** array, double poi
     return sol;
 }
 
+
+// Interpolate multiple values in an array
+int data2 :: interpolate_multi(int numrows, int numcols, double** array, double point, int pointcol, double* &sol_array, bool sortflag) {
+    int n_ycols = numcols-1;
+
+    if (numrows <= 1) {                                                           // check to see if interpolation is possible
+        cout << "Interpolation error: not enough points to interpolate" << endl;
+        exit(0);
+    }
+
+    // Sort data if unsorted
+    if (sortflag == false) {
+        sortasc(array, pointcol, numrows, numcols);
+    }
+
+    double eps = 1e-10*abs(array[numrows-1][pointcol]-array[numrows-2][pointcol]);
+    if (point > array[numrows-1][pointcol]) {       // check to see if point is in bounds
+        if ( abs(point-array[numrows-1][pointcol]) < eps) {
+            return array[numrows-1][pointcol];
+        } else {
+            cout << "Multi Interpolation error: point is not in bounds (greater): " << array[0][pointcol] << ", " << point << ", " << array[numrows-1][pointcol] << endl;
+            exit(0);
+        }
+    }
+
+    eps = 1e-10*abs(array[0][pointcol]-array[1][pointcol]);
+    if (point < array[0][pointcol]) {       // check to see if point is in bounds
+        if ( abs(point-array[0][pointcol]) < eps) {
+            return array[0][pointcol];
+        } else {
+            cout << "Interpolation error: point is not in bounds (smaller): " << array[0][pointcol] << ", " << point << ", " << array[numrows-1][pointcol] << endl;
+            exit(0);
+        }
+    }
+
+    // Set up bisection for the upper and lower limits of the point
+    int mid = floor(numrows/2);
+    double* slope; double* yint;
+    sol_array = new double[n_ycols];
+    slope = new double[n_ycols];
+    yint = new double[n_ycols];
+    int midpoint = 0;
+    int upperbound = -1;
+    int lowerbound = -1;
+    int n;
+    
+    // base case for an array of 2 or 3 rows
+    if (mid == 1) {
+        for (int i=1; i<numcols; ++i) {
+            slope[i-1] = (array[numrows-1][i] - array[0][i])/(array[numrows-1][pointcol] - array[0][pointcol]);
+            yint[i-1] = array[numrows-1][i] - slope[i-1]*array[numrows-1][pointcol];
+            sol_array[i-1] = slope[i-1]*point + yint[i-1];
+        }
+    }
+    
+    // Bisection to find a bounds
+    n = mid;
+    while(mid != 0) {
+        midpoint = n - 1;   // rownumber to row location in array
+        mid = floor(mid/2);
+        //cout << mid << " " << array[midpoint][pointcol] << endl; //(For Debug only)
+        if (point >= array[midpoint][pointcol]) {
+            n = n + mid;
+        } else {
+            n = n - mid;
+        }
+    }
+    
+    // identify the bound as upper or lower
+    if (array[midpoint][pointcol] >= point || midpoint == (numrows - 1)) {
+        upperbound = midpoint;
+        lowerbound = midpoint -1;
+        while (array[lowerbound][pointcol] > point) {
+            if (lowerbound - 1 == 0) {
+                lowerbound = 0;
+                upperbound = 1;
+                break;
+            } else {
+                lowerbound = lowerbound - 1;
+                upperbound = upperbound - 1;
+            }
+        }
+    } else if (array[midpoint][pointcol] < point || midpoint == 0) {
+        lowerbound = midpoint;
+        upperbound = midpoint + 1;
+        while (array[upperbound][pointcol] < point) {
+            if (upperbound + 1 == numrows - 1) {
+                lowerbound = numrows - 2;
+                upperbound = numrows - 1;
+                break;
+            } else {
+                lowerbound = lowerbound + 1;
+                upperbound = upperbound + 1;
+            }
+        }
+    }
+    
+    if (upperbound == -1 || lowerbound == -1 || lowerbound > upperbound) {
+        cout << "Interpolation error unknown" << endl;
+        exit(0);
+    }
+    
+    for (int i=1; i<numcols; ++i) {
+        // Interpolate
+        slope[i-1] = (array[upperbound][i] - array[lowerbound][i])/(array[upperbound][pointcol] - array[lowerbound][pointcol]);
+        yint[i-1] = array[upperbound][i] - slope[i-1]*array[upperbound][pointcol];
+        sol_array[i-1] = slope[i-1]*point + yint[i-1];
+    }
+    delete slope;
+    delete yint;
+    return 0;
+}
+
+
 void data2 :: cubicspline(double**arr, double**&spline, int nrows, int xcol, int ycol) {
     int n = nrows-2;
     double a[n-1];
@@ -356,6 +522,26 @@ double data2 :: splinecalc(double** spline, int x1, int x2, double x) {
     return y;
 }
 
+double data2 :: transpose_file(string file) {
+    double** temp_array;
+    double** temp_array_t;
+    int nrows = rowcount(file);
+    int ncols = colcount(file);
+    importdata(file,temp_array);
+    create(temp_array_t,ncols,nrows);
+
+    
+    for(int i=0; i<nrows; ++i) {
+        for (int j=0; j<ncols; ++j) {
+            temp_array_t[j][i] = temp_array[i][j];
+        }
+    }
+    cleanup(temp_array,nrows);
+    print(temp_array_t,ncols,nrows,true,file);
+    cleanup(temp_array_t,ncols);
+    return 0;
+}
+
 //----------------------------------------------------------------------------------------
 
 // Bubble sort ascending order
@@ -406,6 +592,14 @@ bool data2 :: sortasc(double ** array, int col, int numrows, int numcols) {
 
 // cleanup pointer array
 void data2 :: cleanup(double** &array, int nrows) {
+    for (int i = 0; i<nrows; i++) {
+        delete[] array[i];
+    }
+    delete[] array;
+}
+
+// cleanup pointer array
+void data2 :: cleanup_string(string** &array, int nrows) {
     for (int i = 0; i<nrows; i++) {
         delete[] array[i];
     }
@@ -544,6 +738,14 @@ void data2 :: copy_pointer(double** pointer, double** &array, int nrows, int nco
     }
 }
 
+void data2 :: ping_discord(string message) {
+    string webhookUrl = "https://discord.com/api/webhooks/1200825775503454268/oT_UkDDBCTwGyUWfHARPk2IY_Rv3CaiZKeGNtub3xhy2-WyQpLcS1a_qe7KIm1kRdLyO";
+    string payload = "{\"content\": \"" + message + "\"}";
+    string curlCommand = "curl -X POST -H \"Content-Type: application/json\" -d '" + payload + "' " + webhookUrl;
+    system(curlCommand.c_str());
+    return;
+}
+
 
 //*********************************************************************************
 //*********************************************************************************
@@ -612,4 +814,347 @@ double nummeth :: findintersect(double **arr1, int nrows1, int ncols1, int xcol1
     }
     cout << "No intersection point found " << endl;
     exit(0);
+}
+
+double nummeth :: zbrent(double (*func)(double, double[10], double), double x1, double x2, double tol, double kf, double couplings[10]) {
+    int iter;
+    int ITMAX = 100;
+    double EPS = 3.0e-8;
+    double a=x1, b=x2, c=x2, d,min1,min2;
+    double e = 0.0;
+    double fa = (*func)(kf,couplings,a), fb = (*func)(kf,couplings,b), fc,p,q,r,s,tol1,xm;
+
+    if ( (fa > 0.0 && fb > 0.0) || (fa < 0.0 && fb < 0.0)) {
+        cout << "Root must be bracketed in zbrent" << endl;
+        exit(0);
+    }
+    fc = fb;
+    for (iter=1; iter<=ITMAX; iter++) {
+        if ( (fb > 0.0 && fc > 0.0) || (fb < 0.0 && fc < 0.0)) {
+            c=a;
+            fc=fa;
+            e=d=b-a;
+        }
+        if (fabs(fc) < fabs(fb)) {
+            a=b;
+            b=c;
+            c=a;
+            fa=fb;
+            fb=fc;
+            fc=fa;
+        }
+        tol1 = 2.0*EPS*fabs(b) + 0.5*tol;
+        xm = 0.5*(c-b);
+        if (fabs(xm) <= tol1 || fb == 0.0) return b;
+        if (fabs(e) >= tol1 && fabs(fa) > fabs(fb)) {
+            s = fb/fa;
+            if (a == c) {
+                p = 2.0*xm*s;
+                q = 1.0-s;
+            } else {
+                q = fa/fc;
+                r = fb/fc;
+                p = s*(2.0*xm*q*(q-r)-(b-a)*(r-1.0));
+                q = (q-1.0)*(r-1.0)*(s-1.0);
+            }
+            if (p > 0.0) q = -q;
+            p = fabs(p);
+            min1 = 3.0*xm*q - fabs(tol1*q);
+            min2 = fabs(e*q);
+            if (2.0*p < (min1<min2 ? min1:min2)) {
+                e=d;
+                d=p/q;
+            } else {
+                d=xm;
+                e=d;
+            }
+        } else {
+            d=xm;
+            e=d;
+        }
+        a=b;
+        fa=fb;
+        if (fabs(d) > tol1) {
+            b +=d;
+        } else {
+            b += SIGN(tol1,xm);
+        }
+        fb=(*func)(kf,couplings,b);
+    }
+    cout << "Maximum number of iterations exceeded in zbrent" << endl;
+    return 0.0;
+}
+
+void nummeth :: pretovconv(double** &eos, int encol, int prcol, double enconv, double prconv, int nrows) {
+    for (int i=0; i<nrows; ++i) {
+        eos[i][encol] = eos[i][encol]*enconv;
+        eos[i][prcol] = eos[i][prcol]*prconv;
+    }
+}
+
+// dm/dr TOV equation (unitless)
+double nummeth :: dmdr(double r, double p, double m, double en) {
+    double eq;
+    eq = r*r*en; // Dimensionless
+    return eq;
+}
+
+// dp/dr TOV equation (unitless)
+double nummeth :: dpdr(double r, double p, double m, double en) {
+    double eq;
+    eq = -0.5*(en+p)*(m+pow(r,3)*p)/(r*(r-m)); //Dimensionless
+    return eq;
+}
+
+double nummeth :: dvdr(double r, double m, double p) {
+    double eq;
+    eq = (m+pow(r,3)*p)/(r*(r-m));
+    return eq;
+}
+
+double nummeth :: dYdr(double r, double Y, double en, double p, double v, double m, double wbar) {
+    double eq, jp, j;
+
+    jp = -(en+p)*exp(-v)*r;
+    j = exp(-v)*(1.0-m/r);
+    eq = -2.0*jp*wbar/(r*j) -(0.5*jp/j + 4.0/r)*Y;
+    return eq;
+}
+
+double nummeth :: dwdr(double r, double Y) {
+    double eq;
+    eq = Y;
+    return eq;
+}
+
+double nummeth :: Rdnldr(double r, double m, double dpde, double en, double p, int l, double nl) {
+    double eq, Fr, Qr;
+    Fr = (r + 0.5*pow(r,3)*(p-en) )/(r-m);
+    Qr = r/(r-m) * ( 0.5*(5.0*en + 9.0*p + (en+p)/dpde) - l*(l+1)/pow(r,2) ) - pow( (m+pow(r,3)*p)/(pow(r,2)-m*r) , 2);
+    eq = -pow(nl,2)/r - Fr*nl/r - r*Qr;
+    return eq;
+}
+
+// Single star icp tov solve
+void nummeth :: tovsolve(double icp, double h, double** eos, int nrows, int ncols, int encol, int prcol, int dpdecol, double MR[2], bool print) {
+    
+    if (prcol >= ncols || prcol < 0 || encol >= ncols || encol < 0) {   // throw error for out of bounds columns
+        cout << "TOV error: column is out of bounds" << endl;
+        exit(0);
+    }
+
+    double r = 1e-20;       // set initial radius close to zero
+    double p = icp;         // set central pressure
+    double m = 0;           // inital mass to zero
+    double en,dpde;
+    double k1,k2,k3,k4;
+    double l1,l2,l3,l4;
+    double pmin = eos[0][prcol];
+
+    if (print == true) {
+        ofstream out("SingleICP.txt");
+        while (p>pmin) {
+            en = dm.interpolate(nrows, ncols, eos, p, prcol, encol, true);  // Interpolate the nuclear/quark eos
+            dpde = dm.interpolate(nrows, ncols, eos, p, prcol, dpdecol, true);
+            out << scientific << setprecision(15) << en << "  " << p << "  " << dpde << "  " << r << "  " << m << endl;
+            // Integration routine (Possible to optimize stepsize)
+            k1 = dmdr(r,p,m,en);
+            l1 = dpdr(r,p,m,en);
+            k2 = dmdr(r+h/2.0,p+l1*h/2.0,m+k1*h/2.0,en);
+            l2 = dpdr(r+h/2.0,p+l1*h/2.0,m+k1*h/2.0,en);
+            k3 = dmdr(r+h/2.0,p+l2*h/2.0,m+k2*h/2.0,en);
+            l3 = dpdr(r+h/2.0,p+l2*h/2.0,m+k2*h/2.0,en);
+            k4 = dmdr(r+h,p+l3*h,m+k3*h,en);
+            l4 = dpdr(r+h,p+l3*h,m+k3*h,en);
+            m = m + 1.0/6.0*h*(k1 + 2.0*k2 + 2.0*k3 + k4);
+            p = p + 1.0/6.0*h*(l1 + 2.0*l2 + 2.0*l3 + l4);
+            r = r + h;
+        }
+    } else {
+        while (p>pmin) {
+            en = dm.interpolate(nrows, ncols, eos, p, prcol, encol, true);  // Interpolate the nuclear/quark eos
+            dpde = dm.interpolate(nrows, ncols, eos, p, prcol, dpdecol, true);
+            // Integration routine (Possible to optimize stepsize)
+            
+            k1 = dmdr(r,p,m,en);
+            l1 = dpdr(r,p,m,en);
+            k2 = dmdr(r+h/2.0,p+l1*h/2.0,m+k1*h/2.0,en);
+            l2 = dpdr(r+h/2.0,p+l1*h/2.0,m+k1*h/2.0,en);
+            k3 = dmdr(r+h/2.0,p+l2*h/2.0,m+k2*h/2.0,en);
+            l3 = dpdr(r+h/2.0,p+l2*h/2.0,m+k2*h/2.0,en);
+            k4 = dmdr(r+h,p+l3*h,m+k3*h,en);
+            l4 = dpdr(r+h,p+l3*h,m+k3*h,en);
+
+            m = m + 1.0/6.0*h*(k1 + 2.0*k2 + 2.0*k3 + k4);
+            p = p + 1.0/6.0*h*(l1 + 2.0*l2 + 2.0*l3 + l4);
+            r = r + h;
+        }
+    }
+    
+    MR[0] = m;   // save the final star mass
+    MR[1] = r;   // save final star radius
+    //cout << "icp: " << icp << "  M: " << m << "  R: " << conv.rnonetokm(r) << endl;
+}
+
+// Multiple central pressure star configurations
+void nummeth :: multitov(double h, double** eos, int nrows, int ncols, int encol, int prcol, int dpdecol, int npoints, string filesave, double pr0) {
+    double en, icp;
+    int space;
+    
+    if (prcol >= ncols || prcol < 0 || encol >= ncols || encol < 0) { // throw error for out of bounds columns
+        cout << "TOV error: column is out of bounds" << endl;
+        exit(0);
+    }
+
+    if (npoints > nrows) {
+        cout << " too many points: calculating each pr point" << endl;
+        npoints = nrows;
+    }
+    
+    double MR[2];                                            // initalize the mass radius array
+    ofstream out(filesave + "_RM.txt");                         // File name save
+    int index = dm.findvalue(eos,nrows,ncols,pr0,prcol,1.0);
+
+    space = ceil(1.0*(nrows-(index+1.0))/npoints);
+    double dens;
+    while (index < nrows) {
+        icp = eos[index][prcol];
+        tovsolve(icp, h, eos, nrows, ncols, encol, prcol, dpdecol, MR, false);                 // solve tov equations
+        en = dm.interpolate(nrows, ncols, eos, icp, prcol, encol, true);
+        dens = dm.interpolate(nrows,ncols,eos,icp,prcol,0,true);
+        out << dens << "  " << en*conv.energyCONV(1,0) << "  " << icp*conv.energyCONV(1,0) << "  " << conv.rnonetokm(MR[1]) << " " << MR[0] << endl;
+        //cout << to_string(index) + "/" + to_string(nrows) << "  " << "mue: " << dm.interpolate(nrows, ncols, eos, icp, prcol, 0, true) << " icp: " << icp*conv.energyCONV(1,0) << " ice: " << en*conv.energyCONV(1,0) << " RM: " << conv.rnonetokm(MR[0][1]) << " " << MR[0][0] << endl;
+        index = index + space;  //spacing of each mass radius point in pressure space
+        //cout << "LOVE: " << Nlove("SingleICP.txt", 3, 2, 0, MR[0][1], 1e-3) << endl;
+    }
+}
+
+// relativistic love number, inertia, and quadrupole moment
+void nummeth :: RloveMCMC(double** EOS, int dpdecol, int encol, int prcol, double h, double ILQR[4], double icp, int nrows, int ncols) {
+    double r0 = 1e-5;   // Set the integration starting point (close to zero)
+    double en, cs2, r, v, wbar,Y,vaR;
+    double I = 0;
+    int l = 2;          // Set the order to 2
+    double nl = l*1.0;      // boundary condition for clairaut-radau equation       
+    double M, R;
+    double r1,r2,r3,r4;
+    double p1,p2,p3,p4;
+    double m1,m2,m3,m4;
+    double b1,b2,b3,b4;
+    double a1,a2,a3,a4;
+    double l1,l2,l3,l4;
+    double pmin = EOS[0][prcol];
+    double p = icp;         // set central pressure
+    double m = 0;           // inital mass to zero
+    
+    r = r0;             //integrate from center
+    v = 0;
+    while (p>pmin) {
+        en = dm.interpolate(nrows, ncols, EOS, p, prcol, encol, true);  // Interpolate the nuclear/quark eos
+        a1 = dmdr(r,p,m,en);
+        l1 = dpdr(r,p,m,en);
+        m1 = dvdr(r,m,p);
+        a2 = dmdr(r+h/2.0,p+l1*h/2.0,m+a1*h/2.0,en);
+        l2 = dpdr(r+h/2.0,p+l1*h/2.0,m+a1*h/2.0,en);
+        m2 = dvdr(r+h/2.0,m+a1*h/2.0,p+l1*h/2.0);
+        a3 = dmdr(r+h/2.0,p+l2*h/2.0,m+a2*h/2.0,en);
+        l3 = dpdr(r+h/2.0,p+l2*h/2.0,m+a2*h/2.0,en);
+        m3 = dvdr(r+h/2.0,m+a2*h/2.0,p+l2*h/2.0);
+        a4 = dmdr(r+h,p+l3*h,m+a3*h,en);
+        l4 = dpdr(r+h,p+l3*h,m+a3*h,en);
+        m4 = dvdr(r+h,m+a3*h,p+l3*h);
+        m = m + 1.0/6.0*h*(a1 + 2.0*a2 + 2.0*a3 + a4);
+        p = p + 1.0/6.0*h*(l1 + 2.0*l2 + 2.0*l3 + l4);
+        v = v + 1.0/6.0*h*(m1 + 2.0*m2 + 2.0*m3 + m4);
+        r = r+h;
+    }
+    M = m;
+    R = r;
+    vaR = v;
+
+    r = r0;
+    v = log(1.0-M/R) - vaR;
+    wbar = r0;
+    Y = r0;
+    p = icp;
+    m = 0;
+    ofstream out("SingleLove.txt");
+    while (p>pmin) {
+        en = dm.interpolate(nrows, ncols, EOS, p, prcol, encol, true);  // Interpolate the nuclear/quark eos
+        cs2  = dm.interpolate(nrows, ncols, EOS, p, prcol, dpdecol, true);   //speed of sound
+        
+        a1 = dmdr(r,p,m,en);
+        b1 = dpdr(r,p,m,en);
+        r1 = Rdnldr(r,m,cs2,en,p,l,nl);
+        l1 = dwdr(r,Y);
+        p1 = dYdr(r,Y,en,p,v,m,wbar);
+        m1 = dvdr(r,m,p);
+
+        a2 = dmdr(r+h/2.0, p+b1*h/2.0, m+a1*h/2.0, en);
+        b2 = dpdr(r+h/2.0, p+b1*h/2.0, m+a1*h/2.0, en);
+        r2 = Rdnldr(r+h/2.0, m+a1*h/2.0, cs2, en, p+b1*h/2.0, l, nl+r1*h/2.0);
+        l2 = dwdr(r+h/2.0, Y+p1*h/2.0);
+        p2 = dYdr(r+h/2.0, Y+p1*h/2.0,en, p+b1*h/2.0, v+m1*h/2.0, m+a1*h/2.0, wbar+l1*h/2.0);
+        m2 = dvdr(r+h/2.0, m+a1*h/2.0, p+b1*h/2.0);
+
+        a3 = dmdr(r+h/2.0, p+b2*h/2.0, m+a2*h/2.0,en);
+        b3 = dpdr(r+h/2.0, p+b2*h/2.0, m+a2*h/2.0,en);
+        r3 = Rdnldr(r+h/2.0, m+a2*h/2.0, cs2, en, p+b2*h/2.0, l, nl+r2*h/2.0);
+        l3 = dwdr(r+h/2.0, Y+p2*h/2.0);
+        p3 = dYdr(r+h/2.0, Y+p2*h/2.0,en, p+b2*h/2.0, v+m2*h/2.0, m+a2*h/2.0, wbar+l2*h/2.0);
+        m3 = dvdr(r+h/2.0, m+a2*h/2.0, p+b2*h/2.0);
+
+        a4 = dmdr(r+h, p+b3*h, m+a3*h,en);
+        b4 = dpdr(r+h, p+b3*h, m+a3*h,en);
+        r4 = Rdnldr(r+h, m+a3*h, cs2,en, p+b3*h, l, nl+r3*h);
+        l4 = dwdr(r+h, Y+p3*h);
+        p4 = dYdr(r+h, Y+p3*h,en, p+b3*h, v+m3*h, m+a3*h, wbar+l3*h);
+        m4 = dvdr(r+h, m+a3*h, p+b3*h);
+
+        double C = M/(2.0*R);   // compactness
+        double d1 = 2.0*C*(6.0-3.0*nl+15.0*C*nl-24.0*C);
+        double d2 = 4.0*pow(C,3)*(13.0-11.0*nl+3.0*C*nl-2.0*C+2.0*pow(C,2)*(nl+1.0));
+        double d3 = 3.0*pow(1.0-2.0*C,2)*(2.0-nl+2.0*C*nl-2.0*C)*log(1.0-2.0*C);
+        double k2 = 8.0*pow(C,5)/5.0*pow(1.0-2.0*C,2)*(2.0-2.0*C+2.0*nl*C-nl)/(d1+d2+d3);
+        
+        out << r*2.95324203 << "  " << m << "  " << cs2 << "  " << nl << "  " << k2 << "  " << 2.0/3.0*k2*pow(C,-5) << endl;
+
+        m = m + 1.0/6.0*h*(a1 + 2.0*a2 + 2.0*a3 + a4); 
+        p = p + 1.0/6.0*h*(b1 + 2.0*b2 + 2.0*b3 + b4); 
+        nl = nl + 1.0/6.0*h*(r1 + 2.0*r2 + 2.0*r3 + r4); // clairaut-radau equation
+        wbar = wbar + 1.0/6.0*h*(l1 + 2.0*l2 + 2.0*l3 + l4); 
+        Y = Y + 1.0/6.0*h*(p1 + 2.0*p2 + 2.0*p3 + p4);
+        v = v + 1.0/6.0*h*(m1 + 2.0*m2 + 2.0*m3 + m4);
+        if (cs2 < 0) {
+            cout << "bad: " << cs2 << endl;
+        }
+        r = r+h;
+    }
+    I = Y*pow(r,4)/(3.0*wbar + Y*r);
+
+    double C = M/(2.0*R);   // compactness
+    double d1 = 2.0*C*(6.0-3.0*nl+15.0*C*nl-24.0*C);
+    double d2 = 4.0*pow(C,3)*(13.0-11.0*nl+3.0*C*nl-2.0*C+2.0*pow(C,2)*(nl+1.0));
+    double d3 = 3.0*pow(1.0-2.0*C,2)*(2.0-nl+2.0*C*nl-2.0*C)*log(1.0-2.0*C);
+    double k2 = 8.0*pow(C,5)/5.0*pow(1.0-2.0*C,2)*(2.0-2.0*C+2.0*nl*C-nl)/(d1+d2+d3);
+    ILQR[0] = 4.0*I/pow(m,3);         // DIMENSIONLESS I
+    ILQR[1] = 2.0/3.0*k2*pow(C,-5);       // Tidal Deformability
+    ILQR[2] = 0;
+    ILQR[3] = R;
+    //cout << "nl: " << nl << endl;
+    cout << "mass: " << M << endl;
+    //cout << "Compactness: " << C << endl;
+    cout << "k2: " << k2 << "  I: " << I << endl;
+    cout << "TDeform: " << 2.0/3.0*k2*pow(C,-5) << endl;
+    cout << "Radius: " << R*2.95324203 << endl;
+}
+
+double nummeth :: Urca_threshold(double** eos, int ncols, int nrows, int Yp_col, int Yp_Urca_col, int dens_col) {
+    for (int i=0; i<nrows; ++i) {
+        if (eos[i][Yp_col] > eos[i][Yp_Urca_col]) {
+            return eos[i][dens_col];
+        }
+    }
+    cout << "Error: No Urca process allowed" << endl;
+    return 0;
 }
