@@ -1,5 +1,6 @@
 #include "NumMethods.hpp"
 #include "infinitematter.hpp"
+#include "minpack.hpp"
 
 #include <cmath>
 #include <iostream>
@@ -18,8 +19,8 @@ equationofstate eos;
 
 // Constants
 const double pi = 4.0*atan(1.0);
-const double mP = 939; //938.27231;    // Mass of proton (MeV)
-const double mN = 939; //939.56542052;
+const double mP = 939.0; //938.27231;    // Mass of proton (MeV)
+const double mN = 939.0; //939.56542052;
 const double mNuc = (mP+mN)/2.0;
 const double mE = 0.511;
 const double mMU = 105.7;
@@ -34,15 +35,17 @@ double tools :: scalardens(double k, double mstar) {
 }
 
 double tools :: endensity_integral(double k, double mstar) {
-    double en = sqrt(pow(k,2.0)+pow(mstar,2.0));
-    double integral = k*pow(en,3)/4.0 - pow(mstar,2)*k*en/8.0 - pow(mstar,4)/8.0*log(k+en) + pow(mstar,4)/8.0*log(abs(mstar));
-    return integral/pow(pi,2.0);
+    double x = k/mstar;
+    double y = sqrt(1.0 + pow(x,2.0));
+    double integral = pow(mstar,4.0)/(8.0*pow(pi,2.0))*(pow(x,3.0)*y + pow(y,3.0)*x  - log(x+y));
+    return integral;
 }
 
 double tools :: pr_integral(double k, double mstar) {
-    double en = sqrt(pow(k,2.0)+pow(mstar,2.0));
-    double integral = pow(k,3)*en - 3.0/4.0*k*pow(en,3) + 3.0/8.0*pow(mstar,2)*k*en + 3.0/8.0*pow(mstar,4)*log(k+en) - 3.0/8.0*pow(mstar,4)*log(abs(mstar));
-    return integral/(3.0*pow(pi,2));
+    double x = k/mstar;
+    double y = sqrt(1.0 + pow(x,2.0));
+    double integral = pow(mstar,4.0)/(8.0*pow(pi,2.0))*(2.0/3.0*pow(x,3.0)*y - x*y + log(x+y));
+    return integral;
 }
 
 // integral of k^4/rp^3 dk (comes from derivative of the scalar dens)
@@ -124,6 +127,23 @@ double gpp_FE(double kf, double gww, double gpp, double couplings[10], double t)
 
     res = gpomp2*(0.5*vdensp - 0.5*vdensn - 2.0*lambda_v*gpp*pow(gww,2.0) - 1.0/6.0*xi*pow(gpp,3.0)) - gpp;
     return res;
+}
+
+// p = {kf,t,gwomw2,gpomp2,zeta,xi,lambda_v}
+void vectorfields_func(int n, double x[], double fvec[], int &iflag, double p[]) {
+    double kf = p[0];
+    double t = p[1];
+    double gwomw2 = p[2];
+    double gpomp2 = p[3];
+    double zeta = p[4];
+    double xi = p[5];
+    double lambda_v = p[6];
+    double couplings[10] = {0,gwomw2,gpomp2,0,0,0,zeta,xi,lambda_v,0};
+
+
+    fvec[0] = gww_FE(kf,x[0],x[1],couplings,t);
+    fvec[1] = gpp_FE(kf,x[0],x[1],couplings,t);
+    return;
 }
 
 double vectorfield_2D_NR(double kf, double couplings[10], double t, double eps, double fields[2]) {
@@ -502,7 +522,7 @@ double tools :: get_gdomd2(double kf, double J, double L, double Ksym, double gs
     
     error = 1e-6;           // set min error
     y = error*2;            // initialize bisection
-    min = 1.0e-8; max = 0.01; // set bounds on solution
+    min = 1.0e-15; max = 0.01; // set bounds on solution
     MAXIT = 100;   // maximum number of iterations for newtons method
     ib = 0; // count for bisection
     x = min;   // solution starts at midpoint
@@ -623,19 +643,22 @@ void tools :: convert_to_inf_couplings(double fin_couplings[16], double inf_coup
     inf_couplings[9] = fin_couplings[9];
 }
 
-double chneutral(double kf, double couplings[10], double t) {
+double chneutral(double kf, double couplings[10], double t, double fields_v[2]) {
     double kp, kn, gss, gpp, gdd, munmmup, y, np,ne,nmu, mstarn,mstarp;
     
     kp = kf*pow(1.0-t,1.0/3.0); kn = kf*pow(1.0+t,1.0/3.0); // get nucleon fermi momenta
     np = pow(kp,3.0)/(3.0*pow(pi,2));   // proton density
 
-    double fields[2];
-    tool.scalarfield_2D_NR(kf,couplings,t,1e-10,fields);
-    gdd = fields[1];
-    gss = fields[0];
+    double fields_s[2];
+    tool.scalarfield_2D_NR(kf,couplings,t,1e-10,fields_s);
+    gdd = fields_s[1];
+    gss = fields_s[0];
     mstarp = mNuc-gss-0.5*gdd;   mstarn = mNuc-gss+0.5*gdd; // effective mass
-    vectorfield_2D_NR(kf,couplings,t,1e-7,fields);
-    gpp = fields[1];
+    double fvec[2]; int lwa = (2*(3*2+13))/2; int iflag = 1;  double wa[lwa];
+    double params[7] = {kf,t,couplings[1],couplings[2],couplings[6],couplings[7],couplings[8]};
+    hybrd1(vectorfields_func,2,fields_v,fvec,1e-6,wa,lwa,params);
+    //vectorfield_2D_NR(kf,couplings,t,1e-7,fields);
+    gpp = fields_v[1];
     munmmup = sqrt(pow(kn,2) + pow(mstarn,2)) - sqrt(pow(kp,2) + pow(mstarp,2)) - gpp;    // mun - mup = mue
     ne = eos.qknb(munmmup,mE,2.0);
     nmu = eos.qknb(munmmup,mMU,2.0);
@@ -644,45 +667,27 @@ double chneutral(double kf, double couplings[10], double t) {
 }
 
 // perform newtons method and bisection to get t for a given fermi momentum kf
-double tools :: get_t_betaeq(double kf, double couplings[10], double t_max) {
+double tools :: get_t_betaeq(double kf, double couplings[10], double t_avg, double fields_v[2]) {
     double y,min, max;
-    double x = 1e-8; double sgn = 1.0; bool flag_zero = false;
-    int n_array = 1000;
-
-    for (int i=0; i<n_array; ++i) {
-        y = chneutral(kf,couplings,x);
-        //cout << x << "  " << y;
-        min = x;
-        x = x + t_max/(n_array-1);
-        max = x;
-        sgn = y;
-        y = chneutral(kf,couplings,x);
-        //cout << "  " << x << "  " << y << endl;
-        sgn = sgn*y;
-
-        if (sgn < 0) {
-            flag_zero = true;
-            break;
-        }
+    double x = 1.0;
+    min = t_avg - 0.040;
+    max = t_avg + 0.040;
+    if (max>1.0) {
+        max = 0.99999;
+    }
+    if (min<0.0) {
+        min = 1e-8;
     }
 
-    if (flag_zero == false) {
-        cout << " no zero exists t at kf: " << kf << endl;
-        x = 1e-8;
-        n_array = n_array*1;
-        for (int i=0; i<n_array; ++i) {
-            y = chneutral(kf,couplings,x);
-            cout << x << "  " << y << endl;
-            x = x + t_max/(n_array-1);
-        }
-        for (int i=0; i<10; ++i) {
-            cout << couplings[i] << "  ";
-        }
-        cout << endl;
-        exit(0);
+    x = min;
+    //cout << "kf: " << kf << "  t: " << t_avg << "  min: " << min << "  max: " << max << endl;
+    double fi[2] = {fields_v[0],fields_v[1]};
+    for (int i=0; i<100; ++i) {
+        y = chneutral(kf,couplings,x,fi);
+        //cout << x << "  " << y << endl;
+        x = x + (max-min)/(100-1);
     }
-    
-    return nmi.zbrent(chneutral,min,max,1e-7,kf,couplings);
+    return nmi.zbrent(chneutral,min,max,1e-7,kf,couplings,fields_v);
 }
 
 // need to change
@@ -861,7 +866,7 @@ double equationofstate :: qkpr(double cp, double mass, double deg) {
     if (mass > cp) {
         return 0;
     } else {
-        pr = deg*pow(cp,4)/(24.0*pow(pi,2))*( sqrt(1.0-pow(z,2))*(1.0-5.0/2.0*pow(z,2)) + 3.0/2.0*pow(z,4)*log((1.0+sqrt(1.0-pow(z,2)))/z) );
+        pr = deg*pow(cp,4)/(24.0*pow(pi,2))*( sqrt(1.0-pow(z,2))*(1.0-5.0/2.0*pow(z,2)) + 1.5*pow(z,4)*log((1.0+sqrt(1.0-pow(z,2)))/z) );
         return pr;
     }
 }
@@ -1020,7 +1025,8 @@ int equationofstate :: get_EOS_NSM(double couplings[10], double** &eos, int npoi
     double kf = pow(3.0*pow(pi,2.0)/2.0*p0f*0.15/conv_mev4,1.0/3.0);
     // step size that increases with increasing density
     ssize = (kf-k)/npoints;
-    double fields[2];
+    double fields_v[2];
+    double fields_s[2];
 
     // create EOS array
     eos = new double*[npoints];
@@ -1029,18 +1035,23 @@ int equationofstate :: get_EOS_NSM(double couplings[10], double** &eos, int npoi
     }
     
     // return the EOS for a specified number of points
-    double t_max = 1.0;
+    double t_avg = 1.0; // initial guess for t_avg
+    fields_v[0] = 10.0; fields_v[1] = -10.0; // inital guesses for vector fields
     for (int i=0; i<npoints; ++i) {
         dens = 2.0*pow(k,3)/(3.0*pow(pi,2));    // density at given fermi momentum
-        t = tool.get_t_betaeq(k,couplings,t_max); // get t from charge neutrality and beta equil
-        t_max = 1.0;
+        t = tool.get_t_betaeq(k,couplings,t_avg,fields_v); // get t from charge neutrality and beta equil
+        t_avg = t;
         kp = k*pow(1.0-t,1.0/3.0); kn = k*pow(1.0+t,1.0/3.0);   // get proton and neutron fermi momenta
-        tool.scalarfield_2D_NR(k,couplings,t,1e-7,fields);
-        gdd = fields[1];
-        gss = fields[0];
-        vectorfield_2D_NR(k,couplings,t,1e-7,fields);
-        gpp = fields[1];
-        gww = fields[0];
+        tool.scalarfield_2D_NR(k,couplings,t,1e-7,fields_s);
+        gdd = fields_s[1];
+        gss = fields_s[0];
+        double fvec[2]; int lwa = (2*(3*2+13))/2; int iflag = 1;  double wa[lwa];
+        double params[7] = {k,t,couplings[1],couplings[2],couplings[6],couplings[7],couplings[8]};
+        hybrd1(vectorfields_func,2,fields_v,fvec,1e-6,wa,lwa,params);
+
+        //vectorfield_2D_NR(k,couplings,t,1e-7,fields);
+        gpp = fields_v[1];
+        gww = fields_v[0];
         
         //gww = tool.FSUgwwnewton(couplings,dens,t);
         //gpp = -0.5*gpomp2*dens*t/(1.0+2.0*lambda_v*gpomp2*pow(gww,2.0));  // get rho field
@@ -1071,13 +1082,26 @@ int equationofstate :: get_EOS_NSM(double couplings[10], double** &eos, int npoi
         eos[i][6] = tool.effK2(k,couplings,gss,gww,gpp,gdd,t);
         eos[i][7] = Yp;
         eos[i][8] = Yp_Urca;
+        //cout << gss << "  " << gww << "  " << gpp << "  " << gdd << "  " << t << endl;
     
         // check for thermodynamic stability
+        double fi[2];
         check = mun*dens - en - pr;
+        //cout << "ch: " << -qknb(mue,mE,2.0) - qknb(mue,mMU,2.0) + pow(kp,3.0)/(3.0*pow(pi,2));
+        //cout << "  gss: " << gss << "  gww: " << gww << "  gpp: " << gpp << "  gdd: " << gdd << "  t: " << t << endl;
         if (abs(check)>10000.0) {
             cout << "consistency fail for k: " << k << " with value: " << check << endl;
-            cout << pr << "  " << mun*dens - en << endl;
-            //exit(0);
+            cout << pr*conv_mev4 << "  " << (mun*dens - en)*conv_mev4 << endl;
+            for (int j=0; j<1000; ++j) {
+                double w = j*1.0/(1000-1);
+                tool.scalarfield_2D_NR(k,couplings,w,1e-10,fields_s);
+                gss = fields_s[0];
+                vectorfield_2D_NR(k,couplings,w,1e-7,fields_v);
+                gpp = fields_v[1];
+                double z = chneutral(k,couplings,w,fields_v);
+                //cout << w << "  " << z << "  " << gss << "  " << gpp << endl;
+            }
+            exit(0);
         }
 
         k = k + ssize;

@@ -1890,8 +1890,9 @@ double get_WEAK_CHARGE_densities_v2(double** &densities_svtnp_unitless, int Z, i
     }
 
     // print the weak skin
-    //dm2.print(q_charge_weak_factors,npoints,4,true,"q_transfer_Fch,Fwk,wkskin.txt");
-
+    if (A==48) {
+        dm2.print(q_charge_weak_factors,npoints,4,true,"q_transfer_Fch,Fwk,wkskin.txt");
+    }
     // inverse fourier transform
     double q_unitless_a, q_unitless_b, charge_factor_a, charge_factor_b, fa, fb, q_unitless_ab2, charge_factor_ab2, fab2, weak_factor_a, weak_factor_b, weak_factor_ab2, ga, gb, gab2;
     #pragma omp parallel num_threads(12)
@@ -1930,15 +1931,17 @@ double get_WEAK_CHARGE_densities_v2(double** &densities_svtnp_unitless, int Z, i
     if (Z==20 && A==48) {
         q_transfer_exp = q_transfer_Ca;
         q_transfer_row = dm2.findvalue(q_charge_weak_factors,nrows_dens,4,q_transfer_exp*r0_fm,0,0.1);
+        double Fch_Fwk = q_charge_weak_factors[q_transfer_row][3];
         dm2.cleanup(q_charge_weak_factors,npoints);
-        cout << "Fch: " << q_charge_weak_factors[q_transfer_row][1] << endl;
-        return q_charge_weak_factors[q_transfer_row][3];
+        //cout << "Fch: " << q_charge_weak_factors[q_transfer_row][1] << endl;
+        return Fch_Fwk;
     } else if (Z==82 && A ==208) {
         q_transfer_exp = q_transfer_Pb;
         q_transfer_row = dm2.findvalue(q_charge_weak_factors,nrows_dens,4,q_transfer_exp*r0_fm,0,0.1);
+        double Fch_Fwk = q_charge_weak_factors[q_transfer_row][3];
         dm2.cleanup(q_charge_weak_factors,npoints);
-        cout << "Fch: " << q_charge_weak_factors[q_transfer_row][1] << endl;
-        return q_charge_weak_factors[q_transfer_row][3];
+        //cout << "Fch: " << q_charge_weak_factors[q_transfer_row][1] << endl;
+        return Fch_Fwk;
     } else {
         dm2.cleanup(q_charge_weak_factors,npoints);
         return 0;
@@ -2108,7 +2111,7 @@ int hartree_method(double fin_couplings[16], int A, int Z, int iterations, int g
     cout << "Fch - Fwk: " << Fch_Fwk << endl;
     cout << "Rch: " << sqrt(Radii2_N_P_fm2[1] + pow(0.84,2.0)) << endl;
     cout << "-----------------------------------" << endl;
-
+    
     Observables[0] = BA_mev; Observables[1] = sqrt(Radii2_N_P_fm2[0]);
     Observables[2] = sqrt(Radii2_N_P_fm2[1]); Observables[3] = sqrt(Radii2_N_P_fm2[1] + pow(0.84,2.0));
     Observables[4] = sqrt(Radii2_C_W_fm2[1]); Observables[5] = Fch_Fwk;

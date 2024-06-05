@@ -9,7 +9,9 @@
 #include <chrono>
 #include <iomanip>
 #include <cstdlib>
+#include <assert.h>
 #include <omp.h>
+#include "minpack.hpp"
 
 using namespace std;
 data2 dm3;
@@ -25,7 +27,7 @@ int main() {
     auto start = chrono :: high_resolution_clock::now();     
     
     double Observables[7]; 
-    double inf_couplings[10]; 
+    //double inf_couplings[10]; 
     double fin_couplings[16];
     int gridsize = 401;
     
@@ -37,22 +39,22 @@ int main() {
     }
     dm3.cleanup(param_sets,50);
     */
-
-
+    /*
+    double params[9] = {4.91160767e+02,  1.05813435e+02,  1.82548004e+02,  1.67125801e+02, 1.10939990e+02,  3.36134447e+00, -1.20853287e-03,  2.80633218e-02, 6.69791611e-03};
     // Experimental
-    fin_couplings[0] = 91.0316; // gs2
-    fin_couplings[1] = 150.824; // gw2
-    fin_couplings[2] = 877.121; // gp2
-    fin_couplings[3] = 1252.71; // gd2
-    fin_couplings[4] = 5.2914; // kappa
-    fin_couplings[5] = -0.01488; // lambda
-    fin_couplings[6] = 0.015; // zeta
+    fin_couplings[0] = params[1]; // gs2
+    fin_couplings[1] = params[2]; // gw2
+    fin_couplings[2] = params[3]; // gp2
+    fin_couplings[3] = params[4]; // gd2
+    fin_couplings[4] = params[5]; // kappa
+    fin_couplings[5] = params[6]; // lambda
+    fin_couplings[6] = params[7]; // zeta
     fin_couplings[7] = 0.0; // xi
-    fin_couplings[8] = 0.0014014; // Lambda_v
+    fin_couplings[8] = params[8]; // Lambda_v
     fin_couplings[9] = 0.0; // Lambda_s
     fin_couplings[10] = 0.0; // fw
     fin_couplings[11] = 0.0;    // fp
-    fin_couplings[12] = 485.795;
+    fin_couplings[12] = params[0];
     fin_couplings[13] = 782.5;
     fin_couplings[14] = 763.0;
     fin_couplings[15] = 980.0;
@@ -60,7 +62,7 @@ int main() {
     
     tool1.convert_to_inf_couplings(fin_couplings, inf_couplings);
     bulk1.get_bulkproperties(inf_couplings);
-    
+    */
     /*
     //FSUGarnet
     fin_couplings[0] = 110.349; // gs2
@@ -107,21 +109,22 @@ int main() {
     /*
     double BA, kf, p0, mstar, K, J_tilde, L, Ksym, zeta, xi, lambda_s, fw, fp;
     double masses[4];
-    // -16.2925  1.31338  0.582164  247.183  33.9099  49.8975  3.79223e-05  
+    //             
     // Experimental Model
-    masses[0] = 506.0;          
+    //  35.068868770696525 88.04948974877948 -58.91130412652875
+    masses[0] = 490.33;          
     masses[1] = 782.5; 
     masses[2] = 763.0; 
     masses[3] = 980.0;
-    BA = -16.2925; //-16.1856;                          // Binding energy (MeV) decreases binding proportionally (barely effects charge and skin)
-    kf = 1.31338;                                    // larger values lower binding and (lower skin and charge radii equally)
+    BA = -16.2429; //-16.1856;                          // Binding energy (MeV) decreases binding proportionally (barely effects charge and skin)
+    kf = 1.31138;                                    // larger values lower binding and (lower skin and charge radii equally)
     p0 = 2.0/(3.0*pow(pi,2.0))*pow(kf,3.0);        
-    J_tilde = 33.9099;        // Symmetry energy at sat (MeV)
-    mstar = 0.582164*939.0;      // Effective Mass (MeV)
-    K = 247.183;             // Compressibility (MeV) 
-    L = 49.8975;               // Derivative of Symmetry Energy at sat (MeV)
-    Ksym = 25.3836;
-    zeta = 3.79223e-05;
+    J_tilde = 31.6168;        // Symmetry energy at sat (MeV)
+    mstar = 0.584299*939.0;      // Effective Mass (MeV)
+    K = 246.901;             // Compressibility (MeV) 
+    L = 29.4076;               // Derivative of Symmetry Energy at sat (MeV)
+    Ksym = -58.91130412652875;
+    zeta = 0.00137591;
     xi = 0.0;                                            // Self interaction strength for w meson
     fw = 0.0;
     fp = 0.0;
@@ -134,9 +137,8 @@ int main() {
     cout << endl;
     //cout << BA/-16.3 << "  " << kf/1.30 << "  " << mstar/(939*0.61) << "  " << K/230.0 << "  " << J/32.59 << "  " << L/60.50 << endl;
     tool1.convert_to_inf_couplings(fin_couplings, inf_couplings);
-    */
     //chisq(fin_couplings);
-    
+    */
     /*
     //double** Symm_EOS;
     double** PNM_EOS;
@@ -231,12 +233,13 @@ int main() {
     */
 
     // ######################### Neutron Star Calcultions ##########################################
-    /*
+    
     // GET EOS FOR INFINITE MATTER
-    //double inf_couplings[10] = {0.000397149,  0.000261684,  0.000311578,  0,  4.39549,  -0.017726,  0.0020628,  0,  0.0263808,  0};
+    //double inf_couplings[10] = {0.000420665,  0.000282385,  0.000297592,  0.0,  3.87213,  -0.0127319,  0.00882536,  0.0,  0.0310417,  0.0};
+    /*
     double** CORE_EOS;
     int npoints = 250;
-    eosm.get_EOS_NSM(inf_couplings,CORE_EOS,npoints,false,false);
+    eosm.get_EOS_NSM(inf_couplings,CORE_EOS,npoints,true,false);
     double Urca_dens = nmm.Urca_threshold(CORE_EOS,9,npoints,7,8,0);
     cout << "Urca_onset_dens = " << Urca_dens << endl;
     //dm3.cleanup(CORE_EOS,npoints);
@@ -298,15 +301,24 @@ int main() {
     */
 
     // RBM Methods
-    //RBM_generate_fields(16,8,"DINO_training_set.txt");
-    //sample_param_space(50,"startfile_gold.txt");
-    get_Observables("DINO_calibration_set.txt",208,82);
+    //RBM_generate_fields(116,50,"training_DINO.txt");
+    //sample_param_space(200,"dat_files/startfile_dino.txt");
+    int A[10] = {16,40,48,68,90,100,116,132,144,208};
+    int Z[10] = {8 ,20,20,28,40,50 ,50 ,50 ,62 ,82 };
+    //get_Observables("validation_DINO.txt",116,50);
+    
+    for (int i=0; i<10; ++i) {
+        //RBM_generate_fields(A[i],Z[i],"training_DINO.txt");
+        //get_Observables("validation_DINO.txt",A[i],Z[i]);
+    }
+    
     //RBM_error_check("RBM_samples.txt",8);
 
 
     // MCMC methods
-    //MCMC_NS(10000,100000,"dat_files/invcovmatrix_FSUGOLD.txt","dat_files/CRUSTEOS.txt");
+    //MCMC_NS(500,10000,"dat_files/invcovmatrix_FSUGOLD.txt","dat_files/CRUSTEOS.txt");
     //MCMC_FN(1000,500,"dat_files/exp_data.txt");
+    MCMC_Observables("MCMC_26.txt","dat_files/CRUSTEOS.txt");
     
     // Get parameters from set of bulk properties
     /*
@@ -327,9 +339,9 @@ int main() {
         out << endl;
     }
     */
+
     auto stop = chrono :: high_resolution_clock::now();
     auto duration = chrono :: duration_cast<chrono :: milliseconds>(stop - start);
     cout << setprecision(5) << duration.count()/1000.0 << "s" << endl;
     return 0;
-    
 }

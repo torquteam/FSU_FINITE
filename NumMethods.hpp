@@ -47,7 +47,7 @@ class nummeth {
 public:
     void twopointD(double **oriarr, double ** &newarr, int ncols, int nrows, int ycol, int xcol);
     double findintersect(double **arr1, int nrows1, int ncols1, int xcol1, int ycol1, double **arr2, int nrows2, int ncols2, int xcol2, int ycol2);
-    double zbrent(double (*func)(double, double[8], double), double x1, double x2, double tol, double kf, double couplings[8]);
+    double zbrent(double (*func)(double, double[8], double, double[2]), double x1, double x2, double tol, double kf, double couplings[8], double fields_v[2]);
     void pretovconv(double** &eos, int encol, int prcol, double enconv, double prconv, int nrows);
     double dmdr(double r, double p, double m, double en);
     double dpdr(double r, double p, double m, double en);

@@ -15,6 +15,7 @@ double metropolis(double lkl0, double lklp, vector<double>& bulks_0, vector<doub
 void adaptive_width(int iter, int n_check, vector<double>& arate, vector<int>& acc_counts, vector<double>& stds, double agoal, int index);
 void MCMC_NS(int nburnin, int nruns, string covdata, string crust);
 void RBM_error_check(string RBM_file, int n_params);
+int MCMC_Observables(string MCMC_data, string crust);
 
 
 double compute_prior_FN(vector<double>& bulks, int n_params);

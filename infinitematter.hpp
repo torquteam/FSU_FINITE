@@ -17,7 +17,7 @@ public:
     double get_gdomd2(double kf, double J, double L, double Ksym, double gss, double gww, double gsoms2, double gwomw2, double kappa, double lambda, double zeta, double lambda_s, int sol);
     double get_lambda_v(double kf, double J, double gss, double gww, double gdomd2, double gpomp2, double lambda_s);
     void convert_to_inf_couplings(double fin_couplings[16], double inf_couplings[10]);
-    double get_t_betaeq(double kf, double couplings[10], double max);
+    double get_t_betaeq(double kf, double couplings[10], double max, double fields_v[2]);
     double effK2(double kf, double couplings[10], double gss, double gww, double gpp, double gdd, double t);
     int ThermalCrust(double** crust, double** core, double** &neweos, int nrowscore, int nrowscrust, bool print, int nbcol, int prcol, int Keffcol);
 };
