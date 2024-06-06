@@ -1891,7 +1891,7 @@ double get_WEAK_CHARGE_densities_v2(double** &densities_svtnp_unitless, int Z, i
 
     // print the weak skin
     if (A==48) {
-        dm2.print(q_charge_weak_factors,npoints,4,true,"q_transfer_Fch,Fwk,wkskin.txt");
+        //dm2.print(q_charge_weak_factors,npoints,4,true,"q_transfer_Fch,Fwk,wkskin.txt");
     }
     // inverse fourier transform
     double q_unitless_a, q_unitless_b, charge_factor_a, charge_factor_b, fa, fb, q_unitless_ab2, charge_factor_ab2, fab2, weak_factor_a, weak_factor_b, weak_factor_ab2, ga, gb, gab2;

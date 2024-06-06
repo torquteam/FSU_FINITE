@@ -301,13 +301,13 @@ int main() {
     */
 
     // RBM Methods
-    //RBM_generate_fields(116,50,"training_DINO.txt");
+    RBM_generate_fields(208,82,"training_DINO.txt");
     //sample_param_space(200,"dat_files/startfile_dino.txt");
     int A[10] = {16,40,48,68,90,100,116,132,144,208};
     int Z[10] = {8 ,20,20,28,40,50 ,50 ,50 ,62 ,82 };
-    //get_Observables("validation_DINO.txt",116,50);
+    get_Observables("validation_DINO.txt",208,82);
     
-    for (int i=0; i<10; ++i) {
+    for (int i=7; i<10; ++i) {
         //RBM_generate_fields(A[i],Z[i],"training_DINO.txt");
         //get_Observables("validation_DINO.txt",A[i],Z[i]);
     }
@@ -317,7 +317,7 @@ int main() {
 
     // MCMC methods
     //MCMC_NS(500,10000,"dat_files/invcovmatrix_FSUGOLD.txt","dat_files/CRUSTEOS.txt");
-    MCMC_FN(0,0,"dat_files/exp_data.txt");
+    //MCMC_FN(0,0,"dat_files/exp_data.txt");
     //MCMC_Observables("MCMC_26.txt","dat_files/CRUSTEOS.txt");
     
     // Get parameters from set of bulk properties
@@ -339,6 +339,10 @@ int main() {
         out << endl;
     }
     */
+
+    // remove leftover files
+    remove("Ap.txt"); remove("Bp.txt"); remove("Fn.txt"); remove("Gn.txt");
+    remove("meson_fields.txt"); remove("neutron_spectrum.txt"); remove("proton_spectrum.txt");
 
     auto stop = chrono :: high_resolution_clock::now();
     auto duration = chrono :: duration_cast<chrono :: milliseconds>(stop - start);

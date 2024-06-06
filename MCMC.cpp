@@ -178,29 +178,29 @@ int RBM_generate_fields(int A, int Z, string params_file) {
     dm1.importdata_string("proton_spectrum.txt",parray);
 
     for (int k=0; k<nstates_n; ++k) {
-        ofstream fout("/Users/marcsalinas/Desktop/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data" + "/neutron/f_wave/state" + narray[k][6] + ".txt",ios::out);
-        ofstream gout("/Users/marcsalinas/Desktop/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data" + "/neutron/g_wave/state" + narray[k][6] + ".txt",ios::out);
+        ofstream fout("/Users/marcsalinas/Desktop/GIT_REPOS/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data" + "/neutron/f_wave/state" + narray[k][6] + ".txt",ios::out);
+        ofstream gout("/Users/marcsalinas/Desktop/GIT_REPOS/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data" + "/neutron/g_wave/state" + narray[k][6] + ".txt",ios::out);
         fout.close();
         gout.close();
     }
 
     for (int k=0; k<nstates_p; ++k) {
-        ofstream aout("/Users/marcsalinas/Desktop/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data" + "/proton/c_wave/state" + parray[k][6] + ".txt",ios::out);
-        ofstream bout("/Users/marcsalinas/Desktop/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data" + "/proton/d_wave/state" + parray[k][6]+ ".txt",ios::out);
+        ofstream aout("/Users/marcsalinas/Desktop/GIT_REPOS/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data" + "/proton/c_wave/state" + parray[k][6] + ".txt",ios::out);
+        ofstream bout("/Users/marcsalinas/Desktop/GIT_REPOS/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data" + "/proton/d_wave/state" + parray[k][6]+ ".txt",ios::out);
         aout.close();
         bout.close();
     }
 
     // initialize the output files
-    ofstream sout("/Users/marcsalinas/Desktop/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data/meson_fields/" + "sigma.txt");
-    ofstream oout("/Users/marcsalinas/Desktop/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data/meson_fields/" + "omega.txt");
-    ofstream rout("/Users/marcsalinas/Desktop/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data/meson_fields/" + "rho.txt");
-    ofstream dout("/Users/marcsalinas/Desktop/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data/meson_fields/" + "delta.txt");
-    ofstream aout("/Users/marcsalinas/Desktop/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data/meson_fields/" + "coulomb.txt");
+    ofstream sout("/Users/marcsalinas/Desktop/GIT_REPOS/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data/meson_fields/" + "sigma.txt");
+    ofstream oout("/Users/marcsalinas/Desktop/GIT_REPOS/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data/meson_fields/" + "omega.txt");
+    ofstream rout("/Users/marcsalinas/Desktop/GIT_REPOS/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data/meson_fields/" + "rho.txt");
+    ofstream dout("/Users/marcsalinas/Desktop/GIT_REPOS/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data/meson_fields/" + "delta.txt");
+    ofstream aout("/Users/marcsalinas/Desktop/GIT_REPOS/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data/meson_fields/" + "coulomb.txt");
     
-    ofstream enout("/Users/marcsalinas/Desktop/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data/neutron/energies.txt");
-    ofstream epout("/Users/marcsalinas/Desktop/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data/proton/energies.txt");
-    ofstream rvecout("/Users/marcsalinas/Desktop/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data/rvec.txt");
+    ofstream enout("/Users/marcsalinas/Desktop/GIT_REPOS/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data/neutron/energies.txt");
+    ofstream epout("/Users/marcsalinas/Desktop/GIT_REPOS/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data/proton/energies.txt");
+    ofstream rvecout("/Users/marcsalinas/Desktop/GIT_REPOS/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data/rvec.txt");
     
     dm1.importdata("Fn.txt",Fn_unitless);
     rvecout << 0.0 << endl;
@@ -244,13 +244,12 @@ int RBM_generate_fields(int A, int Z, string params_file) {
         dm1.importdata("Gn.txt",Gn_unitless);
         dm1.importdata("Ap.txt",Ap_unitless);
         dm1.importdata("Bp.txt",Bp_unitless);
-        cout << "nstates_n: " << nstates_n << endl; // for debugging
 
         // check for level crossing neutrons
         int lvl_count = 0;
         for (int k=0; k<nstates_n; ++k) {
             for (int l=0; l<nstates_n; ++l) {
-                if (narray[l][6] == nref[k][3]) {
+                if (narray[l][6] == nref[k][0]) {
                     lvl_count = lvl_count + 1;
                 }
             }
@@ -268,7 +267,7 @@ int RBM_generate_fields(int A, int Z, string params_file) {
         lvl_count = 0;
         for (int k=0; k<nstates_p; ++k) {
             for (int l=0; l<nstates_p; ++l) {
-                if (narray[l][6] == pref[k][3]) {
+                if (narray[l][6] == pref[k][0]) {
                     lvl_count = lvl_count + 1;
                 }
             }
@@ -283,9 +282,8 @@ int RBM_generate_fields(int A, int Z, string params_file) {
         }
 
         for (int k=0; k<nstates_n; ++k) {
-            cout << narray[k][6] << "  ";
-            ofstream fout("/Users/marcsalinas/Desktop/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data" + "/neutron/f_wave/state" + narray[k][6] + ".txt", ios::app);
-            ofstream gout("/Users/marcsalinas/Desktop/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data" + "/neutron/g_wave/state" + narray[k][6] + ".txt", ios::app);
+            ofstream fout("/Users/marcsalinas/Desktop/GIT_REPOS/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data" + "/neutron/f_wave/state" + narray[k][6] + ".txt", ios::app);
+            ofstream gout("/Users/marcsalinas/Desktop/GIT_REPOS/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data" + "/neutron/g_wave/state" + narray[k][6] + ".txt", ios::app);
             gout << 0.0 << "  ";
             fout << 0.0 << "  ";
             for (int j=1; j<gridsize; ++j) {
@@ -298,8 +296,8 @@ int RBM_generate_fields(int A, int Z, string params_file) {
         cout << endl;
 
         for (int k=0; k<nstates_p; ++k) {
-            ofstream aout("/Users/marcsalinas/Desktop/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data" + "/proton/c_wave/state" + parray[k][6] + ".txt", ios::app);
-            ofstream bout("/Users/marcsalinas/Desktop/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data" + "/proton/d_wave/state" + parray[k][6] + ".txt", ios::app);
+            ofstream aout("/Users/marcsalinas/Desktop/GIT_REPOS/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data" + "/proton/c_wave/state" + parray[k][6] + ".txt", ios::app);
+            ofstream bout("/Users/marcsalinas/Desktop/GIT_REPOS/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data" + "/proton/d_wave/state" + parray[k][6] + ".txt", ios::app);
             aout << 0.0 << "  ";
             bout << 0.0 << "  ";
             for (int j=1; j<gridsize; ++j) {
@@ -359,23 +357,23 @@ int RBM_generate_fields(int A, int Z, string params_file) {
     dm1.importdata_string("proton_spectrum.txt",parray);
 
     for (int k=0; k<nstates_n; ++k) {
-        dm1.transpose_file("/Users/marcsalinas/Desktop/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data" + "/neutron/f_wave/state" + narray[k][6] + ".txt");
-        dm1.transpose_file("/Users/marcsalinas/Desktop/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data" + "/neutron/g_wave/state" + narray[k][6] + ".txt");
+        dm1.transpose_file("/Users/marcsalinas/Desktop/GIT_REPOS/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data" + "/neutron/f_wave/state" + narray[k][6] + ".txt");
+        dm1.transpose_file("/Users/marcsalinas/Desktop/GIT_REPOS/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data" + "/neutron/g_wave/state" + narray[k][6] + ".txt");
 
     }
 
     for (int k=0; k<nstates_p; ++k) {
-        dm1.transpose_file("/Users/marcsalinas/Desktop/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data" + "/proton/c_wave/state" + parray[k][6] + ".txt");
-        dm1.transpose_file("/Users/marcsalinas/Desktop/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data" + "/proton/d_wave/state" + parray[k][6] + ".txt");
+        dm1.transpose_file("/Users/marcsalinas/Desktop/GIT_REPOS/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data" + "/proton/c_wave/state" + parray[k][6] + ".txt");
+        dm1.transpose_file("/Users/marcsalinas/Desktop/GIT_REPOS/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data" + "/proton/d_wave/state" + parray[k][6] + ".txt");
     
     }      
 
     // transpose the meson fields into column vectors
-    dm1.transpose_file("/Users/marcsalinas/Desktop/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data/meson_fields/" + "sigma.txt");
-    dm1.transpose_file("/Users/marcsalinas/Desktop/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data/meson_fields/" + "omega.txt");
-    dm1.transpose_file("/Users/marcsalinas/Desktop/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data/meson_fields/" + "rho.txt");
-    dm1.transpose_file("/Users/marcsalinas/Desktop/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data/meson_fields/" + "delta.txt");
-    dm1.transpose_file("/Users/marcsalinas/Desktop/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data/meson_fields/" + "coulomb.txt");
+    dm1.transpose_file("/Users/marcsalinas/Desktop/GIT_REPOS/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data/meson_fields/" + "sigma.txt");
+    dm1.transpose_file("/Users/marcsalinas/Desktop/GIT_REPOS/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data/meson_fields/" + "omega.txt");
+    dm1.transpose_file("/Users/marcsalinas/Desktop/GIT_REPOS/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data/meson_fields/" + "rho.txt");
+    dm1.transpose_file("/Users/marcsalinas/Desktop/GIT_REPOS/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data/meson_fields/" + "delta.txt");
+    dm1.transpose_file("/Users/marcsalinas/Desktop/GIT_REPOS/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data/meson_fields/" + "coulomb.txt");
 
     dm1.cleanup(param_set,num_param_sets);
     dm1.cleanup_string(narray,nstates_n);
@@ -461,9 +459,9 @@ double sample_param_space(int num_sets, string startfile) {
 
 // Used to compute ground state observables to test RBM error
 void get_Observables(string param_set, int A, int Z) {
-    ofstream observ_out("/Users/marcsalinas/Desktop/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data/" + to_string(A)+ "," + to_string(Z) + "Observables.txt");
-    ofstream enout("/Users/marcsalinas/Desktop/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + "energies_n.txt");
-    ofstream epout("/Users/marcsalinas/Desktop/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + "energies_p.txt");
+    ofstream observ_out("/Users/marcsalinas/Desktop/GIT_REPOS/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data/" + to_string(A)+ "," + to_string(Z) + "Observables.txt");
+    ofstream enout("/Users/marcsalinas/Desktop/GIT_REPOS/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + "energies_n.txt");
+    ofstream epout("/Users/marcsalinas/Desktop/GIT_REPOS/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + "energies_p.txt");
     double** param_set_arr;
     string** narray; string** parray; string** nref; string** pref;
     double** Fn_wf; double** Ap_wf;
@@ -483,8 +481,8 @@ void get_Observables(string param_set, int A, int Z) {
     nstates_p = dm1.rowcount(source_file_p);
 
     // copy reference files to folder
-    string dest_n = "/Users/marcsalinas/Desktop/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data/neutron_spectrum.txt";
-    string dest_p = "/Users/marcsalinas/Desktop/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data/proton_spectrum.txt";
+    string dest_n = "/Users/marcsalinas/Desktop/GIT_REPOS/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data/neutron_spectrum.txt";
+    string dest_p = "/Users/marcsalinas/Desktop/GIT_REPOS/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data/proton_spectrum.txt";
     try {
         // Copy the file to the destination with a new name
         filesystem::copy(source_file_n, dest_n, filesystem::copy_options::overwrite_existing);
@@ -495,7 +493,7 @@ void get_Observables(string param_set, int A, int Z) {
     }
 
     // create a basis file
-    ofstream basis_out("/Users/marcsalinas/Desktop/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data/basis_numbers.txt");
+    ofstream basis_out("/Users/marcsalinas/Desktop/GIT_REPOS/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data/basis_numbers.txt");
     for (int m=0; m<2; ++m) {
         for (int k=0; k<nstates_n; ++k) {
             basis_out << 2 << "  ";
@@ -511,15 +509,14 @@ void get_Observables(string param_set, int A, int Z) {
     for (int m=0; m<5; ++m) {
         basis_out << 7 << endl;
     }
-    
     // create wf files
     for (int k=0; k<nstates_n; ++k) {
-        ofstream fout("/Users/marcsalinas/Desktop/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data" + "/neutron/f_wave/val_" + nref[k][3] + ".txt",ios::out);
+        ofstream fout("/Users/marcsalinas/Desktop/GIT_REPOS/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data" + "/neutron/f_wave/val_" + nref[k][0] + ".txt",ios::out);
         fout.close();
     }
 
     for (int k=0; k<nstates_p; ++k) {
-        ofstream aout("/Users/marcsalinas/Desktop/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data" + "/proton/c_wave/val_" + pref[k][3] + ".txt",ios::out);
+        ofstream aout("/Users/marcsalinas/Desktop/GIT_REPOS/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data" + "/proton/c_wave/val_" + pref[k][0] + ".txt",ios::out);
         aout.close();
     }
 
@@ -552,7 +549,7 @@ void get_Observables(string param_set, int A, int Z) {
         int lvl_count = 0;
         for (int k=0; k<nstates_n; ++k) {
             for (int l=0; l<nstates_n; ++l) {
-                if (narray[l][6] == nref[k][3]) {
+                if (narray[l][6] == nref[k][0]) {
                     lvl_count = lvl_count + 1;
                 }
             }
@@ -570,7 +567,7 @@ void get_Observables(string param_set, int A, int Z) {
         lvl_count = 0;
         for (int k=0; k<nstates_p; ++k) {
             for (int l=0; l<nstates_p; ++l) {
-                if (narray[l][6] == pref[k][3]) {
+                if (narray[l][6] == pref[k][0]) {
                     lvl_count = lvl_count + 1;
                 }
             }
@@ -586,9 +583,9 @@ void get_Observables(string param_set, int A, int Z) {
 
         for (int k=0; k<nstates_n; ++k) {
             for (int l=0; l<nstates_n; ++l) {
-                if (narray[l][6] == nref[k][3]) {
+                if (narray[l][6] == nref[k][0]) {
                     enout << scientific << setprecision(10) << narray[l][0] << "  ";
-                    ofstream fout("/Users/marcsalinas/Desktop/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data" + "/neutron/f_wave/val_" + narray[l][6] + ".txt", ios::app);
+                    ofstream fout("/Users/marcsalinas/Desktop/GIT_REPOS/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data" + "/neutron/f_wave/val_" + narray[l][6] + ".txt", ios::app);
                     for (int j=1; j<gridsize; ++j) {
                         fout << scientific << setprecision(10) << Fn_wf[j][l+1] << "  ";
                     }
@@ -601,9 +598,9 @@ void get_Observables(string param_set, int A, int Z) {
 
         for (int k=0; k<nstates_p; ++k) {
             for (int l=0; l<nstates_p; ++l) {
-                if (parray[l][6] == pref[k][3]) {
+                if (parray[l][6] == pref[k][0]) {
                     epout << scientific << setprecision(10) << parray[l][0] << "  ";
-                    ofstream aout("/Users/marcsalinas/Desktop/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data" + "/proton/c_wave/val_" + narray[l][6] + ".txt", ios::app);
+                    ofstream aout("/Users/marcsalinas/Desktop/GIT_REPOS/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data" + "/proton/c_wave/val_" + narray[l][6] + ".txt", ios::app);
                     for (int j=1; j<gridsize; ++j) {
                         aout << scientific << setprecision(10) << Ap_wf[j][l+1] << "  ";
                     }
@@ -628,11 +625,11 @@ void get_Observables(string param_set, int A, int Z) {
 
     // tranpose wave function files
     for (int k=0; k<nstates_n; ++k) {
-        dm1.transpose_file("/Users/marcsalinas/Desktop/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data" + "/neutron/f_wave/val_" + nref[k][3] + ".txt");
+        dm1.transpose_file("/Users/marcsalinas/Desktop/GIT_REPOS/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data" + "/neutron/f_wave/val_" + nref[k][0] + ".txt");
     }
 
     for (int k=0; k<nstates_p; ++k) {
-        dm1.transpose_file("/Users/marcsalinas/Desktop/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data" + "/proton/c_wave/val_" + pref[k][3] + ".txt");
+        dm1.transpose_file("/Users/marcsalinas/Desktop/GIT_REPOS/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data" + "/proton/c_wave/val_" + pref[k][0] + ".txt");
     }      
 
     // cleanup the arrays
