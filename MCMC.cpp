@@ -210,6 +210,13 @@ int RBM_generate_fields(int A, int Z, string params_file) {
 
     dm1.cleanup_string(narray,nstates_n);
     dm1.cleanup_string(parray,nstates_p);
+
+    // import ref files
+    string** nref; string** pref;
+    string source_file_n = "spectrum_ref_files/" + to_string(A) + "," + to_string(Z) + "," + "neutron_spectrum.txt";
+    string source_file_p = "spectrum_ref_files/" + to_string(A) + "," + to_string(Z) + "," + "proton_spectrum.txt";
+    dm1.importdata_string(source_file_n,nref);
+    dm1.importdata_string(source_file_p,pref);
     // loop through each nuclei and solve the high fidelity problem
     for (int i=0; i<num_param_sets; ++i) {
         for (int k=0; k<16; ++k) {
@@ -238,6 +245,42 @@ int RBM_generate_fields(int A, int Z, string params_file) {
         dm1.importdata("Ap.txt",Ap_unitless);
         dm1.importdata("Bp.txt",Bp_unitless);
         cout << "nstates_n: " << nstates_n << endl; // for debugging
+
+        // check for level crossing neutrons
+        int lvl_count = 0;
+        for (int k=0; k<nstates_n; ++k) {
+            for (int l=0; l<nstates_n; ++l) {
+                if (narray[l][6] == nref[k][3]) {
+                    lvl_count = lvl_count + 1;
+                }
+            }
+        }
+        if (lvl_count != nstates_n) {
+            cout << "level crossing detected for params: " << endl;
+            for (int l=0; l<16; ++l) {
+                cout << fin_couplings[l] << "  ";
+            }
+            cout << endl;
+            exit(0);
+        }
+        
+        // check for level crossing protons
+        lvl_count = 0;
+        for (int k=0; k<nstates_p; ++k) {
+            for (int l=0; l<nstates_p; ++l) {
+                if (narray[l][6] == pref[k][3]) {
+                    lvl_count = lvl_count + 1;
+                }
+            }
+        }
+        if (lvl_count != nstates_p) {
+            cout << "level crossing detected for params: " << endl;
+            for (int l=0; l<16; ++l) {
+                cout << fin_couplings[l] << "  ";
+            }
+            cout << endl;
+            exit(0);
+        }
 
         for (int k=0; k<nstates_n; ++k) {
             cout << narray[k][6] << "  ";
@@ -504,6 +547,42 @@ void get_Observables(string param_set, int A, int Z) {
         dm1.importdata_string("proton_spectrum.txt",parray);
         dm1.importdata("Fn.txt",Fn_wf);
         dm1.importdata("Ap.txt",Ap_wf);
+
+        // check for level crossing neutrons
+        int lvl_count = 0;
+        for (int k=0; k<nstates_n; ++k) {
+            for (int l=0; l<nstates_n; ++l) {
+                if (narray[l][6] == nref[k][3]) {
+                    lvl_count = lvl_count + 1;
+                }
+            }
+        }
+        if (lvl_count != nstates_n) {
+            cout << "level crossing detected for params: " << endl;
+            for (int l=0; l<16; ++l) {
+                cout << fin_couplings[l] << "  ";
+            }
+            cout << endl;
+            exit(0);
+        }
+        
+        // check for level crossing protons
+        lvl_count = 0;
+        for (int k=0; k<nstates_p; ++k) {
+            for (int l=0; l<nstates_p; ++l) {
+                if (narray[l][6] == pref[k][3]) {
+                    lvl_count = lvl_count + 1;
+                }
+            }
+        }
+        if (lvl_count != nstates_p) {
+            cout << "level crossing detected for params: " << endl;
+            for (int l=0; l<16; ++l) {
+                cout << fin_couplings[l] << "  ";
+            }
+            cout << endl;
+            exit(0);
+        }
 
         for (int k=0; k<nstates_n; ++k) {
             for (int l=0; l<nstates_n; ++l) {
@@ -850,7 +929,6 @@ double compute_prior_FN(vector<double>& bulks, int n_params) {
     // initialize the temp arrays and get the prior distribution X^2 = (x-mu)^T Cov^-1 (x-mu)
     for (int i=0; i<n_params; ++i) {
         chisq = chisq + pow((bulks[i]-prior_data[i])/prior_unct[i],2.0);
-        cout << chisq << endl;
     }
     return exp(-chisq/2.0);
 }
@@ -861,9 +939,9 @@ double compute_lkl_single(double exp_data[6],double BA_mev_th, double Rch_th, do
     if (exp_data[2] != -1) {
         lkl = lkl*exp(-0.5*pow(exp_data[2]-Rch_th,2.0)/pow(exp_data[3],2.0));
     }
-    if (exp_data[4] != -1) {
-        lkl = lkl*exp(-0.5*pow(exp_data[4]-FchFwk_th,2.0)/pow(exp_data[5],2.0));
-    }
+    //if (exp_data[4] != -1) {
+        //lkl = lkl*exp(-0.5*pow(exp_data[4]-FchFwk_th,2.0)/pow(exp_data[5],2.0));
+    //}
     return lkl;
 }
 
@@ -941,8 +1019,8 @@ void MCMC_FN(int nburnin, int nruns, string exp_file) {
     dm1.importdata(exp_file,exp_data);
 
     // initialization
-    vector<double> bulks_0 = {-16.232,1.3067,0.59630,223.570,34.9267,83.8965,206.267,0.02995,492.555};
-    vector<double> bulks_p = {-16.232,1.3067,0.59630,223.570,34.9267,83.8965,206.267,0.02995,492.555};
+    vector<double> bulks_0 = {-16.26995407,1.312671339,0.5843732534,244.3419784,33.23473693,45.74291391,0.0,0.00356977081667,504.97};
+    vector<double> bulks_p = {-16.26995407,1.312671339,0.5843732534,244.3419784,33.23473693,45.74291391,0.0,0.00356977081667,504.97};
     vector<double> stds = {0.01047,0.00068,0.00501,1.38,0.542,6.32,175.0,0.00253,0.50570};
     vector<int> acc_counts = {0,0,0,0,0,0,0,0,0};
     vector<double> arate = {0,0,0,0,0,0,0,0,0};
@@ -951,10 +1029,14 @@ void MCMC_FN(int nburnin, int nruns, string exp_file) {
     double prior = compute_prior_FN(bulks_0,n_params);
     double p0 = 2.0/(3.0*pow(pi,2.0))*pow(bulks_0[1],3.0);
     masses[0] = bulks_0[8];
-    flag = bulkmc.get_parameters(bulks_0[0],p0,bulks_0[4],bulks_0[2]*mNuc_mev,bulks_0[3],bulks_0[5],bulks_0[6],bulks_0[7],0.0,0.0,0.0,0.0,masses,fin_couplings,true,1,true);
+    flag = bulkmc.get_parameters(bulks_0[0],p0,bulks_0[4],bulks_0[2]*mNuc_mev,bulks_0[3],bulks_0[5],bulks_0[6],bulks_0[7],0.0,0.0,0.0,0.0,masses,fin_couplings,true,1,false);
+    for (int i=0; i<16; ++i) {
+        cout << fin_couplings[i] << "  ";
+    }
+    cout << endl;
     double lkl0 = compute_nuclei_v2(10,fin_couplings,flag,exp_data);
     double post0 = prior*lkl0;
-    cout << prior << "  " << lkl0 << endl;
+    cout << "initial lkl: " << lkl0 << endl;
 
 
     for (int i=0; i<nburnin; ++i) {
