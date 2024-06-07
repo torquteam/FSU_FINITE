@@ -249,7 +249,7 @@ int RBM_generate_fields(int A, int Z, string params_file) {
         int lvl_count = 0;
         for (int k=0; k<nstates_n; ++k) {
             for (int l=0; l<nstates_n; ++l) {
-                if (narray[l][6] == nref[k][0]) {
+                if (narray[l][6] == nref[k][3]) {
                     lvl_count = lvl_count + 1;
                 }
             }
@@ -267,7 +267,7 @@ int RBM_generate_fields(int A, int Z, string params_file) {
         lvl_count = 0;
         for (int k=0; k<nstates_p; ++k) {
             for (int l=0; l<nstates_p; ++l) {
-                if (narray[l][6] == pref[k][0]) {
+                if (narray[l][6] == pref[k][3]) {
                     lvl_count = lvl_count + 1;
                 }
             }
@@ -511,12 +511,12 @@ void get_Observables(string param_set, int A, int Z) {
     }
     // create wf files
     for (int k=0; k<nstates_n; ++k) {
-        ofstream fout("/Users/marcsalinas/Desktop/GIT_REPOS/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data" + "/neutron/f_wave/val_" + nref[k][0] + ".txt",ios::out);
+        ofstream fout("/Users/marcsalinas/Desktop/GIT_REPOS/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data" + "/neutron/f_wave/val_" + nref[k][3] + ".txt",ios::out);
         fout.close();
     }
 
     for (int k=0; k<nstates_p; ++k) {
-        ofstream aout("/Users/marcsalinas/Desktop/GIT_REPOS/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data" + "/proton/c_wave/val_" + pref[k][0] + ".txt",ios::out);
+        ofstream aout("/Users/marcsalinas/Desktop/GIT_REPOS/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data" + "/proton/c_wave/val_" + pref[k][3] + ".txt",ios::out);
         aout.close();
     }
 
@@ -549,7 +549,7 @@ void get_Observables(string param_set, int A, int Z) {
         int lvl_count = 0;
         for (int k=0; k<nstates_n; ++k) {
             for (int l=0; l<nstates_n; ++l) {
-                if (narray[l][6] == nref[k][0]) {
+                if (narray[l][6] == nref[k][3]) {
                     lvl_count = lvl_count + 1;
                 }
             }
@@ -567,7 +567,7 @@ void get_Observables(string param_set, int A, int Z) {
         lvl_count = 0;
         for (int k=0; k<nstates_p; ++k) {
             for (int l=0; l<nstates_p; ++l) {
-                if (narray[l][6] == pref[k][0]) {
+                if (narray[l][6] == pref[k][3]) {
                     lvl_count = lvl_count + 1;
                 }
             }
@@ -583,7 +583,7 @@ void get_Observables(string param_set, int A, int Z) {
 
         for (int k=0; k<nstates_n; ++k) {
             for (int l=0; l<nstates_n; ++l) {
-                if (narray[l][6] == nref[k][0]) {
+                if (narray[l][6] == nref[k][3]) {
                     enout << scientific << setprecision(10) << narray[l][0] << "  ";
                     ofstream fout("/Users/marcsalinas/Desktop/GIT_REPOS/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data" + "/neutron/f_wave/val_" + narray[l][6] + ".txt", ios::app);
                     for (int j=1; j<gridsize; ++j) {
@@ -598,7 +598,7 @@ void get_Observables(string param_set, int A, int Z) {
 
         for (int k=0; k<nstates_p; ++k) {
             for (int l=0; l<nstates_p; ++l) {
-                if (parray[l][6] == pref[k][0]) {
+                if (parray[l][6] == pref[k][3]) {
                     epout << scientific << setprecision(10) << parray[l][0] << "  ";
                     ofstream aout("/Users/marcsalinas/Desktop/GIT_REPOS/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data" + "/proton/c_wave/val_" + narray[l][6] + ".txt", ios::app);
                     for (int j=1; j<gridsize; ++j) {
@@ -625,11 +625,11 @@ void get_Observables(string param_set, int A, int Z) {
 
     // tranpose wave function files
     for (int k=0; k<nstates_n; ++k) {
-        dm1.transpose_file("/Users/marcsalinas/Desktop/GIT_REPOS/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data" + "/neutron/f_wave/val_" + nref[k][0] + ".txt");
+        dm1.transpose_file("/Users/marcsalinas/Desktop/GIT_REPOS/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data" + "/neutron/f_wave/val_" + nref[k][3] + ".txt");
     }
 
     for (int k=0; k<nstates_p; ++k) {
-        dm1.transpose_file("/Users/marcsalinas/Desktop/GIT_REPOS/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data" + "/proton/c_wave/val_" + pref[k][0] + ".txt");
+        dm1.transpose_file("/Users/marcsalinas/Desktop/GIT_REPOS/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data" + "/proton/c_wave/val_" + pref[k][3] + ".txt");
     }      
 
     // cleanup the arrays
