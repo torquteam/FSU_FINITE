@@ -301,16 +301,20 @@ int main() {
     */
 
     // RBM Methods
-    RBM_generate_fields(208,82,"training_DINO.txt");
+    //RBM_generate_fields(208,82,"training_DINO.txt");
     //sample_param_space(200,"dat_files/startfile_dino.txt");
     int A[10] = {16,40,48,68,90,100,116,132,144,208};
     int Z[10] = {8 ,20,20,28,40,50 ,50 ,50 ,62 ,82 };
-    get_Observables("validation_DINO.txt",208,82);
+    //get_Observables("validation_DINO.txt",208,82);
     
-    for (int i=7; i<10; ++i) {
-        //RBM_generate_fields(A[i],Z[i],"training_DINO.txt");
-        //get_Observables("validation_DINO.txt",A[i],Z[i]);
+    for (int i=0; i<6; ++i) {
+        RBM_generate_fields(A[i],Z[i],"training_DINO.txt");
+        get_Observables("validation_DINO.txt",A[i],Z[i]);
     }
+    RBM_generate_fields(132,50,"training_DINO.txt");
+    get_Observables("validation_DINO.txt",132,50);
+    RBM_generate_fields(208,82,"training_DINO.txt");
+    get_Observables("validation_DINO.txt",208,82);
     
     //RBM_error_check("RBM_samples.txt",8);
 
