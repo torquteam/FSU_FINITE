@@ -308,21 +308,17 @@ int main() {
     //get_Observables("validation_DINO.txt",208,82);
     
     for (int i=0; i<6; ++i) {
-        RBM_generate_fields(A[i],Z[i],"training_DINO.txt");
-        get_Observables("validation_DINO.txt",A[i],Z[i]);
+        //RBM_generate_fields(A[i],Z[i],"training_DINO.txt");
+        //get_Observables("validation_DINO.txt",A[i],Z[i]);
     }
-    RBM_generate_fields(132,50,"training_DINO.txt");
-    get_Observables("validation_DINO.txt",132,50);
-    RBM_generate_fields(208,82,"training_DINO.txt");
-    get_Observables("validation_DINO.txt",208,82);
     
     //RBM_error_check("RBM_samples.txt",8);
 
 
     // MCMC methods
-    //MCMC_NS(500,10000,"dat_files/invcovmatrix_FSUGOLD.txt","dat_files/CRUSTEOS.txt");
+    //MCMC_NS(1000,10000,"dat_files/invcovmatrix_FSUGOLD.txt","dat_files/CRUSTEOS.txt");
     //MCMC_FN(0,0,"dat_files/exp_data.txt");
-    //MCMC_Observables("MCMC_26.txt","dat_files/CRUSTEOS.txt");
+    MCMC_Observables("MCMC.txt","dat_files/CRUSTEOS.txt");
     
     // Get parameters from set of bulk properties
     /*
