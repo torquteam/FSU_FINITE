@@ -30,6 +30,7 @@ int main() {
     //double inf_couplings[10]; 
     double fin_couplings[16];
     int gridsize = 401;
+    srand(time(0));
     
     /*
     double** param_sets;
@@ -318,7 +319,7 @@ int main() {
     // MCMC methods
     //MCMC_NS(1000,10000,"dat_files/invcovmatrix_FSUGOLD.txt","dat_files/CRUSTEOS.txt");
     //MCMC_FN(0,0,"dat_files/exp_data.txt");
-    MCMC_Observables("MCMC.txt","dat_files/CRUSTEOS.txt");
+    //MCMC_Observables("MCMC.txt","dat_files/CRUSTEOS.txt");
     
     // Get parameters from set of bulk properties
     /*
@@ -339,6 +340,35 @@ int main() {
         out << endl;
     }
     */
+
+    // bootstrapping
+    double** raw_data;
+    double** temp_data; double** new_data;
+    dm3.importdata("LIGO_PAPER/Calibration_28.txt",raw_data);
+    int nrows = dm3.rowcount("LIGO_PAPER/Calibration_28.txt");
+    int N = 100000;
+    int r;
+    double mean;
+
+    dm3.create(temp_data,nrows,1);
+    dm3.create(new_data,N,1);
+    for (int i=0; i<N; ++i) {
+        mean = 0.0;
+        for (int j=0; j<nrows; ++j) {
+            r = rand() % nrows;
+            temp_data[j][0] = raw_data[r][0];
+            mean = mean + temp_data[j][0];
+        }
+        mean = mean/(nrows*1.0);
+        new_data[i][0] = mean;
+    }
+
+    dm3.print(new_data,N,1,true,"test_bootstrap.txt");
+    dm3.cleanup(raw_data,nrows);
+    dm3.cleanup(temp_data,nrows);
+    dm3.cleanup(new_data,N);
+
+
 
     // remove leftover files
     remove("Ap.txt"); remove("Bp.txt"); remove("Fn.txt"); remove("Gn.txt");
