@@ -64,7 +64,7 @@ int main() {
     tool1.convert_to_inf_couplings(fin_couplings, inf_couplings);
     bulk1.get_bulkproperties(inf_couplings);
     */
-    /*
+    
     //FSUGarnet
     fin_couplings[0] = 110.349; // gs2
 	fin_couplings[1] = 187.695;  // gw2
@@ -83,9 +83,9 @@ int main() {
     fin_couplings[14] = 763.0;
     fin_couplings[15] = 980.0;
     
-    tool1.convert_to_inf_couplings(fin_couplings, inf_couplings);
+    //tool1.convert_to_inf_couplings(fin_couplings, inf_couplings);
     //bulk1.get_bulkproperties(inf_couplings);
-    */
+    
     /*
     //FSUGold2
     fin_couplings[0] = 108.0943; // gs2
@@ -161,7 +161,7 @@ int main() {
     //hartree_method(fin_couplings,116,50,20,gridsize,3,Observables,1.2,false,false);
     //hartree_method(fin_couplings,132,50,20,gridsize,3,Observables,1.2,false,false);
     //hartree_method(fin_couplings,144,62,20,gridsize,3,Observables,1.4,true,true);
-    //hartree_method(fin_couplings,208,82,20,gridsize,3,Observables,1.2,true,true);
+    hartree_method(fin_couplings,208,82,20,gridsize,3,Observables,1.2,true,true);
 
     /*
     // MCMC sample for charge radii
@@ -340,35 +340,6 @@ int main() {
         out << endl;
     }
     */
-
-    // bootstrapping
-    double** raw_data;
-    double** temp_data; double** new_data;
-    dm3.importdata("LIGO_PAPER/Calibration_28.txt",raw_data);
-    int nrows = dm3.rowcount("LIGO_PAPER/Calibration_28.txt");
-    int N = 100000;
-    int r;
-    double mean;
-
-    dm3.create(temp_data,nrows,1);
-    dm3.create(new_data,N,1);
-    for (int i=0; i<N; ++i) {
-        mean = 0.0;
-        for (int j=0; j<nrows; ++j) {
-            r = rand() % nrows;
-            temp_data[j][0] = raw_data[r][0];
-            mean = mean + temp_data[j][0];
-        }
-        mean = mean/(nrows*1.0);
-        new_data[i][0] = mean;
-    }
-
-    dm3.print(new_data,N,1,true,"test_bootstrap.txt");
-    dm3.cleanup(raw_data,nrows);
-    dm3.cleanup(temp_data,nrows);
-    dm3.cleanup(new_data,N);
-
-
 
     // remove leftover files
     remove("Ap.txt"); remove("Bp.txt"); remove("Fn.txt"); remove("Gn.txt");
