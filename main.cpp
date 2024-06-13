@@ -40,8 +40,8 @@ int main() {
     }
     dm3.cleanup(param_sets,50);
     */
-    /*
-    double params[9] = {4.91160767e+02,  1.05813435e+02,  1.82548004e+02,  1.67125801e+02, 1.10939990e+02,  3.36134447e+00, -1.20853287e-03,  2.80633218e-02, 6.69791611e-03};
+    
+    double params[9] = {4.91239332e+02, 1.08503896e+02, 1.90987414e+02, 9.68993953e+02, 1.31718808e+03, 2.65128158e+00, 7.59352431e-03, 3.91359605e-02, 1.35247285e-03};
     // Experimental
     fin_couplings[0] = params[1]; // gs2
     fin_couplings[1] = params[2]; // gw2
@@ -61,10 +61,10 @@ int main() {
     fin_couplings[15] = 980.0;
     
     
-    tool1.convert_to_inf_couplings(fin_couplings, inf_couplings);
-    bulk1.get_bulkproperties(inf_couplings);
-    */
+    //tool1.convert_to_inf_couplings(fin_couplings, inf_couplings);
+    //bulk1.get_bulkproperties(inf_couplings);
     
+    /*
     //FSUGarnet
     fin_couplings[0] = 110.349; // gs2
 	fin_couplings[1] = 187.695;  // gw2
@@ -85,7 +85,7 @@ int main() {
     
     //tool1.convert_to_inf_couplings(fin_couplings, inf_couplings);
     //bulk1.get_bulkproperties(inf_couplings);
-    
+    */
     /*
     //FSUGold2
     fin_couplings[0] = 108.0943; // gs2
@@ -159,9 +159,9 @@ int main() {
     //hartree_method(fin_couplings,90,40,20,gridsize,3,Observables,1.2,false,false);
     //hartree_method(fin_couplings,100,50,20,gridsize,3,Observables,1.4,false,false);
     //hartree_method(fin_couplings,116,50,20,gridsize,3,Observables,1.2,false,false);
-    //hartree_method(fin_couplings,132,50,20,gridsize,3,Observables,1.2,false,false);
+    hartree_method(fin_couplings,132,50,20,gridsize,3,Observables,1.2,false,false);
     //hartree_method(fin_couplings,144,62,20,gridsize,3,Observables,1.4,true,true);
-    hartree_method(fin_couplings,208,82,20,gridsize,3,Observables,1.2,true,true);
+    //hartree_method(fin_couplings,208,82,20,gridsize,3,Observables,1.2,true,true);
 
     /*
     // MCMC sample for charge radii
