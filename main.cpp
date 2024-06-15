@@ -41,7 +41,7 @@ int main() {
     dm3.cleanup(param_sets,50);
     */
     
-    double params[9] = {4.91239332e+02, 1.08503896e+02, 1.90987414e+02, 9.68993953e+02, 1.31718808e+03, 2.65128158e+00, 7.59352431e-03, 3.91359605e-02, 1.35247285e-03};
+    double params[9] = {4.92720946e+02, 1.07324295e+02, 1.85560128e+02, 9.37958787e+02, 1.25872683e+03, 3.10983345e+00, 1.16587660e-03, 3.08534632e-02, 1.44136832e-03};
     // Experimental
     fin_couplings[0] = params[1]; // gs2
     fin_couplings[1] = params[2]; // gw2
@@ -154,12 +154,12 @@ int main() {
 
     //hartree_method(fin_couplings,16,8,20,gridsize,3,Observables,1.2,false,false);
     //hartree_method(fin_couplings,40,20,20,gridsize,3,Observables,1.2,false,false);
-    //hartree_method(fin_couplings,48,20,20,gridsize,3,Observables,1.2,false,false);
+    hartree_method(fin_couplings,48,20,20,gridsize,3,Observables,1.2,false,false);
     //hartree_method(fin_couplings,68,28,20,gridsize,3,Observables,1.2,false,false);
     //hartree_method(fin_couplings,90,40,20,gridsize,3,Observables,1.2,false,false);
     //hartree_method(fin_couplings,100,50,20,gridsize,3,Observables,1.4,false,false);
     //hartree_method(fin_couplings,116,50,20,gridsize,3,Observables,1.2,false,false);
-    hartree_method(fin_couplings,132,50,20,gridsize,3,Observables,1.2,false,false);
+    //hartree_method(fin_couplings,132,50,20,gridsize,3,Observables,1.2,false,false);
     //hartree_method(fin_couplings,144,62,20,gridsize,3,Observables,1.4,true,true);
     //hartree_method(fin_couplings,208,82,20,gridsize,3,Observables,1.2,true,true);
 
