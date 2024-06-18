@@ -40,18 +40,17 @@ int main() {
     }
     dm3.cleanup(param_sets,50);
     */
-    
-    double params[9] = {4.92720946e+02, 1.07324295e+02, 1.85560128e+02, 9.37958787e+02, 1.25872683e+03, 3.10983345e+00, 1.16587660e-03, 3.08534632e-02, 1.44136832e-03};
+    double params[8] = {5.08847788e+02,  1.05513973e+02,  1.65808426e+02,  3.76834803e+02, 4.23186971e+00, -1.81757243e-02,  5.72921400e-04,  4.26515100e-02};
     // Experimental
     fin_couplings[0] = params[1]; // gs2
     fin_couplings[1] = params[2]; // gw2
     fin_couplings[2] = params[3]; // gp2
-    fin_couplings[3] = params[4]; // gd2
-    fin_couplings[4] = params[5]; // kappa
-    fin_couplings[5] = params[6]; // lambda
-    fin_couplings[6] = params[7]; // zeta
+    fin_couplings[3] = 0.0; // gd2
+    fin_couplings[4] = params[4]; // kappa
+    fin_couplings[5] = params[5]; // lambda
+    fin_couplings[6] = params[6]; // zeta
     fin_couplings[7] = 0.0; // xi
-    fin_couplings[8] = params[8]; // Lambda_v
+    fin_couplings[8] = params[7]; // Lambda_v
     fin_couplings[9] = 0.0; // Lambda_s
     fin_couplings[10] = 0.0; // fw
     fin_couplings[11] = 0.0;    // fp
@@ -60,6 +59,10 @@ int main() {
     fin_couplings[14] = 763.0;
     fin_couplings[15] = 980.0;
     
+    for (int i=0; i<16; ++i) {
+        cout << fin_couplings[i] << "  ";
+    }
+    cout << endl;
     
     //tool1.convert_to_inf_couplings(fin_couplings, inf_couplings);
     //bulk1.get_bulkproperties(inf_couplings);
@@ -151,18 +154,18 @@ int main() {
     //dm3.cleanup(Symm_EOS,npoints);
     dm3.cleanup(PNM_EOS,npoints);
     */
-
-    //hartree_method(fin_couplings,16,8,20,gridsize,3,Observables,1.2,false,false);
-    //hartree_method(fin_couplings,40,20,20,gridsize,3,Observables,1.2,false,false);
+   /*
+    hartree_method(fin_couplings,16,8,20,gridsize,3,Observables,1.3,false,false);
+    hartree_method(fin_couplings,40,20,20,gridsize,3,Observables,1.2,false,false);
     hartree_method(fin_couplings,48,20,20,gridsize,3,Observables,1.2,false,false);
-    //hartree_method(fin_couplings,68,28,20,gridsize,3,Observables,1.2,false,false);
-    //hartree_method(fin_couplings,90,40,20,gridsize,3,Observables,1.2,false,false);
-    //hartree_method(fin_couplings,100,50,20,gridsize,3,Observables,1.4,false,false);
-    //hartree_method(fin_couplings,116,50,20,gridsize,3,Observables,1.2,false,false);
-    //hartree_method(fin_couplings,132,50,20,gridsize,3,Observables,1.2,false,false);
-    //hartree_method(fin_couplings,144,62,20,gridsize,3,Observables,1.4,true,true);
-    //hartree_method(fin_couplings,208,82,20,gridsize,3,Observables,1.2,true,true);
-
+    hartree_method(fin_couplings,68,28,20,gridsize,3,Observables,1.2,false,false);
+    hartree_method(fin_couplings,90,40,20,gridsize,3,Observables,1.2,false,false);
+    hartree_method(fin_couplings,100,50,20,gridsize,3,Observables,1.4,false,false);
+    hartree_method(fin_couplings,116,50,20,gridsize,3,Observables,1.2,false,false);
+    hartree_method(fin_couplings,132,50,20,gridsize,3,Observables,1.2,false,false);
+    hartree_method(fin_couplings,144,62,20,gridsize,3,Observables,1.3,true,true);
+    hartree_method(fin_couplings,208,82,20,gridsize,3,Observables,1.2,true,true);
+*/
     /*
     // MCMC sample for charge radii
     int npoints = 1000;

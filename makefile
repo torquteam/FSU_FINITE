@@ -1,7 +1,7 @@
-CXX = g++-10
-CC = gcc-10
+CXX = g++-14
+CC = gcc-14
 VARNAME = value
-CXXFLAGS = -Wall -g -O3 -fopenmp -std=c++17
+CXXFLAGS = -Wall -g -O3 -fopenmp
 
 main: main.o NumMethods.o finitenuclei.o MCMC.o infinitematter.o Conversions.o minpack.o
 	$(CXX) $(CXXFLAGS) -o main main.o NumMethods.o finitenuclei.o MCMC.o infinitematter.o Conversions.o minpack.o
