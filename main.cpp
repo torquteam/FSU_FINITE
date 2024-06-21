@@ -27,7 +27,7 @@ int main() {
     auto start = chrono :: high_resolution_clock::now();     
     
     double Observables[7]; 
-    //double inf_couplings[10]; 
+    double inf_couplings[10]; 
     double fin_couplings[16];
     int gridsize = 401;
     srand(time(0));
@@ -40,6 +40,7 @@ int main() {
     }
     dm3.cleanup(param_sets,50);
     */
+   /*
     double params[8] = {5.08847788e+02,  1.05513973e+02,  1.65808426e+02,  3.76834803e+02, 4.23186971e+00, -1.81757243e-02,  5.72921400e-04,  4.26515100e-02};
     // Experimental
     fin_couplings[0] = params[1]; // gs2
@@ -66,7 +67,7 @@ int main() {
     
     //tool1.convert_to_inf_couplings(fin_couplings, inf_couplings);
     //bulk1.get_bulkproperties(inf_couplings);
-    
+    */
     /*
     //FSUGarnet
     fin_couplings[0] = 110.349; // gs2
@@ -110,30 +111,29 @@ int main() {
     tool1.convert_to_inf_couplings(fin_couplings, inf_couplings);
     bulk1.get_bulkproperties(inf_couplings);
     */
-    /*
+
     double BA, kf, p0, mstar, K, J_tilde, L, Ksym, zeta, xi, lambda_s, fw, fp;
     double masses[4];
-    //             
+    //           
     // Experimental Model
-    //  35.068868770696525 88.04948974877948 -58.91130412652875
-    masses[0] = 490.33;          
+    masses[0] = 502.2303545;          
     masses[1] = 782.5; 
     masses[2] = 763.0; 
     masses[3] = 980.0;
-    BA = -16.2429; //-16.1856;                          // Binding energy (MeV) decreases binding proportionally (barely effects charge and skin)
+    BA = -16.3253261;   // Binding energy (MeV) decreases binding proportionally (barely effects charge and skin)
     kf = 1.31138;                                    // larger values lower binding and (lower skin and charge radii equally)
-    p0 = 2.0/(3.0*pow(pi,2.0))*pow(kf,3.0);        
-    J_tilde = 31.6168;        // Symmetry energy at sat (MeV)
-    mstar = 0.584299*939.0;      // Effective Mass (MeV)
-    K = 246.901;             // Compressibility (MeV) 
-    L = 29.4076;               // Derivative of Symmetry Energy at sat (MeV)
+    p0 = 0.1518791179; //2.0/(3.0*pow(pi,2.0))*pow(kf,3.0);        
+    J_tilde = 36.63400779;        // Symmetry energy at sat (MeV)
+    mstar = 0.5981984388;      // Effective Mass (MeV)
+    K = 246.6814529;             // Compressibility (MeV) 
+    L = 105.67548212;               // Derivative of Symmetry Energy at sat (MeV)
     Ksym = -58.91130412652875;
-    zeta = 0.00137591;
+    zeta = 0.000399945274706;
     xi = 0.0;                                            // Self interaction strength for w meson
     fw = 0.0;
     fp = 0.0;
     lambda_s = 0.0;
-    bulk1.get_parameters(BA,p0,J_tilde,mstar,K,L,Ksym,zeta,xi,lambda_s,fw,fp,masses,fin_couplings,true,1,false);     // calculate coupling constants FSU Model  
+    bulk1.get_parameters(BA,p0,J_tilde,mstar*939.0,K,L,Ksym,zeta,xi,lambda_s,fw,fp,masses,fin_couplings,true,1,false);     // calculate coupling constants FSU Model  
     
     for (int i=0; i<16; ++i) {
         cout << fin_couplings[i] << "  ";
@@ -142,7 +142,7 @@ int main() {
     //cout << BA/-16.3 << "  " << kf/1.30 << "  " << mstar/(939*0.61) << "  " << K/230.0 << "  " << J/32.59 << "  " << L/60.50 << endl;
     tool1.convert_to_inf_couplings(fin_couplings, inf_couplings);
     //chisq(fin_couplings);
-    */
+    
     /*
     //double** Symm_EOS;
     double** PNM_EOS;
@@ -154,7 +154,7 @@ int main() {
     //dm3.cleanup(Symm_EOS,npoints);
     dm3.cleanup(PNM_EOS,npoints);
     */
-   /*
+    /*
     hartree_method(fin_couplings,16,8,20,gridsize,3,Observables,1.3,false,false);
     hartree_method(fin_couplings,40,20,20,gridsize,3,Observables,1.2,false,false);
     hartree_method(fin_couplings,48,20,20,gridsize,3,Observables,1.2,false,false);
@@ -165,7 +165,7 @@ int main() {
     hartree_method(fin_couplings,132,50,20,gridsize,3,Observables,1.2,false,false);
     hartree_method(fin_couplings,144,62,20,gridsize,3,Observables,1.3,true,true);
     hartree_method(fin_couplings,208,82,20,gridsize,3,Observables,1.2,true,true);
-*/
+    */
     /*
     // MCMC sample for charge radii
     int npoints = 1000;
@@ -320,7 +320,7 @@ int main() {
 
 
     // MCMC methods
-    //MCMC_NS(1000,10000,"dat_files/invcovmatrix_FSUGOLD.txt","dat_files/CRUSTEOS.txt");
+    MCMC_NS(1000,10000,"dat_files/invcovmatrix_RBM.txt","dat_files/CRUSTEOS.txt");
     //MCMC_FN(0,0,"dat_files/exp_data.txt");
     //MCMC_Observables("MCMC.txt","dat_files/CRUSTEOS.txt");
     

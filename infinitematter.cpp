@@ -654,7 +654,7 @@ double chneutral(double kf, double couplings[10], double t, double fields_v[2]) 
     gdd = fields_s[1];
     gss = fields_s[0];
     mstarp = mNuc-gss-0.5*gdd;   mstarn = mNuc-gss+0.5*gdd; // effective mass
-    double fvec[2]; int lwa = (2*(3*2+13))/2; int iflag = 1;  double wa[lwa];
+    double fvec[2]; int lwa = (2*(3*2+13))/2;  double wa[lwa];
     double params[7] = {kf,t,couplings[1],couplings[2],couplings[6],couplings[7],couplings[8]};
     hybrd1(vectorfields_func,2,fields_v,fvec,1e-6,wa,lwa,params);
     //vectorfield_2D_NR(kf,couplings,t,1e-7,fields);
@@ -668,8 +668,7 @@ double chneutral(double kf, double couplings[10], double t, double fields_v[2]) 
 
 // perform newtons method and bisection to get t for a given fermi momentum kf
 double tools :: get_t_betaeq(double kf, double couplings[10], double t_avg, double fields_v[2]) {
-    double y,min, max;
-    double x = 1.0;
+    double min, max;
     min = t_avg - 0.040;
     max = t_avg + 0.040;
     if (max>1.0) {
@@ -677,15 +676,6 @@ double tools :: get_t_betaeq(double kf, double couplings[10], double t_avg, doub
     }
     if (min<0.0) {
         min = 1e-8;
-    }
-
-    x = min;
-    //cout << "kf: " << kf << "  t: " << t_avg << "  min: " << min << "  max: " << max << endl;
-    double fi[2] = {fields_v[0],fields_v[1]};
-    for (int i=0; i<100; ++i) {
-        y = chneutral(kf,couplings,x,fi);
-        //cout << x << "  " << y << endl;
-        x = x + (max-min)/(100-1);
     }
     return nmi.zbrent(chneutral,min,max,1e-7,kf,couplings,fields_v);
 }
@@ -1013,7 +1003,7 @@ int equationofstate :: get_SymmetryEnergy(double couplings[10], double** &eos, i
 
 
 // get the EOS for a given number of points and set of couplings
-// coupling array of the form [ (gs/ms)^2 , (gw/mw)^2 , (gp/mp)^2, (gd/md)^2, b , c , h , lambda ]
+// coupling array of the form [ (gs/ms)^2 , (gw/mw)^2 , (gp/mp)^2, (gd/md)^2, kappa , lambda , zeta, xi, lambda_v , lambda_s ]
 // will output an array of the form [nb fm-3, en MeV/fm3, pr MeV/fm3, dpde, mub MeV, dP/drho, Keff MeV]
 int equationofstate :: get_EOS_NSM(double couplings[10], double** &eos, int npoints, bool print, bool unstable) {
     double k,en,pr,dens,mue,gww,gss,gpp,gdd,mstarp,mstarn,kp,kn,mun,mup,t,check,conv_mev4,p0f,ssize;
@@ -1045,7 +1035,7 @@ int equationofstate :: get_EOS_NSM(double couplings[10], double** &eos, int npoi
         tool.scalarfield_2D_NR(k,couplings,t,1e-7,fields_s);
         gdd = fields_s[1];
         gss = fields_s[0];
-        double fvec[2]; int lwa = (2*(3*2+13))/2; int iflag = 1;  double wa[lwa];
+        double fvec[2]; int lwa = (2*(3*2+13))/2;  double wa[lwa];
         double params[7] = {k,t,couplings[1],couplings[2],couplings[6],couplings[7],couplings[8]};
         hybrd1(vectorfields_func,2,fields_v,fvec,1e-6,wa,lwa,params);
 
@@ -1058,7 +1048,7 @@ int equationofstate :: get_EOS_NSM(double couplings[10], double** &eos, int npoi
         mstarp = mP - gss - 0.5*gdd; mstarn = mN - gss + 0.5*gdd; // get efffecitve masses
         //cout << setprecision(10) << dens*conv_mev4 << "  " << t << "  " << gdd << "  " << gss << "  " << gww << "  " << gpp << endl;
         //cout << "eff rho: " << sqrt(pow(763.0,2.0) + 2.0*couplings[2]*pow(763,2.0)*couplings[8]*pow(gww,2.0)) << endl;
-        //cout << "eff delta: " << sqrt(pow(980.0,2.0) + 2.0*couplings[3]*pow(980,2.0)*couplings[9]*pow(gss,2.0)) << endl;
+        //double eff_w_mass = 1.0/couplings[1] + 1.0/6.0*couplings[6]*pow(gww,2.0);
         //cout << "check t: " << chneutral(k,couplings,t) << endl;
         //cout << "---------------------------------" << endl;
         
@@ -1085,7 +1075,6 @@ int equationofstate :: get_EOS_NSM(double couplings[10], double** &eos, int npoi
         //cout << gss << "  " << gww << "  " << gpp << "  " << gdd << "  " << t << endl;
     
         // check for thermodynamic stability
-        double fi[2];
         check = mun*dens - en - pr;
         //cout << "ch: " << -qknb(mue,mE,2.0) - qknb(mue,mMU,2.0) + pow(kp,3.0)/(3.0*pow(pi,2));
         //cout << "  gss: " << gss << "  gww: " << gww << "  gpp: " << gpp << "  gdd: " << gdd << "  t: " << t << endl;
@@ -1098,8 +1087,6 @@ int equationofstate :: get_EOS_NSM(double couplings[10], double** &eos, int npoi
                 gss = fields_s[0];
                 vectorfield_2D_NR(k,couplings,w,1e-7,fields_v);
                 gpp = fields_v[1];
-                double z = chneutral(k,couplings,w,fields_v);
-                //cout << w << "  " << z << "  " << gss << "  " << gpp << endl;
             }
             exit(0);
         }
@@ -1404,7 +1391,7 @@ int bulks :: get_parameters(double BA, double p0, double Jtilde, double mstar, d
     fin_couplings[14] = masses[2];
     fin_couplings[15] = masses[3];
 
-    if (gpomp2 < 0 || lambda_v < 0 || zeta < 0 || gpomp2>0.001717) {
+    if (gpomp2 < 0 || gsoms2 < 0 || gwomw2 < 0 || zeta < 0 || lambda_v < 0) {
         return -1;
     }
 

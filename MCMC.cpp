@@ -470,7 +470,6 @@ void get_Observables(string param_set, int A, int Z) {
     double fin_couplings[16];
     double Observables[7];
 
-    int exit_code;
     int nstates_n, nstates_p;
 
     string source_file_n = "spectrum_ref_files/" + to_string(A) + "," + to_string(Z) + "," + "neutron_spectrum.txt";
@@ -686,7 +685,7 @@ void RBM_error_check(string RBM_file, int n_params) {
 // ################################################################################################
 // bulks has to be of form [BA, kf, mstar/m, K, J, L, zeta]
 int param_change(int n_params, vector<double>& bulks_0, vector<double>& bulks_p, vector<double>& stds, double mw, double mp, int index, double inf_couplings[10]) {
-    double ms = 500.0;
+    double ms = bulks_0[7];
     double md = 980.0;
     double masses[4] = {ms,mw,mp,md};
     double fin_couplings[16];
@@ -697,8 +696,8 @@ int param_change(int n_params, vector<double>& bulks_0, vector<double>& bulks_p,
     }
     bulks_p[index] = rand_normal(bulks_0[index], stds[index]);
 
-    double p0 = 2.0/(3.0*pow(pi,2.0))*pow(bulks_p[1],3.0);
-    int flag = bulkmc.get_parameters(bulks_p[0],p0,bulks_p[4],bulks_p[2]*mNuc_mev,bulks_p[3],bulks_p[5],0,bulks_p[6],0.0,0.0,0.0,0.0,masses,fin_couplings,true,1,false);
+    masses[0] = bulks_p[7];
+    int flag = bulkmc.get_parameters(bulks_p[0],bulks_p[1],bulks_p[4],bulks_p[2]*mNuc_mev,bulks_p[3],bulks_p[5],0,bulks_p[6],0.0,0.0,0.0,0.0,masses,fin_couplings,true,1,false);
     if (flag == -1) {
         toolmc.convert_to_inf_couplings(fin_couplings,inf_couplings);
         return -1;
@@ -708,18 +707,16 @@ int param_change(int n_params, vector<double>& bulks_0, vector<double>& bulks_p,
     }
 }
 
-double compute_prior(double** invcov, double means[7], vector<double>& bulks) {
-    double vec1[7];         // temporary arrays for matrix mulitplication
+double compute_prior(double** invcov, double means[8], vector<double>& bulks) {
+    double vec1[8] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};         // temporary arrays for matrix mulitplication
     double chisq = 0.0;
-    double scaling[7] = {-16.3,1.30,0.61,230.0,32.59,60.50,0.06};
 
     // initialize the temp arrays and get the prior distribution X^2 = (x-mu)^T Cov^-1 (x-mu)
-    vec1[0] = 0; vec1[1] = 0; vec1[2] = 0; vec1[3] = 0; vec1[4] = 0; vec1[5] = 0; vec1[6] = 0;
-    for (int i=0; i<7; ++i) {
-        for (int j=0; j<7; ++j) {
-            vec1[i] = vec1[i] + invcov[i][j]*(bulks[j]/scaling[j]-means[j]);
+    for (int i=0; i<8; ++i) {
+        for (int j=0; j<8; ++j) {
+            vec1[i] = vec1[i] + invcov[i][j]*(bulks[j]-means[j]);
         }
-        chisq = chisq + vec1[i]*(bulks[i]/scaling[i]-means[i]);
+        chisq = chisq + vec1[i]*(bulks[i]-means[i]);
     }
     return exp(-chisq/2.0);
 }
@@ -727,7 +724,7 @@ double compute_prior(double** invcov, double means[7], vector<double>& bulks) {
 double compute_lkl(double inf_couplings[10], double** CRUST, int nrowscrust, int flag) {
     double lkl = 1.0;
     double chisq = 0.0;
-    double Mmax_exp = 2.8;
+    double Mmax_exp = 2.6;
     double** COREEOS; double** NS_EOS;
     int npoints = 250;
     double cv = convmc.energyCONV(0,1);   // MeV/fm3 to unitless
@@ -783,7 +780,7 @@ void adaptive_width(int iter, int n_check, vector<double>& arate, vector<int>& a
 
 void MCMC_NS(int nburnin, int nruns, string covdata, string crust) {
     srand(time(0));
-    int n_params = 7;
+    int n_params = 8;
     double inf_couplings[10]; double fin_couplings[16];
     double ms = 500.0; double mw = 782.5; double mp = 763.0; double md = 980.0;
     double masses[4] = {ms,mw,mp,md};
@@ -795,12 +792,12 @@ void MCMC_NS(int nburnin, int nruns, string covdata, string crust) {
     int flag;
 
     // initialization
-    vector<double> bulks_0 = {-16.272,1.3126,0.5844,244.046,33.57,49.82,0.00389};
-    vector<double> bulks_p = {-16.272,1.3126,0.5844,244.046,33.57,49.82,0.00389};
-    vector<double> stds = {0.0146,0.0012,0.0032,2.159,0.479,6.12,0.0011};
-    vector<int> acc_counts = {0,0,0,0,0,0,0};
-    vector<double> arate = {0,0,0,0,0,0,0};
-    double prior_means[7] = {0.99878396660424529, 1.00491981968270430, 0.97168943949904518, 1.03461649348865610, 1.15443471952649210, 1.86516512236962420, 0.42744836577894457};
+    vector<double> bulks_0 = {-16.272,0.1527,0.5844,244.046,33.57,49.82,0.00389,500.0};
+    vector<double> bulks_p = {-16.272,0.1527,0.5844,244.046,33.57,49.82,0.00389,500.0};
+    vector<double> stds = {0.0146,0.0012,0.0032,2.159,0.479,6.12,0.0011,1.0};
+    vector<int> acc_counts = {0,0,0,0,0,0,0,0};
+    vector<double> arate = {0,0,0,0,0,0,0,0};
+    double prior_means[8] = {-16.27550113678805, 0.15004790714657257, 0.598661002256021, 230.77327244908972, 37.94451864647914, 123.55145494700821, 0.028198928263439435, 493.6076641346023};
     double** invcov; double** CRUST;
     dm1.importdata(covdata,invcov);
     dm1.importdata(crust,CRUST);
@@ -808,8 +805,8 @@ void MCMC_NS(int nburnin, int nruns, string covdata, string crust) {
     
     // MCMC start
     double prior = compute_prior(invcov,prior_means,bulks_0);
-    double p0 = 2.0/(3.0*pow(pi,2.0))*pow(bulks_0[1],3.0);
-    flag = bulkmc.get_parameters(bulks_0[0],p0,bulks_0[4],bulks_0[2]*mNuc_mev,bulks_0[3],bulks_0[5],0,bulks_0[6],0.0,0.0,0.0,0.0,masses,fin_couplings,true,1,false);
+    masses[0] = bulks_0[7];
+    flag = bulkmc.get_parameters(bulks_0[0],bulks_0[1],bulks_0[4],bulks_0[2]*mNuc_mev,bulks_0[3],bulks_0[5],0,bulks_0[6],0.0,0.0,0.0,0.0,masses,fin_couplings,true,1,false);
     toolmc.convert_to_inf_couplings(fin_couplings,inf_couplings);
     double lkl0 = compute_lkl(inf_couplings,CRUST,nrowscrust,flag);
     double post0 = prior*lkl0;
@@ -819,7 +816,7 @@ void MCMC_NS(int nburnin, int nruns, string covdata, string crust) {
         for (int j=0; j<n_params; ++j) {
             // get new proposed params
             flag = param_change(n_params,bulks_0,bulks_p,stds,mw,mp,j,inf_couplings);
-            cout << bulks_p[0] << "  " << bulks_p[1] << "  " << bulks_p[2] << "  " << bulks_p[3] << "  " << bulks_p[4] << "  " << bulks_p[5] << "  " << bulks_p[6] << endl;
+            cout << bulks_p[0] << "  " << bulks_p[1] << "  " << bulks_p[2] << "  " << bulks_p[3] << "  " << bulks_p[4] << "  " << bulks_p[5] << "  " << bulks_p[6] << "  " << bulks_p[7] << endl;
 
             // get posterior
             prior = compute_prior(invcov,prior_means,bulks_p);
@@ -872,7 +869,6 @@ int MCMC_Observables(string MCMC_data, string crust) {
     double inf_couplings[10]; double fin_couplings[16];
     double ms = 500.0; double mw = 782.5; double mp = 763.0; double md = 980.0;
     double masses[4] = {ms,mw,mp,md};  
-    double p0;   
     double** CRUST;
     dm1.importdata(crust,CRUST);
     int nrowscrust = dm1.rowcount(crust);
@@ -880,8 +876,8 @@ int MCMC_Observables(string MCMC_data, string crust) {
 
     // run through all param sets  
     for (int i=0; i<nrows; ++i) {
-        p0 = 2.0/(3.0*pow(pi,2.0))*pow(bulks[i][1],3.0);
-        bulkmc.get_parameters(bulks[i][0],p0,bulks[i][4],bulks[i][2]*mNuc_mev,bulks[i][3],bulks[i][5],0,bulks[i][6],0.0,0.0,0.0,0.0,masses,fin_couplings,true,1,false);
+        masses[0] = bulks[i][7];
+        bulkmc.get_parameters(bulks[i][0],bulks[i][1],bulks[i][4],bulks[i][2]*mNuc_mev,bulks[i][3],bulks[i][5],0,bulks[i][6],0.0,0.0,0.0,0.0,masses,fin_couplings,true,1,false);
         toolmc.convert_to_inf_couplings(fin_couplings,inf_couplings);
 
         // compute NS properties
@@ -898,7 +894,7 @@ int MCMC_Observables(string MCMC_data, string crust) {
         dm1.cleanup(NS_EOS,n);
 
         // print out all data
-        for (int j=0; j<7; ++j) {
+        for (int j=0; j<8; ++j) {
             out << bulks[i][j] << "  ";
         }
         for (int j=0; j<10; ++j) {
@@ -948,7 +944,6 @@ double compute_nuclei_v2(int num_nuclei, double params[16], int flag, double** e
     int Z[10] = {8,20,20,28,40,50,50,50,62,82};
     double Observables[7];
     double exp_data_single[6];
-    double conv_help = 1.2;
     int exit_code = -1;
     int count = 0;
 
