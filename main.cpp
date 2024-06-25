@@ -112,24 +112,24 @@ int main() {
     tool1.convert_to_inf_couplings(fin_couplings, inf_couplings);
     bulk1.get_bulkproperties(inf_couplings);
     */
-   /*
+   
     double BA, kf, p0, mstar, K, J_tilde, L, Ksym, zeta, xi, lambda_s, fw, fp;
     double masses[4];
-    //           
+
     // Experimental Model
-    masses[0] = 502.2303545;          
+    masses[0] = 493.6076641346023;          
     masses[1] = 782.5; 
     masses[2] = 763.0; 
     masses[3] = 980.0;
-    BA = -16.3253261;   // Binding energy (MeV) decreases binding proportionally (barely effects charge and skin)
+    BA = -16.27550113678805;   // Binding energy (MeV) decreases binding proportionally (barely effects charge and skin)
     kf = 1.31138;                                    // larger values lower binding and (lower skin and charge radii equally)
-    p0 = 0.1518791179; //2.0/(3.0*pow(pi,2.0))*pow(kf,3.0);        
-    J_tilde = 36.63400779;        // Symmetry energy at sat (MeV)
-    mstar = 0.5981984388;      // Effective Mass (MeV)
-    K = 246.6814529;             // Compressibility (MeV) 
-    L = 105.67548212;               // Derivative of Symmetry Energy at sat (MeV)
+    p0 = 0.15004790714657257; //2.0/(3.0*pow(pi,2.0))*pow(kf,3.0);        
+    J_tilde = 37.94451864647914;        // Symmetry energy at sat (MeV)
+    mstar = 0.598661002256021;      // Effective Mass (MeV)
+    K = 230.77327244908972;             // Compressibility (MeV) 
+    L = 123.55145494700821;               // Derivative of Symmetry Energy at sat (MeV)
     Ksym = -58.91130412652875;
-    zeta = 0.000399945274706;
+    zeta = 0.028198928263439435;
     xi = 0.0;                                            // Self interaction strength for w meson
     fw = 0.0;
     fp = 0.0;
@@ -143,7 +143,7 @@ int main() {
     //cout << BA/-16.3 << "  " << kf/1.30 << "  " << mstar/(939*0.61) << "  " << K/230.0 << "  " << J/32.59 << "  " << L/60.50 << endl;
     tool1.convert_to_inf_couplings(fin_couplings, inf_couplings);
     //chisq(fin_couplings);
-    */
+    
     /*
     //double** Symm_EOS;
     double** PNM_EOS;
