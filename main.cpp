@@ -40,22 +40,23 @@ int main() {
     }
     dm3.cleanup(param_sets,50);
     */
-   /*
-    double params[8] = {5.08847788e+02,  1.05513973e+02,  1.65808426e+02,  3.76834803e+02, 4.23186971e+00, -1.81757243e-02,  5.72921400e-04,  4.26515100e-02};
+   
+    //double params[8] = {5.08847788e+02,  1.05513973e+02,  1.65808426e+02,  3.76834803e+02, 4.23186971e+00, -1.81757243e-02,  5.72921400e-04,  4.26515100e-02};
+
     // Experimental
-    fin_couplings[0] = params[1]; // gs2
-    fin_couplings[1] = params[2]; // gw2
-    fin_couplings[2] = params[3]; // gp2
+    fin_couplings[0] = 100.25574844165376; // gs2
+    fin_couplings[1] = 159.94894689710125; // gw2
+    fin_couplings[2] = 83.08017667927881; // gp2
     fin_couplings[3] = 0.0; // gd2
-    fin_couplings[4] = params[4]; // kappa
-    fin_couplings[5] = params[5]; // lambda
-    fin_couplings[6] = params[6]; // zeta
+    fin_couplings[4] = 4.475103985; // kappa
+    fin_couplings[5] = -0.01870805824; // lambda
+    fin_couplings[6] = 0.000399945274706; // zeta
     fin_couplings[7] = 0.0; // xi
-    fin_couplings[8] = params[7]; // Lambda_v
+    fin_couplings[8] = 0.004248329329141; // Lambda_v
     fin_couplings[9] = 0.0; // Lambda_s
     fin_couplings[10] = 0.0; // fw
     fin_couplings[11] = 0.0;    // fp
-    fin_couplings[12] = params[0];
+    fin_couplings[12] = 502.2303545;
     fin_couplings[13] = 782.5;
     fin_couplings[14] = 763.0;
     fin_couplings[15] = 980.0;
@@ -67,7 +68,7 @@ int main() {
     
     //tool1.convert_to_inf_couplings(fin_couplings, inf_couplings);
     //bulk1.get_bulkproperties(inf_couplings);
-    */
+    
     /*
     //FSUGarnet
     fin_couplings[0] = 110.349; // gs2
@@ -111,7 +112,7 @@ int main() {
     tool1.convert_to_inf_couplings(fin_couplings, inf_couplings);
     bulk1.get_bulkproperties(inf_couplings);
     */
-
+   /*
     double BA, kf, p0, mstar, K, J_tilde, L, Ksym, zeta, xi, lambda_s, fw, fp;
     double masses[4];
     //           
@@ -142,7 +143,7 @@ int main() {
     //cout << BA/-16.3 << "  " << kf/1.30 << "  " << mstar/(939*0.61) << "  " << K/230.0 << "  " << J/32.59 << "  " << L/60.50 << endl;
     tool1.convert_to_inf_couplings(fin_couplings, inf_couplings);
     //chisq(fin_couplings);
-    
+    */
     /*
     //double** Symm_EOS;
     double** PNM_EOS;
@@ -154,7 +155,7 @@ int main() {
     //dm3.cleanup(Symm_EOS,npoints);
     dm3.cleanup(PNM_EOS,npoints);
     */
-    /*
+    
     hartree_method(fin_couplings,16,8,20,gridsize,3,Observables,1.3,false,false);
     hartree_method(fin_couplings,40,20,20,gridsize,3,Observables,1.2,false,false);
     hartree_method(fin_couplings,48,20,20,gridsize,3,Observables,1.2,false,false);
@@ -165,7 +166,7 @@ int main() {
     hartree_method(fin_couplings,132,50,20,gridsize,3,Observables,1.2,false,false);
     hartree_method(fin_couplings,144,62,20,gridsize,3,Observables,1.3,true,true);
     hartree_method(fin_couplings,208,82,20,gridsize,3,Observables,1.2,true,true);
-    */
+    
     /*
     // MCMC sample for charge radii
     int npoints = 1000;
@@ -322,7 +323,7 @@ int main() {
     // MCMC methods
     //MCMC_NS(1000,10000,"dat_files/invcovmatrix_RBM.txt","dat_files/CRUSTEOS.txt");
     //MCMC_FN(0,0,"dat_files/exp_data.txt");
-    MCMC_Observables("MCMC.txt","dat_files/CRUSTEOS.txt");
+    //MCMC_Observables("MCMC.txt","dat_files/CRUSTEOS.txt");
     
     // Get parameters from set of bulk properties
     /*
