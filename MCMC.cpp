@@ -724,7 +724,7 @@ double compute_prior(double** invcov, double means[8], vector<double>& bulks) {
 double compute_lkl(double inf_couplings[10], double** CRUST, int nrowscrust, int flag) {
     double lkl = 1.0;
     double chisq = 0.0;
-    double Mmax_exp = 2.6;
+    double Mmax_exp = 2.2;
     double** COREEOS; double** NS_EOS;
     int npoints = 250;
     double cv = convmc.energyCONV(0,1);   // MeV/fm3 to unitless

@@ -320,9 +320,9 @@ int main() {
 
 
     // MCMC methods
-    MCMC_NS(1000,10000,"dat_files/invcovmatrix_RBM.txt","dat_files/CRUSTEOS.txt");
+    //MCMC_NS(1000,10000,"dat_files/invcovmatrix_RBM.txt","dat_files/CRUSTEOS.txt");
     //MCMC_FN(0,0,"dat_files/exp_data.txt");
-    //MCMC_Observables("MCMC.txt","dat_files/CRUSTEOS.txt");
+    MCMC_Observables("MCMC.txt","dat_files/CRUSTEOS.txt");
     
     // Get parameters from set of bulk properties
     /*
