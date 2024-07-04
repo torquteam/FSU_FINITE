@@ -946,6 +946,7 @@ int equationofstate :: get_PNMEOS(double couplings[10], double** &eos, int npoin
         en = get_en(k,t,gss,gww,gpp,gdd,couplings);
         eos[i][0] = dens*conv_mev4;
         eos[i][1] = en/dens - mNuc;
+        cout << gdd << "  " << gss << "  " << gpp << "  " << gww << "  " << eos[i][1] << endl;
 
         k = k + ssize;
     }

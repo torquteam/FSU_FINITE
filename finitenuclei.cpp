@@ -1970,7 +1970,7 @@ void get_weak_charge_radii(double** densities_unitless, int npoints_densities, i
 }
 
 // returns exit code -1 if no states are found and 0 if success and -2 if no convergence
-// densities form of (r,psn,psp,pvn,pvp,ptn,ptp,pch,pwk)
+// densities form of (r,sn,sp,vn,vp,tn,tp,ch,wk,dtn,dtp)
 int hartree_method(double fin_couplings[16], int A, int Z, int iterations, int gridsize, int meson_iterations, double Observables[7], double convergence_help, bool print_densities, bool print_meson_fields) {
     double R_fm = convergence_help*1.05*pow(A,1.0/3.0); // Wood saxon parameter
     double r_init_fm = 1e-5;    // initial starting point 

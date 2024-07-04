@@ -68,7 +68,7 @@ int main() {
     //tool1.convert_to_inf_couplings(fin_couplings, inf_couplings);
     //bulk1.get_bulkproperties(inf_couplings);
     */
-    /*
+    
     //FSUGarnet
     fin_couplings[0] = 110.349; // gs2
 	fin_couplings[1] = 187.695;  // gw2
@@ -87,9 +87,9 @@ int main() {
     fin_couplings[14] = 763.0;
     fin_couplings[15] = 980.0;
     
-    //tool1.convert_to_inf_couplings(fin_couplings, inf_couplings);
+    tool1.convert_to_inf_couplings(fin_couplings, inf_couplings);
     //bulk1.get_bulkproperties(inf_couplings);
-    */
+    
     /*
     //FSUGold2
     fin_couplings[0] = 108.0943; // gs2
@@ -111,7 +111,7 @@ int main() {
     tool1.convert_to_inf_couplings(fin_couplings, inf_couplings);
     bulk1.get_bulkproperties(inf_couplings);
     */
-
+    /*
     double BA, kf, p0, mstar, K, J_tilde, L, Ksym, zeta, xi, lambda_s, fw, fp;
     double masses[4];
     //           
@@ -142,30 +142,30 @@ int main() {
     //cout << BA/-16.3 << "  " << kf/1.30 << "  " << mstar/(939*0.61) << "  " << K/230.0 << "  " << J/32.59 << "  " << L/60.50 << endl;
     tool1.convert_to_inf_couplings(fin_couplings, inf_couplings);
     //chisq(fin_couplings);
+    */
     
-    /*
     //double** Symm_EOS;
     double** PNM_EOS;
     int npoints = 200;
     eosm.get_PNMEOS(inf_couplings,PNM_EOS,npoints);
     //eosm.get_SymmetryEnergy(inf_couplings,Symm_EOS,npoints);
     //dm3.print(Symm_EOS,npoints,3,true,"DINOa_Symm.txt");
-    dm3.print(PNM_EOS,npoints,2,true,"FSU-TDb_xi_PNM.txt");
+    dm3.print(PNM_EOS,npoints,2,true,"FSU-Garnet.txt");
     //dm3.cleanup(Symm_EOS,npoints);
     dm3.cleanup(PNM_EOS,npoints);
-    */
-    /*
-    hartree_method(fin_couplings,16,8,20,gridsize,3,Observables,1.3,false,false);
-    hartree_method(fin_couplings,40,20,20,gridsize,3,Observables,1.2,false,false);
-    hartree_method(fin_couplings,48,20,20,gridsize,3,Observables,1.2,false,false);
-    hartree_method(fin_couplings,68,28,20,gridsize,3,Observables,1.2,false,false);
-    hartree_method(fin_couplings,90,40,20,gridsize,3,Observables,1.2,false,false);
-    hartree_method(fin_couplings,100,50,20,gridsize,3,Observables,1.4,false,false);
-    hartree_method(fin_couplings,116,50,20,gridsize,3,Observables,1.2,false,false);
-    hartree_method(fin_couplings,132,50,20,gridsize,3,Observables,1.2,false,false);
-    hartree_method(fin_couplings,144,62,20,gridsize,3,Observables,1.3,true,true);
-    hartree_method(fin_couplings,208,82,20,gridsize,3,Observables,1.2,true,true);
-    */
+    
+    
+    //hartree_method(fin_couplings,16,8,20,gridsize,3,Observables,1.3,false,false);
+    //hartree_method(fin_couplings,40,20,20,gridsize,3,Observables,1.2,false,false);
+    //hartree_method(fin_couplings,48,20,20,gridsize,3,Observables,1.2,true,false);
+    //hartree_method(fin_couplings,68,28,20,gridsize,3,Observables,1.2,false,false);
+    //hartree_method(fin_couplings,90,40,20,gridsize,3,Observables,1.2,false,false);
+    //hartree_method(fin_couplings,100,50,20,gridsize,3,Observables,1.4,false,false);
+    //hartree_method(fin_couplings,116,50,20,gridsize,3,Observables,1.2,false,false);
+    //hartree_method(fin_couplings,132,50,20,gridsize,3,Observables,1.2,false,false);
+    //hartree_method(fin_couplings,144,62,20,gridsize,3,Observables,1.3,true,true);
+    //hartree_method(fin_couplings,208,82,20,gridsize,3,Observables,1.2,true,false);
+    
     /*
     // MCMC sample for charge radii
     int npoints = 1000;
@@ -322,7 +322,7 @@ int main() {
     // MCMC methods
     //MCMC_NS(1000,10000,"dat_files/invcovmatrix_RBM.txt","dat_files/CRUSTEOS.txt");
     //MCMC_FN(0,0,"dat_files/exp_data.txt");
-    MCMC_Observables("MCMC.txt","dat_files/CRUSTEOS.txt");
+    //MCMC_Observables("MCMC.txt","dat_files/CRUSTEOS.txt");
     
     // Get parameters from set of bulk properties
     /*
