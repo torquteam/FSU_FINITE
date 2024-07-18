@@ -2077,7 +2077,7 @@ int hartree_method(double fin_couplings[16], int A, int Z, int iterations, int g
             dm2.cleanup(densities_svtnp_unitless,npoints_meson);
             return -1;
         }   
-        cout << setprecision(8) << "iteration " << i+1 << "  " << fabs(BA_mev) << "  " << densities_svtnp_unitless[0][4]/pow(r0_fm,3.0) << endl;
+        //cout << setprecision(8) << "iteration " << i+1 << "  " << fabs(BA_mev) << "  " << densities_svtnp_unitless[0][4]/pow(r0_fm,3.0) << endl;
         dm2.cleanup(densities_svtnp_unitless,npoints_meson);
         
     }

@@ -68,7 +68,7 @@ int main() {
     //tool1.convert_to_inf_couplings(fin_couplings, inf_couplings);
     //bulk1.get_bulkproperties(inf_couplings);
     */
-    
+    /*
     //FSUGarnet
     fin_couplings[0] = 110.349; // gs2
 	fin_couplings[1] = 187.695;  // gw2
@@ -89,7 +89,7 @@ int main() {
     
     tool1.convert_to_inf_couplings(fin_couplings, inf_couplings);
     //bulk1.get_bulkproperties(inf_couplings);
-    
+    */
     /*
     //FSUGold2
     fin_couplings[0] = 108.0943; // gs2
@@ -143,7 +143,7 @@ int main() {
     tool1.convert_to_inf_couplings(fin_couplings, inf_couplings);
     //chisq(fin_couplings);
     */
-    
+    /*
     //double** Symm_EOS;
     double** PNM_EOS;
     int npoints = 200;
@@ -153,7 +153,7 @@ int main() {
     dm3.print(PNM_EOS,npoints,2,true,"FSU-Garnet.txt");
     //dm3.cleanup(Symm_EOS,npoints);
     dm3.cleanup(PNM_EOS,npoints);
-    
+    */
     
     //hartree_method(fin_couplings,16,8,20,gridsize,3,Observables,1.3,false,false);
     //hartree_method(fin_couplings,40,20,20,gridsize,3,Observables,1.2,false,false);
@@ -316,7 +316,7 @@ int main() {
         //get_Observables("validation_DINO.txt",A[i],Z[i]);
     }
     
-    //RBM_error_check("RBM_samples.txt",8);
+    RBM_error_check("RBM_samples.txt",8);
 
 
     // MCMC methods

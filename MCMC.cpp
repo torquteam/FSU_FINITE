@@ -649,6 +649,11 @@ void RBM_error_check(string RBM_file, int n_params) {
     double Observables[7];
     vector<double> hf_results;
     double error[22];
+    for (int i=0; i<22; ++i) {
+        error[i] = 0.0;
+    }
+    int exit_code;
+    int count = 0;
 
     for (int i=0; i<nrows; ++i) {
         for (int j=0; j<10; ++j) {
@@ -661,7 +666,18 @@ void RBM_error_check(string RBM_file, int n_params) {
             fin_couplings[5] = RBM_data[i][5];  // lambda
             fin_couplings[6] = RBM_data[i][6];  // zeta
             fin_couplings[8] = RBM_data[i][7];  // lambda_v
-            hartree_method(fin_couplings,A[j],Z[j],20,gridsize,3,Observables,1.2,false,false);
+            exit_code = -1;
+            while (exit_code != 0) {
+                exit_code = hartree_method(fin_couplings,A[j],Z[j],20,gridsize,3,Observables,pow(1.1,count*1.0),false,false);
+                count = count + 1;
+                if (count > 7) {
+                    break;
+                    cout << "error" << endl;
+                    exit(0);
+                }
+            }
+            count = 0;
+
             if (A[j] == 48 || A[j] == 208) {
                 hf_results.push_back(Observables[0]);
                 hf_results.push_back(Observables[3]);
@@ -677,6 +693,7 @@ void RBM_error_check(string RBM_file, int n_params) {
             cout << error[k] << "  ";
         }
         cout << endl;
+        hf_results.clear();
     }
 }
 
