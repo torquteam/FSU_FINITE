@@ -40,8 +40,8 @@ int main() {
     }
     dm3.cleanup(param_sets,50);
     */
-   /*
-    double params[8] = {5.08847788e+02,  1.05513973e+02,  1.65808426e+02,  3.76834803e+02, 4.23186971e+00, -1.81757243e-02,  5.72921400e-04,  4.26515100e-02};
+
+    double params[8] = {502.2303545,  100.25574844165376,  159.94894689710125,  83.08017667927881, 4.475103985, -0.01870805824,  0.000399945274706,  0.004248329329141};
     // Experimental
     fin_couplings[0] = params[1]; // gs2
     fin_couplings[1] = params[2]; // gw2
@@ -65,9 +65,9 @@ int main() {
     }
     cout << endl;
     
-    //tool1.convert_to_inf_couplings(fin_couplings, inf_couplings);
+    tool1.convert_to_inf_couplings(fin_couplings, inf_couplings);
     //bulk1.get_bulkproperties(inf_couplings);
-    */
+    
     /*
     //FSUGarnet
     fin_couplings[0] = 110.349; // gs2
@@ -240,7 +240,7 @@ int main() {
     
     // GET EOS FOR INFINITE MATTER
     //double inf_couplings[10] = {0.000420665,  0.000282385,  0.000297592,  0.0,  3.87213,  -0.0127319,  0.00882536,  0.0,  0.0310417,  0.0};
-    /*
+    
     double** CORE_EOS;
     int npoints = 250;
     eosm.get_EOS_NSM(inf_couplings,CORE_EOS,npoints,true,false);
@@ -256,11 +256,22 @@ int main() {
     dm3.cleanup(crust,nrows);
     dm3.cleanup(CORE_EOS,npoints);
     //dm3.cleanup(EOS,n);          // comment out if using the EOS to calc MR
-
+    
+    /*
+    // convert for Lorene
+    double** array;
+    dm3.importdata("FSUEOSC.txt",array);
+    ofstream out("Lorene_FSU_EOS.d");
+    int N = dm3.rowcount("FSUEOSC.txt");
+    for (int i=0; i<N; ++i) {
+        out << i+1 << "     " << array[i][0] << "     " << convm.energyCONV(0,2)*array[i][1] << "     " << convm.energyCONV(0,5)*array[i][2] << endl;
+    }
+    dm3.cleanup(array,N);
+    */
     
     // CALCULATE MASS/RADIUS PROFILE
     // ---------------- Calculate Mass Radius Profile
-    string mrfilename = "D";               // output MR filename title (adds _RM)
+    string mrfilename = "FSU";               // output MR filename title (adds _RM)
     int encol = 1;                          // input en col
     int prcol = 2;                          // input pr col
     int dpdecol = 3;
@@ -273,8 +284,8 @@ int main() {
     cout << pr0 << endl;
     nmm.multitov(1e-4, EOS, n, 4, encol, prcol, dpdecol, 1000, mrfilename,pr0);    // calculate mass radius profile, output is (n,en,pr,r,m) (mev/fm3)
     dm3.cleanup(EOS,n);        // comment out if calc ILQ
-    */
-    /*
+    
+    
     // To specify what mass of star for the Tidal Deformability
     double** MRarr;
     string RMfile = mrfilename + "_RM.txt";
@@ -286,7 +297,7 @@ int main() {
     cout << "Urca mass = " << Urca_mass << endl;
     dm3.cleanup(MRarr,nrowsRM);
     cout << cpr << " MeV/fm3" << endl;
-    
+    /*
     // ---------------------- Calculate Relativistic and Newtonian ILQ
     encol = 1;                          // input en col
     prcol = 2;                          // input pr col
@@ -316,7 +327,7 @@ int main() {
         //get_Observables("validation_DINO.txt",A[i],Z[i]);
     }
     
-    RBM_error_check("RBM_samples.txt",8);
+    //RBM_error_check("RBM_samples.txt",8);
 
 
     // MCMC methods

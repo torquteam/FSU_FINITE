@@ -27,7 +27,8 @@ const double mE = 0.511;        // Mass of electron (MeV)
 const double mU = 2.3;          // Mass of up quark (MeV)
 const double mD = 4.8;          // Mass of down quark (MeV)
 const double mS = 95.0;         // Mass of strange quark (MeV)
-const double mP = 938.27231;    // Mass of proton (MeV)
+const double mP = 939.0;    // Mass of proton (MeV)
+const double mN = 939.0;    // Mass of neutron (MeV)
 const double mMU = 105.6583745; // Mass of muon (MeV)
 
 #define SIGN(a,b) ((b) >= 0.0 ? fabs(a) : -fabs(a))
@@ -756,6 +757,19 @@ void data2 :: copy_pointer(double** pointer, double** &array, int nrows, int nco
     }
 }
 
+/*
+void data2 :: CompOSE_format(string eos) {
+    double** eos_array;
+    importdata(eos,eos_array);
+    int nrows = rowcount(eos_array);
+
+    ofstream out("CompOSE_files/eos.thermo");
+    out << mN << "     " << mP << "     " << 1 << endl;
+    for (int i=0; i<nrows; ++i) {
+        out << 1 << "     " << i+1 << "     " << 
+    }
+}
+*/
 
 //*********************************************************************************
 //*********************************************************************************
