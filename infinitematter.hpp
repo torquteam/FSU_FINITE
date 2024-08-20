@@ -29,7 +29,6 @@ public:
     double get_L(double kf, double gss, double gww, double couplings[10]);
     double get_Ksym(double kf, double gss, double gww, double couplings[10]);
     void get_bulkproperties(double couplings[10]);
-    int get_parameters(double BA, double p0, double Jtilde, double mstar, double K, double L, double Ksym, double zeta, double xi, double lambda_s, double fw, double fp, double masses[4], double fin_couplings[16], bool flag, int gd_sol_type, bool delta_coupling);
 };
 
 class equationofstate {
@@ -44,3 +43,7 @@ public:
     int get_EOS_NSM(double couplings[10], double** &eos, int npoints, bool print, bool unstable);
     int get_SymmetryEnergy(double couplings[10], double** &eos, int npoints);
 };
+
+extern "C" {
+int get_parameters(double BA, double p0, double Jtilde, double mstar, double K, double L, double Ksym, double zeta, double xi, double lambda_s, double fw, double fp, double masses[4], double fin_couplings[16], bool flag, int gd_sol_type, bool delta_coupling);
+}

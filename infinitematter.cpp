@@ -1316,7 +1316,8 @@ void bulks :: get_bulkproperties(double couplings[10]) {
 
 // returns finite nuclei parameters (15 parameters)
 // (gs2,gw2,gp2,gd2,kappa,lambda,zeta,lambda_v,lambda_s,fw,fp,ms,mw,mp,md)
-int bulks :: get_parameters(double BA, double p0, double Jtilde, double mstar, double K, double L, double Ksym, double zeta, double xi, double lambda_s, double fw, double fp, double masses[4], double fin_couplings[16], bool flag, int gd_sol_type, bool delta_coupling) {
+extern "C" {
+int get_parameters(double BA, double p0, double Jtilde, double mstar, double K, double L, double Ksym, double zeta, double xi, double lambda_s, double fw, double fp, double masses[4], double fin_couplings[16], bool flag, int gd_sol_type, bool delta_coupling) {
     double a1,a2,a3,b1,c1,c2,c3,g1,integral,tau;
     double kf,gss,gww,gwomw2,en,sdensn,sdensp,sdens,gsoms2,kappa,lambda,gpomp2,lambda_v,gdomd2;
 
@@ -1397,6 +1398,7 @@ int bulks :: get_parameters(double BA, double p0, double Jtilde, double mstar, d
     }
 
     return 0;
+}
 }
 
 // get the effective compressibility for determining the crust core transition

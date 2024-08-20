@@ -41,7 +41,18 @@ int main() {
     dm3.cleanup(param_sets,50);
     */
 
-    double params[8] = {502.2303545,  100.25574844165376,  159.94894689710125,  83.08017667927881, 4.475103985, -0.01870805824,  0.000399945274706,  0.004248329329141};
+    //FSU230529
+    //double params[8] = {502.2303545, 100.25574844165376, 159.94894689710125, 83.08017667927881, 4.475103985, -0.01870805824, 0.000399945274706, 0.004248329329141};
+    
+    //FSU BigApple
+    //double params[8] = {492.7300000, 93.507400000000000, 151.68390000000000, 200.5562000000000, 5.203260000, -0.02173900000, 0.000700000000000, 0.047471000000000};
+    
+    //FSUGarnet
+    double params[8] = {496.939, 110.349, 187.695, 192.927, 3.26, -0.003551, 0.0235, 0.043377};
+    
+    // FSUGold2
+    //double params[8] = {497.479, 108.0943, 183.7893, 80.4656, 3.0029, -0.000533, 0.0256, 0.000823};
+
     // Experimental
     fin_couplings[0] = params[1]; // gs2
     fin_couplings[1] = params[2]; // gw2
@@ -64,53 +75,10 @@ int main() {
         cout << fin_couplings[i] << "  ";
     }
     cout << endl;
-    
-    tool1.convert_to_inf_couplings(fin_couplings, inf_couplings);
-    //bulk1.get_bulkproperties(inf_couplings);
-    
-    /*
-    //FSUGarnet
-    fin_couplings[0] = 110.349; // gs2
-	fin_couplings[1] = 187.695;  // gw2
-	fin_couplings[2] = 192.927;  // gp2
-    fin_couplings[3] = 0.0; // gd2
-	fin_couplings[4] = 3.26;  // kappa
-	fin_couplings[5] = -0.003551;   // lambda
-	fin_couplings[6] = 0.0235; // zeta
-    fin_couplings[7] = 0.0; // xi
-	fin_couplings[8] =  0.043377;  // lambda_v
-    fin_couplings[9] = 0.0; //lambda_s;
-    fin_couplings[10] = 0.0; // fw
-    fin_couplings[11] = 0.0; // fp
-    fin_couplings[12] = 496.939;
-    fin_couplings[13] = 782.5;
-    fin_couplings[14] = 763.0;
-    fin_couplings[15] = 980.0;
-    
-    tool1.convert_to_inf_couplings(fin_couplings, inf_couplings);
-    //bulk1.get_bulkproperties(inf_couplings);
-    */
-    /*
-    //FSUGold2
-    fin_couplings[0] = 108.0943; // gs2
-	fin_couplings[1] = 183.7893;  // gw2
-	fin_couplings[2] = 80.4656;  // gp2
-    fin_couplings[3] = 0.0/4.0; // gd2
-	fin_couplings[4] = 3.0029; // kappa
-	fin_couplings[5] = -0.000533; // lambda
-	fin_couplings[6] = 0.0256; // zeta
-    fin_couplings[7] = 0.0; // xi
-	fin_couplings[8] = 0.000823; // lambda_v
-    fin_couplings[9] = 0.0; // lambda_s
-    fin_couplings[10] = 0.0; // fw
-    fin_couplings[11] = 0.0; // fp
-    fin_couplings[12] = 497.479;
-    fin_couplings[13] = 782.5;
-    fin_couplings[14] = 763.0;
-    fin_couplings[15] = 980.0;
+
     tool1.convert_to_inf_couplings(fin_couplings, inf_couplings);
     bulk1.get_bulkproperties(inf_couplings);
-    */
+
     /*
     double BA, kf, p0, mstar, K, J_tilde, L, Ksym, zeta, xi, lambda_s, fw, fp;
     double masses[4];
@@ -240,7 +208,7 @@ int main() {
     
     // GET EOS FOR INFINITE MATTER
     //double inf_couplings[10] = {0.000420665,  0.000282385,  0.000297592,  0.0,  3.87213,  -0.0127319,  0.00882536,  0.0,  0.0310417,  0.0};
-    
+    /*
     double** CORE_EOS;
     int npoints = 250;
     eosm.get_EOS_NSM(inf_couplings,CORE_EOS,npoints,true,false);
@@ -257,7 +225,7 @@ int main() {
     dm3.cleanup(CORE_EOS,npoints);
     //dm3.cleanup(EOS,n);          // comment out if using the EOS to calc MR
     
-    /*
+    
     // convert for Lorene
     double** array;
     dm3.importdata("FSUEOSC.txt",array);
@@ -269,23 +237,28 @@ int main() {
     dm3.cleanup(array,N);
     */
     
+    double** EOS;
+    dm3.importdata("eos_fsugarnet.txt",EOS);
+    int n = 500;
     // CALCULATE MASS/RADIUS PROFILE
     // ---------------- Calculate Mass Radius Profile
-    string mrfilename = "FSU";               // output MR filename title (adds _RM)
-    int encol = 1;                          // input en col
-    int prcol = 2;                          // input pr col
-    int dpdecol = 3;
+    string mrfilename = "FSU_P";               // output MR filename title (adds _RM)
+    int encol = 2;                          // input en col
+    int prcol = 3;                          // input pr col
+    int dpdecol = 0;
+    double cv1 = convm.energyCONV(2,1);   // MeV/fm3 to unitless
+    double cv2 = convm.energyCONV(5,1);   // MeV/fm3 to unitless
     double cv = convm.energyCONV(0,1);   // MeV/fm3 to unitless
     // --------------------------------------------------
     
     //int n = npoints;
-    nmm.pretovconv(EOS, encol, prcol, cv, cv, n);                                 //convert to unitless en, pr
+    nmm.pretovconv(EOS, encol, prcol, cv1, cv2, n);                                 //convert to unitless en, pr
     double pr0 = 2.0*cv; // start at 2 MeV/fm3
     cout << pr0 << endl;
     nmm.multitov(1e-4, EOS, n, 4, encol, prcol, dpdecol, 1000, mrfilename,pr0);    // calculate mass radius profile, output is (n,en,pr,r,m) (mev/fm3)
     dm3.cleanup(EOS,n);        // comment out if calc ILQ
     
-    
+    /*
     // To specify what mass of star for the Tidal Deformability
     double** MRarr;
     string RMfile = mrfilename + "_RM.txt";

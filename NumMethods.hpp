@@ -59,6 +59,8 @@ public:
     vector<vector<double>> multitov(double h, double** eos, int nrows, int ncols, int encol, int prcol, int dpdecol, int npoints, string filesave, double pr0);
     void RloveMCMC(double** EOS, int dpdecol, int encol, int prcol, double h, double ILQR[4], double icp, int nrows, int ncols);
     double Urca_threshold(double** eos, int ncols, int nrows, int Yp_col, int Yp_Urca_col, int dens_col);
+    bool invertMatrix(double** A, double** inverse, int n);
+    double det(double** A, int n);
 };
 
 #endif /* NumMethods_h */

@@ -109,7 +109,7 @@ int rho_mass_check(double* proposed_params, double** prior_DATA, double masses[4
     fp = proposed_params[11]*prior_DATA[11][3];
 
     p0 = 2.0/(3.0*pow(pi,2.0))*pow(kf,3.0);
-    bulkmc.get_parameters(BA,p0,J,mstar,K,L,Ksym,zeta,xi,lambda_s,fw,fp,masses,fin_couplings,true,gd_sol_type,delta_coupling);     // solve for parameters given bulk properties
+    get_parameters(BA,p0,J,mstar,K,L,Ksym,zeta,xi,lambda_s,fw,fp,masses,fin_couplings,true,gd_sol_type,delta_coupling);     // solve for parameters given bulk properties
     // Check if lambda is negative (eff rho mass is imaginary)
     if (fin_couplings[7] < 0 || fin_couplings[6] < 0) {
         return -1;
@@ -398,7 +398,7 @@ int generate_sample(double params[16], double** start_data) {
     for (int i=0; i<4; ++i) {
         masses[i] = bulks[12+i];
     }
-    bulkmc.get_parameters(bulks[0],bulks[1],bulks[4],bulks[2]*mNuc_mev,bulks[3],bulks[5],bulks[6],bulks[7],bulks[8],bulks[9],bulks[10],bulks[11],masses,params,false,1,true);
+    get_parameters(bulks[0],bulks[1],bulks[4],bulks[2]*mNuc_mev,bulks[3],bulks[5],bulks[6],bulks[7],bulks[8],bulks[9],bulks[10],bulks[11],masses,params,false,1,true);
 
     for (int i=0; i<16; ++i) {
         cout << params[i] << "  ";
@@ -714,7 +714,7 @@ int param_change(int n_params, vector<double>& bulks_0, vector<double>& bulks_p,
     bulks_p[index] = rand_normal(bulks_0[index], stds[index]);
 
     masses[0] = bulks_p[7];
-    int flag = bulkmc.get_parameters(bulks_p[0],bulks_p[1],bulks_p[4],bulks_p[2]*mNuc_mev,bulks_p[3],bulks_p[5],0,bulks_p[6],0.0,0.0,0.0,0.0,masses,fin_couplings,true,1,false);
+    int flag = get_parameters(bulks_p[0],bulks_p[1],bulks_p[4],bulks_p[2]*mNuc_mev,bulks_p[3],bulks_p[5],0,bulks_p[6],0.0,0.0,0.0,0.0,masses,fin_couplings,true,1,false);
     if (flag == -1) {
         toolmc.convert_to_inf_couplings(fin_couplings,inf_couplings);
         return -1;
@@ -823,7 +823,7 @@ void MCMC_NS(int nburnin, int nruns, string covdata, string crust) {
     // MCMC start
     double prior = compute_prior(invcov,prior_means,bulks_0);
     masses[0] = bulks_0[7];
-    flag = bulkmc.get_parameters(bulks_0[0],bulks_0[1],bulks_0[4],bulks_0[2]*mNuc_mev,bulks_0[3],bulks_0[5],0,bulks_0[6],0.0,0.0,0.0,0.0,masses,fin_couplings,true,1,false);
+    flag = get_parameters(bulks_0[0],bulks_0[1],bulks_0[4],bulks_0[2]*mNuc_mev,bulks_0[3],bulks_0[5],0,bulks_0[6],0.0,0.0,0.0,0.0,masses,fin_couplings,true,1,false);
     toolmc.convert_to_inf_couplings(fin_couplings,inf_couplings);
     double lkl0 = compute_lkl(inf_couplings,CRUST,nrowscrust,flag);
     double post0 = prior*lkl0;
@@ -894,7 +894,7 @@ int MCMC_Observables(string MCMC_data, string crust) {
     // run through all param sets  
     for (int i=0; i<nrows; ++i) {
         masses[0] = bulks[i][7];
-        bulkmc.get_parameters(bulks[i][0],bulks[i][1],bulks[i][4],bulks[i][2]*mNuc_mev,bulks[i][3],bulks[i][5],0,bulks[i][6],0.0,0.0,0.0,0.0,masses,fin_couplings,true,1,false);
+        get_parameters(bulks[i][0],bulks[i][1],bulks[i][4],bulks[i][2]*mNuc_mev,bulks[i][3],bulks[i][5],0,bulks[i][6],0.0,0.0,0.0,0.0,masses,fin_couplings,true,1,false);
         toolmc.convert_to_inf_couplings(fin_couplings,inf_couplings);
 
         // compute NS properties
@@ -1004,7 +1004,7 @@ int param_change_FN(int n_params, vector<double>& bulks_0, vector<double>& bulks
 
     double p0 = 2.0/(3.0*pow(pi,2.0))*pow(bulks_p[1],3.0);
     masses[0] = bulks_p[8];
-    int flag = bulkmc.get_parameters(bulks_p[0],p0,bulks_p[4],bulks_p[2]*mNuc_mev,bulks_p[3],bulks_p[5],bulks_p[6],bulks_p[7],0.0,0.0,0.0,0.0,masses,fin_couplings,true,1,true);
+    int flag = get_parameters(bulks_p[0],p0,bulks_p[4],bulks_p[2]*mNuc_mev,bulks_p[3],bulks_p[5],bulks_p[6],bulks_p[7],0.0,0.0,0.0,0.0,masses,fin_couplings,true,1,true);
     if (flag == -1) {
         return -1;
     } else {
@@ -1038,7 +1038,7 @@ void MCMC_FN(int nburnin, int nruns, string exp_file) {
     double prior = compute_prior_FN(bulks_0,n_params);
     double p0 = 2.0/(3.0*pow(pi,2.0))*pow(bulks_0[1],3.0);
     masses[0] = bulks_0[8];
-    flag = bulkmc.get_parameters(bulks_0[0],p0,bulks_0[4],bulks_0[2]*mNuc_mev,bulks_0[3],bulks_0[5],bulks_0[6],bulks_0[7],0.0,0.0,0.0,0.0,masses,fin_couplings,true,1,false);
+    flag = get_parameters(bulks_0[0],p0,bulks_0[4],bulks_0[2]*mNuc_mev,bulks_0[3],bulks_0[5],bulks_0[6],bulks_0[7],0.0,0.0,0.0,0.0,masses,fin_couplings,true,1,false);
     for (int i=0; i<16; ++i) {
         cout << fin_couplings[i] << "  ";
     }
@@ -1095,3 +1095,109 @@ void MCMC_FN(int nburnin, int nruns, string exp_file) {
     }
     dm1.cleanup(exp_data,10);
 }
+
+// Attempt at Levenberg Marquardt Method for finite nuclei
+/*
+double chisq(double** exp_data, int A_vec[10], int Z_vec[10], double* bulks, double* norm, double* &y_i, int n_observs) {
+    double X2 = 0.0;
+    int A, Z;
+    double Observables[7];
+    double fin_couplings[16];
+    double masses[4];
+    y_i = new double[n_observs];
+
+
+    for (int i=0; i<10; ++i) {
+        A = A_vec[i];
+        Z = Z_vec[i];
+        masses[0] = bulks[12]*norm[12]; masses[1] = bulks[13]*norm[13]; masses[2] = bulks[14]*norm[14]; masses[3] = bulks[15]*norm[15];
+        int flag = bulkmc.get_parameters(bulks[0]*norm[0],bulks[1]*norm[1],bulks[4]*norm[4],bulks[2]*norm[2]*mNuc_mev,bulks[3]*norm[3],bulks[5]*norm[5],bulks[6]*norm[6],bulks[7]*norm[7],bulks[8]*norm[8],bulks[9]*norm[9],bulks[10]*norm[10],bulks[11]*norm[11],masses,fin_couplings,true,1,false);
+        if (flag == -1) {
+            cout << "flagged" << endl;
+        }
+        hartree_method(fin_couplings,A,Z,20,401,3,Observables,1.2,false,false);
+        X2 = X2 + pow(Observables[0] - exp_data[i][0],2.0)/pow(exp_data[i][1],2.0);
+        y_i[]
+        if (exp_data[i][2] != -1) {
+            X2 = X2 + pow(Observables[3]-exp_data[i][2],2.0)/pow(exp_data[i][3],2.0);
+        }
+        if (exp_data[i][4] != -1) {
+            X2 = X2 + pow(Observables[5] - exp_data[i][4],2.0)/pow(exp_data[i][5],2.0);
+        }
+    }
+    return X2;
+}
+
+void compute_jac(double* bulks, double* norm, int n_params, double** &jac, double* index, int A_vec[10], int Z_vec[10], double** exp_data) {
+    double* bulks_h;
+    bulks_h = new double[n_params];
+    double masses[4];
+    double fin_couplings[16];
+    double Observables[7];
+    int A,Z;
+
+    for (int i=0; i<n_params; ++i) {
+        // reset all params
+        for (int j=0; j<n_params; ++j) {
+            bulks_h[j] = bulks[j];
+        }
+
+        double X2_h = 0.0;
+        // if index indicates parameter change then change by 0.01
+        if (index[i] == 1) {
+            bulks_h[i] = bulks_h[i] + 0.01;
+            for (int k=0; k<10; ++k) {
+                A = A_vec[k];
+                Z = Z_vec[k];
+                masses[0] = bulks[12]*norm[12]; masses[1] = bulks[13]*norm[13]; masses[2] = bulks[14]*norm[14]; masses[3] = bulks[15]*norm[15];
+                int flag = bulkmc.get_parameters(bulks[0]*norm[0],bulks[1]*norm[1],bulks[4]*norm[4],bulks[2]*norm[2]*mNuc_mev,bulks[3]*norm[3],bulks[5]*norm[5],bulks[6]*norm[6],bulks[7]*norm[7],bulks[8]*norm[8],bulks[9]*norm[9],bulks[10]*norm[10],bulks[11]*norm[11],masses,fin_couplings,true,1,false);
+                if (flag == -1) {
+                    cout << "flagged" << endl;
+                }
+                hartree_method(fin_couplings,A,Z,20,401,3,Observables,1.2,false,false);
+                X2 = X2 + pow(Observables[0] - exp_data[i][0],2.0)/pow(exp_data[i][1],2.0);
+                if (exp_data[i][2] != -1) {
+                    X2 = X2 + pow(Observables[3]-exp_data[i][2],2.0)/pow(exp_data[i][3],2.0);
+                }
+                if (exp_data[i][4] != -1) {
+                    X2 = X2 + pow(Observables[5] - exp_data[i][4],2.0)/pow(exp_data[i][5],2.0);
+                }
+            }
+        }
+    }
+
+}
+
+void compute_alpha() {
+
+}
+
+void LM(double** exp_data, double fin_couplings_i[16]) {
+    // nuclei to calibrate
+    int A[10] = {16,40,48,68,90,100,116,132,144,208};
+    int Z[10] = {8 ,20,20,28,40,50 ,50 ,50 ,62 ,82 };
+
+    // Compute initial chisq
+    chisq(exp_data,A,Z,fin_couplings_i);
+
+    // set initial lambda and convergence threshold
+    double lambda = 0.001;
+    double X2_diff = 100.0;
+    double thresh = 1.0;
+
+    // Run until convergence is reached
+    while (X2_diff > thresh) {
+        // compute alpha (curvature) matrix and beta vector
+
+
+        // solve for delta a
+
+
+        // evaluate chisq at a + delta a
+
+    }
+
+
+    
+}
+*/

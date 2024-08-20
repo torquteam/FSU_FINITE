@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <string>
 using namespace std;
-
+extern "C" {
 double proton_scalardens(double jp, double pfrac, double Ap_r_unitless, double Bp_r_unitless, double r_unitless);
 double neutron_scalardens(double jn, double nfrac, double Fn_r_unitless, double Gn_r_unitless, double r_unitless);
 double neutron_vectordens(double jn, double nfrac, double Fn_r_unitless, double Gn_r_unitless, double r_unitless);
@@ -41,4 +41,5 @@ double charge_formfactor(double q_unitless, double** densities_svtnp_unitless, i
 double weak_formfactor(double q_unitless, double** densities_svtnp_unitless, int nrows, int A, int Z, double qwn);
 double get_WEAK_CHARGE_densities_v2(double** &densities_svtnp_unitless, int Z, int A, int ncols_dens, int nrows_dens, double qwn);
 void get_weak_charge_radii(double** densities_unitless, int npoints_densities, int ncols_density, int A, int Z, double Radii2_C_W_fm2[2], double qwn);
+}
 #endif

@@ -1,11 +1,15 @@
 CXX = g++-10
 CC = gcc-10
 VARNAME = value
-CXXFLAGS = -Wall -g -O3 -fopenmp -std=c++17
+CXXFLAGS = -Wall -g -O3 -fopenmp -std=c++17 -fPIC
 
 main: main.o NumMethods.o finitenuclei.o MCMC.o infinitematter.o Conversions.o minpack.o
 	$(CXX) $(CXXFLAGS) -o main main.o NumMethods.o finitenuclei.o MCMC.o infinitematter.o Conversions.o minpack.o
-	
+
+# Target for the shared library
+cpylibrary.so: main.o NumMethods.o finitenuclei.o MCMC.o infinitematter.o Conversions.o minpack.o
+	$(CXX) $(CXXFLAGS) -dynamiclib -o cpylibrary.so main.o NumMethods.o finitenuclei.o MCMC.o infinitematter.o Conversions.o minpack.o
+
 NumMethods.o: NumMethods.hpp Conversions.hpp
 	$(CXX) $(CXXFLAGS) -c NumMethods.cpp Conversions.cpp
 
@@ -25,4 +29,4 @@ minpack.o: minpack.hpp
 	$(CXX) $(CXXFLAGS) -c minpack.cpp
 	
 clean:
-	rm -f main main.o NumMethods.o finitenuclei.o Conversions.o MCMC.o infinitematter.o minpack.o
+	rm -f main main.o NumMethods.o finitenuclei.o Conversions.o MCMC.o infinitematter.o minpack.o cpylibrary.so

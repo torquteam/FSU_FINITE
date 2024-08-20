@@ -1051,7 +1051,7 @@ vector<vector<double>> nummeth :: multitov(double h, double** eos, int nrows, in
         tovsolve(icp, h, eos, nrows, ncols, encol, prcol, dpdecol, MR, false);                 // solve tov equations
         en = dm.interpolate(nrows, ncols, eos, icp, prcol, encol, true);
         dens = dm.interpolate(nrows,ncols,eos,icp,prcol,0,true);
-        out << dens << "  " << en*conv.energyCONV(1,0) << "  " << icp*conv.energyCONV(1,0) << "  " << conv.rnonetokm(MR[1]) << " " << MR[0] << endl;
+        out << dens << "  " << en*conv.energyCONV(1,0) << "  " << icp*conv.energyCONV(1,0) << "  " << conv.rnonetokm(MR[1]) << "  " << MR[0] << "  " << log((en*conv.energyCONV(1,0) + icp*conv.energyCONV(1,0))/(939.0*dens)) << "  " << 32887.0*sqrt(MR[0]/pow(conv.rnonetokm(MR[1]),3.0))*0.9 << endl;
         //cout << to_string(index) + "/" + to_string(nrows) << "  " << "mue: " << dm.interpolate(nrows, ncols, eos, icp, prcol, 0, true) << " icp: " << icp*conv.energyCONV(1,0) << " ice: " << en*conv.energyCONV(1,0) << " RM: " << conv.rnonetokm(MR[0][1]) << " " << MR[0][0] << endl;
         index = index + space;  //spacing of each mass radius point in pressure space
         //cout << "LOVE: " << Nlove("SingleICP.txt", 3, 2, 0, MR[0][1], 1e-3) << endl;
@@ -1188,4 +1188,101 @@ double nummeth :: Urca_threshold(double** eos, int ncols, int nrows, int Yp_col,
     }
     cout << "Error: No Urca process allowed" << endl;
     return 0;
+}
+
+double nummeth :: det(double** A, int n) {
+    double det = 1.0;
+    for (int i = 0; i < n; i++) {
+        int pivot = i;
+        for (int j = i + 1; j < n; j++) {
+            if (abs(A[j][i]) > abs(A[pivot][i])) {
+                pivot = j;
+            }
+        }
+        if (pivot != i) {
+            swap(A[i], A[pivot]);
+            det *= -1;
+        }
+        if (A[i][i] == 0) {
+            return 0;
+        }
+        det *= A[i][i];
+        for (int j = i + 1; j < n; j++) {
+            double factor = A[j][i] / A[i][i];
+            for (int k = i + 1; k < n; k++) {
+                A[j][k] -= factor * A[i][k];
+            }
+        }
+    }
+    return det;
+}
+ 
+
+bool nummeth :: invertMatrix(double** matrix, double** inverse, int n) {
+    // Create an augmented matrix
+    double** augmented = new double*[n];
+    for (int i = 0; i < n; ++i) {
+        augmented[i] = new double[2*n];
+        for (int j = 0; j < n; ++j) {
+            augmented[i][j] = matrix[i][j];
+        }
+        for (int j = n; j < 2*n; ++j) {
+            augmented[i][j] = (i == j-n) ? 1.0 : 0.0;
+        }
+    }
+
+    // Perform Gaussian elimination
+    for (int i = 0; i < n; ++i) {
+        // Find the pivot element
+        double maxEl = abs(augmented[i][i]);
+        int maxRow = i;
+        for (int k = i + 1; k < n; ++k) {
+            if (abs(augmented[k][i]) > maxEl) {
+                maxEl = abs(augmented[k][i]);
+                maxRow = k;
+            }
+        }
+
+        // Swap rows
+        for (int k = 0; k < 2*n; ++k) {
+            double tmp = augmented[maxRow][k];
+            augmented[maxRow][k] = augmented[i][k];
+            augmented[i][k] = tmp;
+        }
+
+        // Make the pivot element equal to 1
+        double pivot = augmented[i][i];
+        if (pivot == 0) {
+            return false; // The matrix is singular and cannot be inverted
+        }
+
+        for (int j = 0; j < 2*n; ++j) {
+            augmented[i][j] /= pivot;
+        }
+
+        // Make all elements in the current column equal to 0 except the pivot
+        for (int k = 0; k < n; ++k) {
+            if (k != i) {
+                double factor = augmented[k][i];
+                for (int j = 0; j < 2*n; ++j) {
+                    augmented[k][j] -= factor * augmented[i][j];
+                }
+            }
+        }
+    }
+
+    // Extract the inverse matrix from the augmented matrix
+    for (int i = 0; i < n; ++i) {
+        for (int j = 0; j < n; ++j) {
+            inverse[i][j] = augmented[i][j+n];
+        }
+    }
+
+    // Clean up memory
+    for (int i = 0; i < n; ++i) {
+        delete[] augmented[i];
+    }
+    delete[] augmented;
+
+    return true;
 }

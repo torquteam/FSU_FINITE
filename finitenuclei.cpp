@@ -38,7 +38,7 @@ const double q_transfer_Pb = 0.3977;
 data2 dm2;
 nummeth nm;
 
-
+extern "C" {
 // proton scalar density given proton wave functions (unitless)
 double proton_scalardens(double jp, double pfrac, double Ap_r_unitless, double Bp_r_unitless, double r_unitless) {
     double sdens_p = pfrac*(2.0*jp+1.0)/(4.0*pi*pow(r_unitless,2))*(pow(Ap_r_unitless,2.0) - pow(Bp_r_unitless,2.0));
@@ -2113,7 +2113,7 @@ int hartree_method(double fin_couplings[16], int A, int Z, int iterations, int g
     cout << "-----------------------------------" << endl;
     
     Observables[0] = BA_mev; Observables[1] = sqrt(Radii2_N_P_fm2[0]);
-    Observables[2] = sqrt(Radii2_N_P_fm2[1]); Observables[3] = sqrt(Radii2_N_P_fm2[1] + pow(0.84,2.0));
+    Observables[2] = sqrt(Radii2_N_P_fm2[1]); Observables[3] = sqrt(Radii2_C_W_fm2[0]);
     Observables[4] = sqrt(Radii2_C_W_fm2[1]); Observables[5] = Fch_Fwk;
     Observables[6] = densities_svtnp_unitless[0][7]*pow(r0_fm,-3.0);
 
@@ -2145,4 +2145,5 @@ int hartree_method(double fin_couplings[16], int A, int Z, int iterations, int g
     dm2.cleanup(meson_fields_unitless,npoints_meson);
     subtract_restmass("proton_spectrum.txt", "neutron_spectrum.txt");
     return 0;
+}
 }
