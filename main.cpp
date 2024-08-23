@@ -207,8 +207,7 @@ int main() {
     // ######################### Neutron Star Calcultions ##########################################
     
     // GET EOS FOR INFINITE MATTER
-    //double inf_couplings[10] = {0.000420665,  0.000282385,  0.000297592,  0.0,  3.87213,  -0.0127319,  0.00882536,  0.0,  0.0310417,  0.0};
-    /*
+    
     double** CORE_EOS;
     int npoints = 250;
     eosm.get_EOS_NSM(inf_couplings,CORE_EOS,npoints,true,false);
@@ -225,7 +224,7 @@ int main() {
     dm3.cleanup(CORE_EOS,npoints);
     //dm3.cleanup(EOS,n);          // comment out if using the EOS to calc MR
     
-    
+    /*
     // convert for Lorene
     double** array;
     dm3.importdata("FSUEOSC.txt",array);
@@ -237,24 +236,22 @@ int main() {
     dm3.cleanup(array,N);
     */
     
-    double** EOS;
-    dm3.importdata("eos_fsugarnet.txt",EOS);
-    int n = 500;
     // CALCULATE MASS/RADIUS PROFILE
     // ---------------- Calculate Mass Radius Profile
-    string mrfilename = "FSU_P";               // output MR filename title (adds _RM)
-    int encol = 2;                          // input en col
-    int prcol = 3;                          // input pr col
-    int dpdecol = 0;
-    double cv1 = convm.energyCONV(2,1);   // MeV/fm3 to unitless
-    double cv2 = convm.energyCONV(5,1);   // MeV/fm3 to unitless
+    string mrfilename = "FSUGarnet";               // output MR filename title (adds _RM)
+    int encol = 1;                          // input en col
+    int prcol = 2;                          // input pr col
+    int dpdecol = 3;
     double cv = convm.energyCONV(0,1);   // MeV/fm3 to unitless
     // --------------------------------------------------
     
     //int n = npoints;
-    nmm.pretovconv(EOS, encol, prcol, cv1, cv2, n);                                 //convert to unitless en, pr
+    nmm.pretovconv(EOS, encol, prcol, cv, cv, n);                                 //convert to unitless en, pr
     double pr0 = 2.0*cv; // start at 2 MeV/fm3
     cout << pr0 << endl;
+
+    double MR[2];
+    //nmm.tovsolve(50.0*cv, 1e-4, EOS, n, 4, encol, prcol, dpdecol, MR, true);
     nmm.multitov(1e-4, EOS, n, 4, encol, prcol, dpdecol, 1000, mrfilename,pr0);    // calculate mass radius profile, output is (n,en,pr,r,m) (mev/fm3)
     dm3.cleanup(EOS,n);        // comment out if calc ILQ
     
