@@ -42,13 +42,13 @@ int main() {
     */
 
     //FSU230529
-    //double params[8] = {502.2303545, 100.25574844165376, 159.94894689710125, 83.08017667927881, 4.475103985, -0.01870805824, 0.000399945274706, 0.004248329329141};
+    double params[8] = {502.2303545, 100.25574844165376, 159.94894689710125, 83.08017667927881, 4.475103985, -0.01870805824, 0.000399945274706, 0.004248329329141};
     
     //FSU BigApple
     //double params[8] = {492.7300000, 93.507400000000000, 151.68390000000000, 200.5562000000000, 5.203260000, -0.02173900000, 0.000700000000000, 0.047471000000000};
     
     //FSUGarnet
-    double params[8] = {496.939, 110.349, 187.695, 192.927, 3.26, -0.003551, 0.0235, 0.043377};
+    //double params[8] = {496.939, 110.349, 187.695, 192.927, 3.26, -0.003551, 0.0235, 0.043377};
     
     // FSUGold2
     //double params[8] = {497.479, 108.0943, 183.7893, 80.4656, 3.0029, -0.000533, 0.0256, 0.000823};
@@ -209,7 +209,7 @@ int main() {
     // GET EOS FOR INFINITE MATTER
     
     double** CORE_EOS;
-    int npoints = 250;
+    int npoints = 150;
     eosm.get_EOS_NSM(inf_couplings,CORE_EOS,npoints,true,false);
     double Urca_dens = nmm.Urca_threshold(CORE_EOS,9,npoints,7,8,0);
     cout << "Urca_onset_dens = " << Urca_dens << endl;
@@ -224,21 +224,21 @@ int main() {
     dm3.cleanup(CORE_EOS,npoints);
     //dm3.cleanup(EOS,n);          // comment out if using the EOS to calc MR
     
-    /*
+    
     // convert for Lorene
     double** array;
     dm3.importdata("FSUEOSC.txt",array);
-    ofstream out("Lorene_FSU_EOS.d");
+    ofstream out("RMS_FSU_EOS.d");
     int N = dm3.rowcount("FSUEOSC.txt");
     for (int i=0; i<N; ++i) {
-        out << i+1 << "     " << array[i][0] << "     " << convm.energyCONV(0,2)*array[i][1] << "     " << convm.energyCONV(0,5)*array[i][2] << endl;
+        out << convm.energyCONV(0,2)*array[i][1] << " " << convm.energyCONV(0,5)*array[i][2] << endl;
     }
     dm3.cleanup(array,N);
-    */
+    
     
     // CALCULATE MASS/RADIUS PROFILE
     // ---------------- Calculate Mass Radius Profile
-    string mrfilename = "FSUGarnet";               // output MR filename title (adds _RM)
+    string mrfilename = "FSU230529";               // output MR filename title (adds _RM)
     int encol = 1;                          // input en col
     int prcol = 2;                          // input pr col
     int dpdecol = 3;

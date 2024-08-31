@@ -1051,7 +1051,7 @@ vector<vector<double>> nummeth :: multitov(double h, double** eos, int nrows, in
         tovsolve(icp, h, eos, nrows, ncols, encol, prcol, dpdecol, MR, false);                 // solve tov equations
         en = dm.interpolate(nrows, ncols, eos, icp, prcol, encol, true);
         dens = dm.interpolate(nrows,ncols,eos,icp,prcol,0,true);
-        out << dens << "  " << en*conv.energyCONV(1,0) << "  " << icp*conv.energyCONV(1,0) << "  " << conv.rnonetokm(MR[1]) << "  " << MR[0] << "  " << log((en*conv.energyCONV(1,0) + icp*conv.energyCONV(1,0))/(939.0*dens)) << "  " << 32887.0*sqrt(MR[0]/pow(conv.rnonetokm(MR[1]),3.0))*0.9 << endl;
+        out << dens << "  " << en*conv.energyCONV(1,2) << "  " << icp*conv.energyCONV(1,0) << "  " << conv.rnonetokm(MR[1]) << "  " << MR[0] << "  " << log((en*conv.energyCONV(1,0) + icp*conv.energyCONV(1,0))/(939.0*dens)) << "  " << 32887.0*sqrt(MR[0]/pow(conv.rnonetokm(MR[1]),3.0))*0.9 << endl;
         //cout << to_string(index) + "/" + to_string(nrows) << "  " << "mue: " << dm.interpolate(nrows, ncols, eos, icp, prcol, 0, true) << " icp: " << icp*conv.energyCONV(1,0) << " ice: " << en*conv.energyCONV(1,0) << " RM: " << conv.rnonetokm(MR[0][1]) << " " << MR[0][0] << endl;
         index = index + space;  //spacing of each mass radius point in pressure space
         //cout << "LOVE: " << Nlove("SingleICP.txt", 3, 2, 0, MR[0][1], 1e-3) << endl;
