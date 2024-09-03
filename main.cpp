@@ -42,13 +42,13 @@ int main() {
     */
 
     //FSU230529
-    double params[8] = {502.2303545, 100.25574844165376, 159.94894689710125, 83.08017667927881, 4.475103985, -0.01870805824, 0.000399945274706, 0.004248329329141};
+    //double params[8] = {502.2303545, 100.25574844165376, 159.94894689710125, 83.08017667927881, 4.475103985, -0.01870805824, 0.000399945274706, 0.004248329329141};
     
     //FSU BigApple
     //double params[8] = {492.7300000, 93.507400000000000, 151.68390000000000, 200.5562000000000, 5.203260000, -0.02173900000, 0.000700000000000, 0.047471000000000};
     
     //FSUGarnet
-    //double params[8] = {496.939, 110.349, 187.695, 192.927, 3.26, -0.003551, 0.0235, 0.043377};
+    double params[8] = {496.939, 110.349, 187.695, 192.927, 3.26, -0.003551, 0.0235, 0.043377};
     
     // FSUGold2
     //double params[8] = {497.479, 108.0943, 183.7893, 80.4656, 3.0029, -0.000533, 0.0256, 0.000823};
@@ -207,13 +207,14 @@ int main() {
     // ######################### Neutron Star Calcultions ##########################################
     
     // GET EOS FOR INFINITE MATTER
-    
+    /*
     double** CORE_EOS;
     int npoints = 150;
     eosm.get_EOS_NSM(inf_couplings,CORE_EOS,npoints,true,false);
     double Urca_dens = nmm.Urca_threshold(CORE_EOS,9,npoints,7,8,0);
     cout << "Urca_onset_dens = " << Urca_dens << endl;
     //dm3.cleanup(CORE_EOS,npoints);
+    
     
     // ADD CRUST
     double** crust; double** EOS;
@@ -223,29 +224,30 @@ int main() {
     dm3.cleanup(crust,nrows);
     dm3.cleanup(CORE_EOS,npoints);
     //dm3.cleanup(EOS,n);          // comment out if using the EOS to calc MR
+    */
     
     
     // convert for Lorene
     double** array;
-    dm3.importdata("FSUEOSC.txt",array);
-    ofstream out("RMS_FSU_EOS.d");
-    int N = dm3.rowcount("FSUEOSC.txt");
+    dm3.importdata("BigAppleNStarEOS-167lines.txt",array);
+    ofstream out("RNS_FSU_EOS.d");
+    int N = dm3.rowcount("BigAppleNStarEOS-167lines.txt");
     for (int i=0; i<N; ++i) {
         out << convm.energyCONV(0,2)*array[i][1] << " " << convm.energyCONV(0,5)*array[i][2] << endl;
     }
     dm3.cleanup(array,N);
     
-    
+    /*
     // CALCULATE MASS/RADIUS PROFILE
     // ---------------- Calculate Mass Radius Profile
-    string mrfilename = "FSU230529";               // output MR filename title (adds _RM)
+    string mrfilename = "FSU";               // output MR filename title (adds _RM)
     int encol = 1;                          // input en col
     int prcol = 2;                          // input pr col
     int dpdecol = 3;
     double cv = convm.energyCONV(0,1);   // MeV/fm3 to unitless
     // --------------------------------------------------
     
-    //int n = npoints;
+    //int n = N;
     nmm.pretovconv(EOS, encol, prcol, cv, cv, n);                                 //convert to unitless en, pr
     double pr0 = 2.0*cv; // start at 2 MeV/fm3
     cout << pr0 << endl;
@@ -254,7 +256,7 @@ int main() {
     //nmm.tovsolve(50.0*cv, 1e-4, EOS, n, 4, encol, prcol, dpdecol, MR, true);
     nmm.multitov(1e-4, EOS, n, 4, encol, prcol, dpdecol, 1000, mrfilename,pr0);    // calculate mass radius profile, output is (n,en,pr,r,m) (mev/fm3)
     dm3.cleanup(EOS,n);        // comment out if calc ILQ
-    
+    */
     /*
     // To specify what mass of star for the Tidal Deformability
     double** MRarr;
