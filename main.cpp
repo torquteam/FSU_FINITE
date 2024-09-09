@@ -79,6 +79,11 @@ int main() {
     tool1.convert_to_inf_couplings(fin_couplings, inf_couplings);
     bulk1.get_bulkproperties(inf_couplings);
 
+    for (int i=0; i<10; ++i) {
+        cout << inf_couplings[i] << "  ";
+    }
+    cout << endl;
+
     /*
     double BA, kf, p0, mstar, K, J_tilde, L, Ksym, zeta, xi, lambda_s, fw, fp;
     double masses[4];
@@ -132,7 +137,7 @@ int main() {
     //hartree_method(fin_couplings,116,50,20,gridsize,3,Observables,1.2,false,false);
     //hartree_method(fin_couplings,132,50,20,gridsize,3,Observables,1.2,false,false);
     //hartree_method(fin_couplings,144,62,20,gridsize,3,Observables,1.3,true,true);
-    //hartree_method(fin_couplings,208,82,20,gridsize,3,Observables,1.2,true,false);
+    hartree_method(fin_couplings,208,82,20,gridsize,3,Observables,1.2,true,false);
     
     /*
     // MCMC sample for charge radii
@@ -213,9 +218,9 @@ int main() {
     eosm.get_EOS_NSM(inf_couplings,CORE_EOS,npoints,true,false);
     double Urca_dens = nmm.Urca_threshold(CORE_EOS,9,npoints,7,8,0);
     cout << "Urca_onset_dens = " << Urca_dens << endl;
-    //dm3.cleanup(CORE_EOS,npoints);
-    
-    
+    dm3.cleanup(CORE_EOS,npoints);
+    */
+    /*
     // ADD CRUST
     double** crust; double** EOS;
     dm3.importdata("dat_files/CRUSTEOS.txt",crust);
@@ -226,8 +231,8 @@ int main() {
     //dm3.cleanup(EOS,n);          // comment out if using the EOS to calc MR
     */
     
-    
-    // convert for Lorene
+    /*
+    // convert for RNS/Lorene
     double** array;
     dm3.importdata("BigAppleNStarEOS-167lines.txt",array);
     ofstream out("RNS_FSU_EOS.d");
@@ -236,7 +241,7 @@ int main() {
         out << convm.energyCONV(0,2)*array[i][1] << " " << convm.energyCONV(0,5)*array[i][2] << endl;
     }
     dm3.cleanup(array,N);
-    
+    */
     /*
     // CALCULATE MASS/RADIUS PROFILE
     // ---------------- Calculate Mass Radius Profile

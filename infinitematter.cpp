@@ -1074,6 +1074,8 @@ int equationofstate :: get_EOS_NSM(double couplings[10], double** &eos, int npoi
         eos[i][7] = Yp;
         eos[i][8] = Yp_Urca;
         //cout << gss << "  " << gww << "  " << gpp << "  " << gdd << "  " << t << endl;
+        //double ntotal = 0.5*dens*(1.0+t) + 0.5*dens*(1.0-t) + qknb(mue,mE,2.0) +  qknb(mue,mMU,2.0);
+        //cout << 0.5*dens*(1.0+t)/ntotal << "  " << 0.5*dens*(1.0-t)/ntotal << "  " << qknb(mue,mE,2.0)/ntotal << "  " << qknb(mue,mMU,2.0)/ntotal << endl;
     
         // check for thermodynamic stability
         check = mun*dens - en - pr;
