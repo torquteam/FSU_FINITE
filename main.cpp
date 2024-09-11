@@ -128,16 +128,16 @@ int main() {
     dm3.cleanup(PNM_EOS,npoints);
     */
     
-    //hartree_method(fin_couplings,16,8,20,gridsize,3,Observables,1.3,false,false);
-    //hartree_method(fin_couplings,40,20,20,gridsize,3,Observables,1.2,false,false);
-    //hartree_method(fin_couplings,48,20,20,gridsize,3,Observables,1.2,true,false);
-    //hartree_method(fin_couplings,68,28,20,gridsize,3,Observables,1.2,false,false);
-    //hartree_method(fin_couplings,90,40,20,gridsize,3,Observables,1.2,false,false);
-    //hartree_method(fin_couplings,100,50,20,gridsize,3,Observables,1.4,false,false);
-    //hartree_method(fin_couplings,116,50,20,gridsize,3,Observables,1.2,false,false);
-    //hartree_method(fin_couplings,132,50,20,gridsize,3,Observables,1.2,false,false);
-    //hartree_method(fin_couplings,144,62,20,gridsize,3,Observables,1.3,true,true);
-    hartree_method(fin_couplings,208,82,20,gridsize,3,Observables,1.2,true,false);
+    //hartree_method(fin_couplings,16,8,20,gridsize,3,Observables,1.3,false,false,0.0);
+    //hartree_method(fin_couplings,40,20,20,gridsize,3,Observables,1.2,false,false,0.0);
+    //hartree_method(fin_couplings,48,20,20,gridsize,3,Observables,1.2,true,false,0.0);
+    //hartree_method(fin_couplings,68,28,20,gridsize,3,Observables,1.2,false,false,0.0);
+    //hartree_method(fin_couplings,90,40,20,gridsize,3,Observables,1.2,false,false,0.0);
+    //hartree_method(fin_couplings,100,50,20,gridsize,3,Observables,1.4,false,false,0.0);
+    //hartree_method(fin_couplings,116,50,20,gridsize,3,Observables,1.2,false,false,0.0);
+    //hartree_method(fin_couplings,132,50,20,gridsize,3,Observables,1.2,false,false,0.0);
+    //hartree_method(fin_couplings,144,62,20,gridsize,3,Observables,1.3,true,true,0.0);
+    hartree_method(fin_couplings,208,82,20,gridsize,3,Observables,1.2,true,false,0.0);
     
     /*
     // MCMC sample for charge radii

@@ -166,7 +166,7 @@ int RBM_generate_fields(int A, int Z, string params_file) {
         fin_couplings[k] = param_set[0][k];
     }
 
-    int exit_code = hartree_method(fin_couplings,A,Z,20,gridsize,3,Observables,1.3,false,true);
+    int exit_code = hartree_method(fin_couplings,A,Z,20,gridsize,3,Observables,1.3,false,true,0.0);
     if(exit_code != 0) {
         exit(0);
     }
@@ -226,7 +226,7 @@ int RBM_generate_fields(int A, int Z, string params_file) {
         int count = 0;
         int exit_code = -1;
         while (exit_code != 0) {
-            exit_code = hartree_method(fin_couplings,A,Z,20,gridsize,3,Observables,pow(1.1,count*1.0),false,true);
+            exit_code = hartree_method(fin_couplings,A,Z,20,gridsize,3,Observables,pow(1.1,count*1.0),false,true,0.0);
             count = count + 1;
             if (count > 7) {
                 break;
@@ -430,19 +430,19 @@ double sample_param_space(int num_sets, string startfile) {
             generate_sample(fin_couplings,start_data);
         }
 
-        exit_code = hartree_method(fin_couplings,16,8,20,gridsize,3,Observables,1.2,false,false);
+        exit_code = hartree_method(fin_couplings,16,8,20,gridsize,3,Observables,1.2,false,false,0.0);
         if (exit_code != 0) {
             dm1.cleanup(start_data,16);
             exit(0);
         }
 
-        exit_code = hartree_method(fin_couplings,48,20,20,gridsize,3,Observables,1.2,false,false);
+        exit_code = hartree_method(fin_couplings,48,20,20,gridsize,3,Observables,1.2,false,false,0.0);
         if (exit_code != 0) {
             dm1.cleanup(start_data,16);
             exit(0);
         }
 
-        exit_code = hartree_method(fin_couplings,208,82,20,gridsize,3,Observables,1.2,false,false);
+        exit_code = hartree_method(fin_couplings,208,82,20,gridsize,3,Observables,1.2,false,false,0.0);
         if (exit_code != 0) {
             dm1.cleanup(start_data,16);
             exit(0);
@@ -528,7 +528,7 @@ void get_Observables(string param_set, int A, int Z) {
         int count = 0;
         int exit_code = -1;
         while (exit_code != 0) {
-            exit_code = hartree_method(fin_couplings,A,Z,20,gridsize,3,Observables,pow(1.1,count*1.0),false,true);
+            exit_code = hartree_method(fin_couplings,A,Z,20,gridsize,3,Observables,pow(1.1,count*1.0),false,true,0.0);
             count = count + 1;
             if (count > 7) {
                 break;
@@ -668,7 +668,7 @@ void RBM_error_check(string RBM_file, int n_params) {
             fin_couplings[8] = RBM_data[i][7];  // lambda_v
             exit_code = -1;
             while (exit_code != 0) {
-                exit_code = hartree_method(fin_couplings,A[j],Z[j],20,gridsize,3,Observables,pow(1.1,count*1.0),false,false);
+                exit_code = hartree_method(fin_couplings,A[j],Z[j],20,gridsize,3,Observables,pow(1.1,count*1.0),false,false,0.0);
                 count = count + 1;
                 if (count > 7) {
                     break;
@@ -975,7 +975,7 @@ double compute_nuclei_v2(int num_nuclei, double params[16], int flag, double** e
             exp_data_single[j] = exp_data[i][j];
         }
         while (exit_code == -1) {
-            exit_code = hartree_method(params,A[i],Z[i],20,gridsize,3,Observables,pow(1.1,count*1.0),false,false);
+            exit_code = hartree_method(params,A[i],Z[i],20,gridsize,3,Observables,pow(1.1,count*1.0),false,false,0.0);
             count = count + 1;
             if (count > 7) {
                 break;
