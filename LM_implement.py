@@ -158,7 +158,7 @@ bulks = [500.0,-16.3,0.153,0.57,250.0,32.5,70.0,0.001] # FSU Models
 def residuals(bulks_arr, A, Z, exp_data):
     residuals = []
     couplings = bulks_to_params(bulks_arr)
-    print(couplings)
+    print(bulks_arr)
     for i in range(len(exp_data)):
         y_model = call_hartree(couplings,A[i],Z[i],0.0)
         res = (y_model[0] - exp_data[i,0])/exp_data[i,1]
@@ -177,38 +177,23 @@ def residuals(bulks_arr, A, Z, exp_data):
         
     return np.array(residuals)
 
-result = sp.least_squares(residuals,x0=bulks,method='lm',args=(A,Z,exp_data),diff_step=1e-4)
-# Save the result to a file
-with open('optimization_result_FSU.pkl', 'wb') as f:
-    pickle.dump(result, f)
+# Run Calibration and Save Results
+#result = sp.least_squares(residuals,x0=bulks,method='lm',args=(A,Z,exp_data),diff_step=1e-4)
+#with open('optimization_result_FSU.pkl', 'wb') as f:
+    #pickle.dump(result, f)
 
+# Unpack results
+#with open('optimization_result_FSU.pkl', 'rb') as f:
+    #result = pickle.load(f)
+#print(result.x)
 
-#RBM
-#502.849  -16.295  0.1525  0.5941  248.354  33.443  61.030  0.0011395
-
-#LM
-#502.634  -16.302  0.1495  0.5996  260.543  33.386  64.295  0.0011256
+# Single Hartree Runs
 #couplings = bulks_to_params([ 5.06172335e+02, -1.61767181e+01,  1.48289332e-01,  5.54851251e-01, 2.51656487e+02,  3.32408658e+01,  7.17122557e+01,  1.02460375e-03])
 #fin_couplings = [112.1996, 204.5469, 138.4701, 0.0, 1.4203, 0.023762, 0.06, 0.0, 0.030, 0.0, 0.0, 0.0, 491.500, 782.5, 763.0, 980.0]
-#fin_couplings = [113.5072, 184.9651, 109.2054, 0.0, 3.5886, -0.015702, 0.001024, 0.0, 0.019583, 0.0, 0.0, 0.0, 506.1723, 782.5, 763.0, 980.0]
 #observs = call_hartree(fin_couplings,A[9],Z[9],0.0)
 #GMR = r2dens(A[9],Z[9],fin_couplings)
-#print(GMR)
 
-#0.0003575970862018177 -2.7699275428449803e-06
-
-#208  82
-#BA: -7.925
-#Neutron Radius: 5.6961
-#Proton Radius: 5.46605
-#Charge Radius: 5.51505
-#Weak Radius: 5.76953
-#Rn - Rp: 0.230046
-#Rwk - Rch: 0.254484
-#Fch - Fwk: 0.0336714
-#Rch: 5.53022
-
-#[ 1.13507253e+02  1.84965110e+02  1.09205464e+02  0.00000000e+00
- # 3.58862159e+00 -1.57029606e-02  1.02460375e-03  0.00000000e+00
- # 1.95839797e-02  0.00000000e+00  0.00000000e+00  0.00000000e+00
- # 5.06172335e+02  7.82500000e+02  7.63000000e+02  9.80000000e+02]
+# Saved Runs
+#RBM:     502.849  -16.295  0.1525  0.5941  248.354  33.443  61.030  0.0011395
+#LM       502.634  -16.302  0.1495  0.5996  260.543  33.386  64.295  0.0011256
+#LM+GMR   502.187  -16.155  0.1491  0.5906  237.784  32.088  70.094  0.0010013
