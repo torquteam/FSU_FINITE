@@ -1890,7 +1890,7 @@ double get_WEAK_CHARGE_densities_v2(double** &densities_svtnp_unitless, int Z, i
     }
 
     // print the weak skin
-    if (A==48) {
+    if (A==208) {
         //dm2.print(q_charge_weak_factors,npoints,4,true,"q_transfer_Fch,Fwk,wkskin.txt");
     }
     // inverse fourier transform
@@ -1940,7 +1940,7 @@ double get_WEAK_CHARGE_densities_v2(double** &densities_svtnp_unitless, int Z, i
         q_transfer_row = dm2.findvalue(q_charge_weak_factors,nrows_dens,4,q_transfer_exp*r0_fm,0,0.1);
         double Fch_Fwk = q_charge_weak_factors[q_transfer_row][3];
         dm2.cleanup(q_charge_weak_factors,npoints);
-        //cout << "Fch: " << q_charge_weak_factors[q_transfer_row][1] << endl;
+        cout << "Fwk: " << q_charge_weak_factors[q_transfer_row][2] << endl;
         return Fch_Fwk;
     } else {
         dm2.cleanup(q_charge_weak_factors,npoints);
@@ -2115,7 +2115,7 @@ int hartree_method(double fin_couplings[16], int A, int Z, int iterations, int g
     cout << "Rn - Rp: " << sqrt(Radii2_N_P_fm2[0]) - sqrt(Radii2_N_P_fm2[1]) << endl;
     cout << "Rwk - Rch: " << sqrt(Radii2_C_W_fm2[1]) - sqrt(Radii2_C_W_fm2[0]) << endl;
     cout << "Fch - Fwk: " << Fch_Fwk << endl;
-    cout << "Rch: " << sqrt(Radii2_N_P_fm2[1] + pow(0.84,2.0)) << endl;
+    cout << "Rch approx: " << sqrt(Radii2_N_P_fm2[1] + pow(0.84,2.0)) << endl;
     cout << "-----------------------------------" << endl;
     
     Observables[0] = BA_mev; Observables[1] = sqrt(Radii2_N_P_fm2[0]);

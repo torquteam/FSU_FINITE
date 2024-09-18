@@ -48,10 +48,16 @@ int main() {
     //double params[8] = {492.7300000, 93.507400000000000, 151.68390000000000, 200.5562000000000, 5.203260000, -0.02173900000, 0.000700000000000, 0.047471000000000};
     
     //FSUGarnet
-    double params[8] = {496.939, 110.349, 187.695, 192.927, 3.26, -0.003551, 0.0235, 0.043377};
+    //double params[8] = {496.939, 110.349, 187.695, 192.927, 3.26, -0.003551, 0.0235, 0.043377};
     
     // FSUGold2
     //double params[8] = {497.479, 108.0943, 183.7893, 80.4656, 3.0029, -0.000533, 0.0256, 0.000823};
+
+    // FSUGold2+R
+    double params[8] = {501.611, 103.760, 169.410, 128.301, 3.79239, -0.010635, 0.01166, 0.0316212};
+
+    // FSUGarnet+R
+    //double params[8] = {495.633, 109.130, 186.481, 142.966, 3.25933, -0.003285, 0.02381, 0.038274};
 
     // Experimental
     fin_couplings[0] = params[1]; // gs2
@@ -218,9 +224,9 @@ int main() {
     eosm.get_EOS_NSM(inf_couplings,CORE_EOS,npoints,true,false);
     double Urca_dens = nmm.Urca_threshold(CORE_EOS,9,npoints,7,8,0);
     cout << "Urca_onset_dens = " << Urca_dens << endl;
-    dm3.cleanup(CORE_EOS,npoints);
-    */
-    /*
+    //dm3.cleanup(CORE_EOS,npoints);
+    
+    
     // ADD CRUST
     double** crust; double** EOS;
     dm3.importdata("dat_files/CRUSTEOS.txt",crust);
@@ -228,7 +234,7 @@ int main() {
     int n = tool1.ThermalCrust(crust,CORE_EOS,EOS,npoints,nrows,true,0,2,6);
     dm3.cleanup(crust,nrows);
     dm3.cleanup(CORE_EOS,npoints);
-    //dm3.cleanup(EOS,n);          // comment out if using the EOS to calc MR
+    dm3.cleanup(EOS,n);          // comment out if using the EOS to calc MR
     */
     
     /*

@@ -115,7 +115,7 @@ def bulks_to_params(bulks):
     return fin_couplings
 
 def r2dens(A,Z,couplings):
-    lgmr = [-0.0001,0.0001]
+    lgmr = [0.001,0.003,0.005]
     intg = []
     hbar2 = (197.32698)**2
     Es = 13.2695
@@ -130,13 +130,14 @@ def r2dens(A,Z,couplings):
         rho = dens[:,3] + dens[:,4]
         intg.append(si.simps(rho*r**4,x=r))
     
-    lgmr.insert(1,0.0)
-    intg.insert(1,intg0)
+    zero_loc = 0
+    lgmr.insert(zero_loc,0.0)
+    intg.insert(zero_loc,intg0)
     lam = np.array(lgmr)*Es**3
     intg = np.array(intg)
-    p = poly.Polynomial.fit(lam, intg, deg=2)
+    p = poly.Polynomial.fit(lam, intg, deg=1)
     p_deriv = p.deriv()
-    der = p_deriv(lam[1])
+    der = p_deriv(lam[zero_loc])
 
     M1 = 8*math.pi*hbar2/939*pow(hbar2,-2)*intg0
     Mn1 = -2*math.pi*der/hbar2
@@ -188,10 +189,14 @@ def residuals(bulks_arr, A, Z, exp_data):
 #print(result.x)
 
 # Single Hartree Runs
+couplings = [110.349, 187.695, 192.927, 0.0, 3.26, -0.003551, 0.0235, 0.0, 0.043377, 0.0, 0.0, 0.0, 496.939, 782.5, 763.0, 980.0] # FSUGarnet
+#couplings = [108.0943, 183.7893, 80.4656, 0.0, 3.0029, -0.000533, 0.0256, 0.0, 0.000823, 0.0, 0.0, 0.0, 497.479, 782.5, 763.0, 980.0] # FSUGold2
 #couplings = bulks_to_params([ 5.06172335e+02, -1.61767181e+01,  1.48289332e-01,  5.54851251e-01, 2.51656487e+02,  3.32408658e+01,  7.17122557e+01,  1.02460375e-03])
 #fin_couplings = [112.1996, 204.5469, 138.4701, 0.0, 1.4203, 0.023762, 0.06, 0.0, 0.030, 0.0, 0.0, 0.0, 491.500, 782.5, 763.0, 980.0]
-#observs = call_hartree(fin_couplings,A[9],Z[9],0.0)
-#GMR = r2dens(A[9],Z[9],fin_couplings)
+nuclei = 9
+observs = call_hartree(couplings,A[nuclei],Z[nuclei],0.0)
+#GMR = r2dens(A[nuclei],Z[nuclei],couplings)
+#print(GMR)
 
 # Saved Runs
 #RBM:     502.849  -16.295  0.1525  0.5941  248.354  33.443  61.030  0.0011395
