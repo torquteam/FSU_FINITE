@@ -90,13 +90,13 @@ def bulks_to_params(bulks):
     L = bulks[6]
     #zeta = bulks[8]
     zeta = bulks[7]
+    fp = bulks[8] 
 
     # Unchanged variables
     Ksym = 60.0
     xi = 0.0
     lambda_s = 0.0
-    fw = 0.0   
-    fp = 0.0  
+    fw = 0.0    
     masses = [ms,782.5,763.0,980.0]
     delta_coupling = False
 
@@ -152,7 +152,8 @@ Z = [8, 20,20,28,40,50, 50, 50, 62, 82]
 exp_data = np.loadtxt("dat_files/exp_data.txt")
 
 # Set Initial start point
-bulks = [500.0,-16.3,0.153,0.57,250.0,32.5,70.0,0.001] # FSU Models
+bulks = [503.0, -16.25, 0.150, 0.58, 240.0, 32.0, 45.0, 0.001, 1.0]
+#bulks = [500.0,-16.3,0.153,0.57,250.0,32.5,70.0,0.001,0.05] # FSU Models
 #bulks = [500.0,-16.3,0.153,0.57,220.0,32.5,50.0,300.0,0.001] # DINO models
 
 # function to compute residuals
@@ -168,7 +169,7 @@ def residuals(bulks_arr, A, Z, exp_data):
             res = (y_model[1] - exp_data[i,2])/exp_data[i,3]
             residuals.append(res)
         if (exp_data[i,4] != -1):
-            res = (y_model[2] - exp_data[i,4])/(exp_data[i,5]/2) # cut uncertainty of form factors in half
+            res = (y_model[2] - exp_data[i,4])/(exp_data[i,5]/4) # cut uncertainty of form factors by four
             residuals.append(res)
         if (exp_data[i,6] != -1):
             GMR = r2dens(A[i],Z[i],couplings)
@@ -180,7 +181,7 @@ def residuals(bulks_arr, A, Z, exp_data):
 
 # Run Calibration and Save Results
 #result = sp.least_squares(residuals,x0=bulks,method='lm',args=(A,Z,exp_data),diff_step=1e-4)
-#with open('optimization_result_FSU.pkl', 'wb') as f:
+#with open('optimization_result_Skyrme.pkl', 'wb') as f:
     #pickle.dump(result, f)
 
 # Unpack results
@@ -189,10 +190,11 @@ def residuals(bulks_arr, A, Z, exp_data):
 #print(result.x)
 
 # Single Hartree Runs
-couplings = [110.349, 187.695, 192.927, 0.0, 3.26, -0.003551, 0.0235, 0.0, 0.043377, 0.0, 0.0, 0.0, 496.939, 782.5, 763.0, 980.0] # FSUGarnet
+couplings = [110.349, 187.695, 192.927, 0.0, 3.26, -0.003551, 0.0235, 0.0, 0.043377, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 496.939, 782.5, 763.0, 980.0] # FSUGarnet
 #couplings = [108.0943, 183.7893, 80.4656, 0.0, 3.0029, -0.000533, 0.0256, 0.0, 0.000823, 0.0, 0.0, 0.0, 497.479, 782.5, 763.0, 980.0] # FSUGold2
 #couplings = bulks_to_params([ 5.06172335e+02, -1.61767181e+01,  1.48289332e-01,  5.54851251e-01, 2.51656487e+02,  3.32408658e+01,  7.17122557e+01,  1.02460375e-03])
 #fin_couplings = [112.1996, 204.5469, 138.4701, 0.0, 1.4203, 0.023762, 0.06, 0.0, 0.030, 0.0, 0.0, 0.0, 491.500, 782.5, 763.0, 980.0]
+#couplings = bulks_to_params(bulks)
 nuclei = 9
 observs = call_hartree(couplings,A[nuclei],Z[nuclei],0.0)
 #GMR = r2dens(A[nuclei],Z[nuclei],couplings)
@@ -202,3 +204,4 @@ observs = call_hartree(couplings,A[nuclei],Z[nuclei],0.0)
 #RBM:     502.849  -16.295  0.1525  0.5941  248.354  33.443  61.030  0.0011395
 #LM       502.634  -16.302  0.1495  0.5996  260.543  33.386  64.295  0.0011256
 #LM+GMR   502.187  -16.155  0.1491  0.5906  237.784  32.088  70.094  0.0010013
+#LM Skyrme: 503.11, -16.245, 0.14975, 0.5847, 248.36, 32.47, 55.864, 0.00123593, 0.0529

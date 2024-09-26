@@ -28,7 +28,7 @@ int main() {
     
     double Observables[7]; 
     double inf_couplings[10]; 
-    double fin_couplings[16];
+    //double fin_couplings[16];
     int gridsize = 401;
     srand(time(0));
     
@@ -48,7 +48,7 @@ int main() {
     //double params[8] = {492.7300000, 93.507400000000000, 151.68390000000000, 200.5562000000000, 5.203260000, -0.02173900000, 0.000700000000000, 0.047471000000000};
     
     //FSUGarnet
-    double params[8] = {496.939, 110.349, 187.695, 192.927, 3.26, -0.003551, 0.0235, 0.043377};
+    //double params[8] = {496.939, 110.349, 187.695, 192.927, 3.26, -0.003551, 0.0235, 0.043377};
     
     // FSUGold2
     //double params[8] = {497.479, 108.0943, 183.7893, 80.4656, 3.0029, -0.000533, 0.0256, 0.000823};
@@ -59,56 +59,24 @@ int main() {
     // FSUGarnet+R
     //double params[8] = {495.633, 109.130, 186.481, 142.966, 3.25933, -0.003285, 0.02381, 0.038274};
 
-    /*
-    // Experimental
-    fin_couplings[0] = params[1]; // gs2
-    fin_couplings[1] = params[2]; // gw2
-    fin_couplings[2] = params[3]; // gp2
-    fin_couplings[3] = 0.0; // gd2
-    fin_couplings[4] = params[4]; // kappa
-    fin_couplings[5] = params[5]; // lambda
-    fin_couplings[6] = params[6]; // zeta
-    fin_couplings[7] = 0.0; // xi
-    fin_couplings[8] = params[7]; // Lambda_v
-    fin_couplings[9] = 0.0; // Lambda_s
-    fin_couplings[10] = 0.0; // fw
-    fin_couplings[11] = 0.0;    // fp
-    fin_couplings[12] = params[0];
-    fin_couplings[13] = 782.5;
-    fin_couplings[14] = 763.0;
-    fin_couplings[15] = 980.0;
-    */
-    // Experimental
-    fin_couplings[0] = params[1]; // gs2
-    fin_couplings[1] = params[2]; // gw2
-    fin_couplings[2] = params[3]*pow(2000.0/763.0,2.0); // gp2
-    fin_couplings[3] = 0.0; // gd2
-    fin_couplings[4] = params[4]; // kappa
-    fin_couplings[5] = params[5]; // lambda
-    fin_couplings[6] = params[6]; // zeta
-    fin_couplings[7] = 0.0; // xi
-    fin_couplings[8] = params[7]; // Lambda_v
-    fin_couplings[9] = 0.0; // Lambda_s
-    fin_couplings[10] = 0.0; // fw
-    fin_couplings[11] = -0.5;    // fp
-    fin_couplings[12] = params[0];
-    fin_couplings[13] = 782.5;
-    fin_couplings[14] = 2000.0;
-    fin_couplings[15] = 980.0;
-    
-    for (int i=0; i<16; ++i) {
-        cout << fin_couplings[i] << "  ";
-    }
-    cout << endl;
+    // DINOa
+    double fin_couplings[19] = {93.9422, 154.436, 805.891, 1115.15, 4.9860, -0.01370, 0.015, 0.0, 0.0016497, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 490.050, 782.5, 763.0, 980.0};
 
+    // DINOb
+    //double fin_couplings[19] = {91.0316, 150.824, 877.121, 1252.71, 5.2914, -0.01488, 0.015, 0.0, 0.0014014, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 485.795, 782.5, 763.0, 980.0};
+
+    // DINOc
+    //double fin_couplings[19] = {90.6481, 151.048, 922.617, 1343.25, 5.3209, -0.01497, 0.015, 0.0, 0.0012312, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 484.162, 782.5, 763.0, 980.0};
+    // gs2   gv2   gp2   gd2   kappa   lambda   zeta   xi   Lambda_v   Lambda_s   fw   fp   bIV   GT2   GH2   ms   mv   mp   md
+
+    /*
     tool1.convert_to_inf_couplings(fin_couplings, inf_couplings);
     bulk1.get_bulkproperties(inf_couplings);
-
     for (int i=0; i<10; ++i) {
         cout << inf_couplings[i] << "  ";
     }
     cout << endl;
-
+    */
     /*
     double BA, kf, p0, mstar, K, J_tilde, L, Ksym, zeta, xi, lambda_s, fw, fp;
     double masses[4];
