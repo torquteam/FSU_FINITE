@@ -92,8 +92,8 @@ double get_lkl_prior(double* proposed_params, double** prior_covariance, double*
 
 //Make sure proposed changes are physical (add Ksym)
 int rho_mass_check(double* proposed_params, double** prior_DATA, double masses[4], int gd_sol_type,bool delta_coupling) {
-    double BA, p0, kf, J, mstar, K, L, Ksym, zeta,xi,lambda_s, fw, fp;   // bulk parameters
-    double fin_couplings[15];
+    double BA, p0, kf, J, mstar, K, L, Ksym, zeta,xi,lambda_s, fw, fp, Gt2, Gh2, bIV;   // bulk parameters
+    double fin_couplings[19];
 
     BA = proposed_params[0]*prior_DATA[0][3]; 
     kf = proposed_params[1]*prior_DATA[1][3]; 
@@ -109,7 +109,7 @@ int rho_mass_check(double* proposed_params, double** prior_DATA, double masses[4
     fp = proposed_params[11]*prior_DATA[11][3];
 
     p0 = 2.0/(3.0*pow(pi,2.0))*pow(kf,3.0);
-    get_parameters(BA,p0,J,mstar,K,L,Ksym,zeta,xi,lambda_s,fw,fp,masses,fin_couplings,true,gd_sol_type,delta_coupling);     // solve for parameters given bulk properties
+    get_parameters(BA,p0,J,mstar,K,L,Ksym,zeta,xi,lambda_s,fw,fp,Gt2,Gh2,bIV,masses,fin_couplings,true,gd_sol_type,delta_coupling);     // solve for parameters given bulk properties
     // Check if lambda is negative (eff rho mass is imaginary)
     if (fin_couplings[7] < 0 || fin_couplings[6] < 0) {
         return -1;
@@ -153,7 +153,7 @@ int RBM_generate_fields(int A, int Z, string params_file) {
     // variable declarations
     int nstates_n, nstates_p;
     double Observables[7]; 
-    double fin_couplings[16];
+    double fin_couplings[19];
     int ncols_meson = 8;
     int npoints_meson = gridsize;
 
@@ -162,7 +162,7 @@ int RBM_generate_fields(int A, int Z, string params_file) {
     double** Ap_unitless; double** Bp_unitless;
     double** meson_fields_unitless;
 
-    for (int k=0; k<16; ++k) {
+    for (int k=0; k<19; ++k) {
         fin_couplings[k] = param_set[0][k];
     }
 
@@ -219,7 +219,7 @@ int RBM_generate_fields(int A, int Z, string params_file) {
     dm1.importdata_string(source_file_p,pref);
     // loop through each nuclei and solve the high fidelity problem
     for (int i=0; i<num_param_sets; ++i) {
-        for (int k=0; k<16; ++k) {
+        for (int k=0; k<19; ++k) {
             fin_couplings[k] = param_set[i][k];
         }
 
@@ -256,7 +256,7 @@ int RBM_generate_fields(int A, int Z, string params_file) {
         }
         if (lvl_count != nstates_n) {
             cout << "level crossing detected for params: " << endl;
-            for (int l=0; l<16; ++l) {
+            for (int l=0; l<19; ++l) {
                 cout << fin_couplings[l] << "  ";
             }
             cout << endl;
@@ -274,7 +274,7 @@ int RBM_generate_fields(int A, int Z, string params_file) {
         }
         if (lvl_count != nstates_p) {
             cout << "level crossing detected for params: " << endl;
-            for (int l=0; l<16; ++l) {
+            for (int l=0; l<19; ++l) {
                 cout << fin_couplings[l] << "  ";
             }
             cout << endl;
@@ -382,11 +382,11 @@ int RBM_generate_fields(int A, int Z, string params_file) {
 }
 
 // generate a random sample
-int generate_sample(double params[16], double** start_data) {
-    double bulks[16];
+int generate_sample(double params[19], double** start_data) {
+    double bulks[19];
 
     // randomnly sample parameter space
-    for (int i=0; i<16; ++i) {
+    for (int i=0; i<19; ++i) {
         bulks[i] = start_data[i][0];
         if (start_data[i][1] == 1) {
             bulks[i] = rand_normal(start_data[i][0], start_data[i][2]);
@@ -398,14 +398,14 @@ int generate_sample(double params[16], double** start_data) {
     for (int i=0; i<4; ++i) {
         masses[i] = bulks[12+i];
     }
-    get_parameters(bulks[0],bulks[1],bulks[4],bulks[2]*mNuc_mev,bulks[3],bulks[5],bulks[6],bulks[7],bulks[8],bulks[9],bulks[10],bulks[11],masses,params,false,1,true);
+    get_parameters(bulks[0],bulks[1],bulks[4],bulks[2]*mNuc_mev,bulks[3],bulks[5],bulks[6],bulks[7],bulks[8],bulks[9],bulks[10],bulks[11],bulks[12],bulks[13],bulks[14], masses,params,false,1,true);
 
-    for (int i=0; i<16; ++i) {
+    for (int i=0; i<19; ++i) {
         cout << params[i] << "  ";
     }
     cout << endl;
     
-    for (int i=0; i<16; ++i) {
+    for (int i=0; i<19; ++i) {
         cout << bulks[i] << "  ";
     }
     cout << endl;
@@ -414,7 +414,7 @@ int generate_sample(double params[16], double** start_data) {
 
 // generate samples of parameters based on some distribution specified in file
 double sample_param_space(int num_sets, string startfile) {
-    double fin_couplings[16]; double Observables[7];
+    double fin_couplings[19]; double Observables[7];
     int exit_code;
     srand(time(0)); // random seed
 
@@ -432,28 +432,28 @@ double sample_param_space(int num_sets, string startfile) {
 
         exit_code = hartree_method(fin_couplings,16,8,20,gridsize,3,Observables,1.2,false,false,0.0);
         if (exit_code != 0) {
-            dm1.cleanup(start_data,16);
+            dm1.cleanup(start_data,19);
             exit(0);
         }
 
         exit_code = hartree_method(fin_couplings,48,20,20,gridsize,3,Observables,1.2,false,false,0.0);
         if (exit_code != 0) {
-            dm1.cleanup(start_data,16);
+            dm1.cleanup(start_data,19);
             exit(0);
         }
 
         exit_code = hartree_method(fin_couplings,208,82,20,gridsize,3,Observables,1.2,false,false,0.0);
         if (exit_code != 0) {
-            dm1.cleanup(start_data,16);
+            dm1.cleanup(start_data,19);
             exit(0);
         }
 
-        for (int j=0; j<16; ++j) {
+        for (int j=0; j<19; ++j) {
             out << fin_couplings[j] << "  ";
         }
         out << endl;
     }
-    dm1.cleanup(start_data,16);
+    dm1.cleanup(start_data,19);
     return 0;
 }
 
@@ -467,7 +467,7 @@ void get_Observables(string param_set, int A, int Z) {
     double** Fn_wf; double** Ap_wf;
     dm1.importdata(param_set,param_set_arr);
     int n_sets = dm1.rowcount(param_set);
-    double fin_couplings[16];
+    double fin_couplings[19];
     double Observables[7];
 
     int nstates_n, nstates_p;
@@ -521,7 +521,7 @@ void get_Observables(string param_set, int A, int Z) {
 
     for (int i=0; i<n_sets; ++i) {
         cout << i << endl;
-        for (int j=0; j<16; ++j) {
+        for (int j=0; j<19; ++j) {
             fin_couplings[j] = param_set_arr[i][j];
         }
         
@@ -555,7 +555,7 @@ void get_Observables(string param_set, int A, int Z) {
         }
         if (lvl_count != nstates_n) {
             cout << "level crossing detected for params: " << endl;
-            for (int l=0; l<16; ++l) {
+            for (int l=0; l<19; ++l) {
                 cout << fin_couplings[l] << "  ";
             }
             cout << endl;
@@ -573,7 +573,7 @@ void get_Observables(string param_set, int A, int Z) {
         }
         if (lvl_count != nstates_p) {
             cout << "level crossing detected for params: " << endl;
-            for (int l=0; l<16; ++l) {
+            for (int l=0; l<19; ++l) {
                 cout << fin_couplings[l] << "  ";
             }
             cout << endl;
@@ -644,8 +644,8 @@ void RBM_error_check(string RBM_file, int n_params) {
     int A[10] = {16,40,48,68,90,100,116,132,144,208};
     int Z[10] = {8,20,20,28,40,50,50,50,62,82};
     double mw = 782.5; double mp = 763.0; double md = 980.0;
-    double gd2 = 0.0; double xi = 0.0; double lambda_s = 0.0; double fw = 0.0; double fp = 0.0;
-    double fin_couplings[16] = {0, 0, 0, gd2, 0, 0, 0, xi, 0, lambda_s, fw, fp, 0.0, mw, mp, md};
+    double gd2 = 0.0; double xi = 0.0; double lambda_s = 0.0; double fw = 0.0; double fp = 0.0; double Gt2 = 0.0; double Gh2 = 0.0; double bIV = 0.0;
+    double fin_couplings[19] = {0, 0, 0, gd2, 0, 0, 0, xi, 0, lambda_s, fw, fp, Gt2, Gh2, bIV, 0.0, mw, mp, md};
     double Observables[7];
     vector<double> hf_results;
     double error[22];
@@ -705,7 +705,7 @@ int param_change(int n_params, vector<double>& bulks_0, vector<double>& bulks_p,
     double ms = bulks_0[7];
     double md = 980.0;
     double masses[4] = {ms,mw,mp,md};
-    double fin_couplings[16];
+    double fin_couplings[19];
 
     // copy old values
     for (int i=0; i<n_params; ++i) {
@@ -714,7 +714,7 @@ int param_change(int n_params, vector<double>& bulks_0, vector<double>& bulks_p,
     bulks_p[index] = rand_normal(bulks_0[index], stds[index]);
 
     masses[0] = bulks_p[7];
-    int flag = get_parameters(bulks_p[0],bulks_p[1],bulks_p[4],bulks_p[2]*mNuc_mev,bulks_p[3],bulks_p[5],0,bulks_p[6],0.0,0.0,0.0,0.0,masses,fin_couplings,true,1,false);
+    int flag = get_parameters(bulks_p[0],bulks_p[1],bulks_p[4],bulks_p[2]*mNuc_mev,bulks_p[3],bulks_p[5],0,bulks_p[6],0.0,0.0,0.0,0.0,0.0,0.0,0.0,masses,fin_couplings,true,1,false);
     if (flag == -1) {
         toolmc.convert_to_inf_couplings(fin_couplings,inf_couplings);
         return -1;
@@ -798,7 +798,7 @@ void adaptive_width(int iter, int n_check, vector<double>& arate, vector<int>& a
 void MCMC_NS(int nburnin, int nruns, string covdata, string crust) {
     srand(time(0));
     int n_params = 8;
-    double inf_couplings[10]; double fin_couplings[16];
+    double inf_couplings[10]; double fin_couplings[19];
     double ms = 500.0; double mw = 782.5; double mp = 763.0; double md = 980.0;
     double masses[4] = {ms,mw,mp,md};
     double lklp, postp;
@@ -823,7 +823,7 @@ void MCMC_NS(int nburnin, int nruns, string covdata, string crust) {
     // MCMC start
     double prior = compute_prior(invcov,prior_means,bulks_0);
     masses[0] = bulks_0[7];
-    flag = get_parameters(bulks_0[0],bulks_0[1],bulks_0[4],bulks_0[2]*mNuc_mev,bulks_0[3],bulks_0[5],0,bulks_0[6],0.0,0.0,0.0,0.0,masses,fin_couplings,true,1,false);
+    flag = get_parameters(bulks_0[0],bulks_0[1],bulks_0[4],bulks_0[2]*mNuc_mev,bulks_0[3],bulks_0[5],0,bulks_0[6],0.0,0.0,0.0,0.0,0.0,0.0,0.0,masses,fin_couplings,true,1,false);
     toolmc.convert_to_inf_couplings(fin_couplings,inf_couplings);
     double lkl0 = compute_lkl(inf_couplings,CRUST,nrowscrust,flag);
     double post0 = prior*lkl0;
@@ -883,7 +883,7 @@ int MCMC_Observables(string MCMC_data, string crust) {
     double** bulks;
     dm1.importdata(MCMC_data,bulks);
     int nrows = dm1.rowcount(MCMC_data);
-    double inf_couplings[10]; double fin_couplings[16];
+    double inf_couplings[10]; double fin_couplings[19];
     double ms = 500.0; double mw = 782.5; double mp = 763.0; double md = 980.0;
     double masses[4] = {ms,mw,mp,md};  
     double** CRUST;
@@ -894,7 +894,7 @@ int MCMC_Observables(string MCMC_data, string crust) {
     // run through all param sets  
     for (int i=0; i<nrows; ++i) {
         masses[0] = bulks[i][7];
-        get_parameters(bulks[i][0],bulks[i][1],bulks[i][4],bulks[i][2]*mNuc_mev,bulks[i][3],bulks[i][5],0,bulks[i][6],0.0,0.0,0.0,0.0,masses,fin_couplings,true,1,false);
+        get_parameters(bulks[i][0],bulks[i][1],bulks[i][4],bulks[i][2]*mNuc_mev,bulks[i][3],bulks[i][5],0,bulks[i][6],0.0,0.0,0.0,0.0,0.0,0.0,0.0,masses,fin_couplings,true,1,false);
         toolmc.convert_to_inf_couplings(fin_couplings,inf_couplings);
 
         // compute NS properties
@@ -956,7 +956,7 @@ double compute_lkl_single(double exp_data[6],double BA_mev_th, double Rch_th, do
 }
 
 // define the total liklihood
-double compute_nuclei_v2(int num_nuclei, double params[16], int flag, double** exp_data) {
+double compute_nuclei_v2(int num_nuclei, double params[19], int flag, double** exp_data) {
     int A[10] ={16,40,48,68,90,100,116,132,144,208};
     int Z[10] = {8,20,20,28,40,50,50,50,62,82};
     double Observables[7];
@@ -993,7 +993,7 @@ double compute_nuclei_v2(int num_nuclei, double params[16], int flag, double** e
     return lkl;
 }
 
-int param_change_FN(int n_params, vector<double>& bulks_0, vector<double>& bulks_p, vector<double>& stds, int index, double fin_couplings[16]) {
+int param_change_FN(int n_params, vector<double>& bulks_0, vector<double>& bulks_p, vector<double>& stds, int index, double fin_couplings[19]) {
     double masses[4] = {500.0,782.5,763.0,980.0};
 
     // copy old values
@@ -1004,7 +1004,7 @@ int param_change_FN(int n_params, vector<double>& bulks_0, vector<double>& bulks
 
     double p0 = 2.0/(3.0*pow(pi,2.0))*pow(bulks_p[1],3.0);
     masses[0] = bulks_p[8];
-    int flag = get_parameters(bulks_p[0],p0,bulks_p[4],bulks_p[2]*mNuc_mev,bulks_p[3],bulks_p[5],bulks_p[6],bulks_p[7],0.0,0.0,0.0,0.0,masses,fin_couplings,true,1,true);
+    int flag = get_parameters(bulks_p[0],p0,bulks_p[4],bulks_p[2]*mNuc_mev,bulks_p[3],bulks_p[5],bulks_p[6],bulks_p[7],0.0,0.0,0.0,0.0,0.0,0.0,0.0,masses,fin_couplings,true,1,true);
     if (flag == -1) {
         return -1;
     } else {
@@ -1015,7 +1015,7 @@ int param_change_FN(int n_params, vector<double>& bulks_0, vector<double>& bulks
 void MCMC_FN(int nburnin, int nruns, string exp_file) {
     srand(time(0));
     int n_params = 9;
-    double fin_couplings[16];
+    double fin_couplings[19];
     double ms = 500.0; double mw = 782.5; double mp = 763.0; double md = 980.0;
     double masses[4] = {ms,mw,mp,md};
     double lklp, postp;
@@ -1038,8 +1038,8 @@ void MCMC_FN(int nburnin, int nruns, string exp_file) {
     double prior = compute_prior_FN(bulks_0,n_params);
     double p0 = 2.0/(3.0*pow(pi,2.0))*pow(bulks_0[1],3.0);
     masses[0] = bulks_0[8];
-    flag = get_parameters(bulks_0[0],p0,bulks_0[4],bulks_0[2]*mNuc_mev,bulks_0[3],bulks_0[5],bulks_0[6],bulks_0[7],0.0,0.0,0.0,0.0,masses,fin_couplings,true,1,false);
-    for (int i=0; i<16; ++i) {
+    flag = get_parameters(bulks_0[0],p0,bulks_0[4],bulks_0[2]*mNuc_mev,bulks_0[3],bulks_0[5],bulks_0[6],bulks_0[7],0.0,0.0,0.0,0.0,0.0,0.0,0.0,masses,fin_couplings,true,1,false);
+    for (int i=0; i<19; ++i) {
         cout << fin_couplings[i] << "  ";
     }
     cout << endl;

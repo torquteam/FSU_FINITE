@@ -630,11 +630,11 @@ double tools :: get_lambda_v(double kf, double J, double gss, double gww, double
     return lambda_v;
 }
 
-void tools :: convert_to_inf_couplings(double fin_couplings[16], double inf_couplings[10]) {
-    inf_couplings[0] = fin_couplings[0]/pow(fin_couplings[12],2.0);
-    inf_couplings[1] = fin_couplings[1]/pow(fin_couplings[13],2.0);
-    inf_couplings[2] = fin_couplings[2]/pow(fin_couplings[14],2.0);
-    inf_couplings[3] = fin_couplings[3]/pow(fin_couplings[15],2.0);
+void tools :: convert_to_inf_couplings(double fin_couplings[19], double inf_couplings[10]) {
+    inf_couplings[0] = fin_couplings[0]/pow(fin_couplings[15],2.0);
+    inf_couplings[1] = fin_couplings[1]/pow(fin_couplings[16],2.0);
+    inf_couplings[2] = fin_couplings[2]/pow(fin_couplings[17],2.0);
+    inf_couplings[3] = fin_couplings[3]/pow(fin_couplings[18],2.0);
     inf_couplings[4] = fin_couplings[4];
     inf_couplings[5] = fin_couplings[5];
     inf_couplings[6] = fin_couplings[6];
@@ -1319,7 +1319,7 @@ void bulks :: get_bulkproperties(double couplings[10]) {
 // returns finite nuclei parameters (15 parameters)
 // (gs2,gw2,gp2,gd2,kappa,lambda,zeta,lambda_v,lambda_s,fw,fp,ms,mw,mp,md)
 extern "C" {
-int get_parameters(double BA, double p0, double Jtilde, double mstar, double K, double L, double Ksym, double zeta, double xi, double lambda_s, double fw, double fp, double masses[4], double fin_couplings[16], bool flag, int gd_sol_type, bool delta_coupling) {
+int get_parameters(double BA, double p0, double Jtilde, double mstar, double K, double L, double Ksym, double zeta, double xi, double lambda_s, double fw, double fp, double Gt2, double Gh2, double bIV, double masses[4], double fin_couplings[19], bool flag, int gd_sol_type, bool delta_coupling) {
     double a1,a2,a3,b1,c1,c2,c3,g1,integral,tau;
     double kf,gss,gww,gwomw2,en,sdensn,sdensp,sdens,gsoms2,kappa,lambda,gpomp2,lambda_v,gdomd2;
 
@@ -1390,10 +1390,13 @@ int get_parameters(double BA, double p0, double Jtilde, double mstar, double K, 
     fin_couplings[9] = lambda_s;
     fin_couplings[10] = fw;
     fin_couplings[11] = fp;
-    fin_couplings[12] = masses[0];
-    fin_couplings[13] = masses[1];
-    fin_couplings[14] = masses[2];
-    fin_couplings[15] = masses[3];
+    fin_couplings[12] = Gt2;
+    fin_couplings[13] = Gh2;
+    fin_couplings[14] = bIV;
+    fin_couplings[15] = masses[0];
+    fin_couplings[16] = masses[1];
+    fin_couplings[17] = masses[2];
+    fin_couplings[18] = masses[3];
 
     if (gpomp2 < 0 || gsoms2 < 0 || gwomw2 < 0 || zeta < 0 || lambda_v < 0) {
         return -1;
