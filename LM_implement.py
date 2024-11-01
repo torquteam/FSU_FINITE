@@ -37,7 +37,6 @@ lib.get_parameters.argtypes = [
 ]
 lib.get_parameters.restype = ctypes.c_int
 
-# Here I need to wrap the c function to use with lm algo
 # Define the Python wrapper function
 def call_hartree(fin_couplings, A, Z, lgmr):
     # Unchanged variables
@@ -51,7 +50,7 @@ def call_hartree(fin_couplings, A, Z, lgmr):
     fin_couplings = np.array(fin_couplings, dtype=np.double)
     Observables = np.zeros(7, dtype=np.float64)
     
-    count = 0
+    count = 2
     exit_code = -1
     # Call the C function
     while (exit_code != 0):
@@ -77,23 +76,25 @@ def call_hartree(fin_couplings, A, Z, lgmr):
     results.append(Observables[5])
     return results
 
-# Here I need to wrap the c function to use with lm algo
 # Define the Python wrapper function
 # BA, p0, Jtilde, mstar, K, L, Ksym, zeta, xi, lambda_s, fw, fp, masses[4], fin_couplings[16], bool flag, int gd_sol_type, bool delta_coupling)
 #bulks = [ms,BA,p0,mstar/m,K,J,L,zeta]
 def bulks_to_params(bulks):
-    ms = bulks[0]
-    BA = bulks[1]
-    p0 = bulks[2]
-    mstar = bulks[3]
-    K = bulks[4]
-    J = bulks[5]
-    L = bulks[6]
-    #zeta = bulks[8]
-    zeta = bulks[7] 
-    Gh2 = bulks[8]
-    #fp = bulks[9]
+    ms = bulks[0]*500.0
+    BA = bulks[1]*(-16.3)
+    p0 = bulks[2]*0.150
+    mstar = bulks[3]*0.6
+    K = bulks[4]*250.0
+    J = bulks[5]*32.0
+    L = bulks[6]*80.0
+    zeta = bulks[7]*0.01
+    Gh2 = bulks[8]*1.5
+    #Ksym = bulks[9]*100.0
+    #fp = bulks[10]*(-20.0)
+    #Gt2 = bulks[9]*0.5
+    #xi = bulks[9]*0.5
 
+    
     # Unchanged variables
     Ksym = 15
     xi = 0.0
@@ -120,6 +121,7 @@ def bulks_to_params(bulks):
     )
     return fin_couplings
 
+# Algorithm to compute the GMR
 def r2dens(A,Z,couplings):
     lgmr = [0.001,0.003,0.005]
     intg = []
@@ -149,24 +151,6 @@ def r2dens(A,Z,couplings):
     Mn1 = -2*math.pi*der/hbar2
     return math.sqrt(M1/Mn1)
 
-
-# Set the Nuclei
-A = [16,40,48,68,90,100,116,132,144,208]
-Z = [8, 20,20,28,40,50, 50, 50, 62, 82]
-
-# Import exp data
-exp_data = np.loadtxt("dat_files/exp_data.txt")
-
-# Set Initial start point
-bulks = [500.0, -16.3, 0.150, 0.60, 250.0, 30.0, 80.0, 0.001, 0.5]
-#bulks = [500.0,-16.3,0.153,0.57,250.0,32.5,70.0,0.001,0.05] # FSU Models
-#bulks = [500.0,-16.3,0.153,0.57,220.0,32.5,50.0,300.0,0.001] # DINO models
-
-# Define lower and upper bounds
-lower_bounds = [450.0, -17.0, 0.140, 0.4, 150.0, 20.0, 20.0, 0.0, 0.0]
-upper_bounds = [550.0, -15.0, 0.160, 0.8, 320.0, 50.0, 200.0, 0.05, 5.0]
-bounds = [(450.0,550.0),(-17.0,-15.0),(0.140,0.160),(0.4,0.8),(150.0,300.0),(20.0,50.0),(30.0,200.0),(0.0,0.05),(0.0,5.0)]
-
 # function to compute residuals
 def residuals(bulks_arr, A, Z, exp_data):
     residuals = []
@@ -195,34 +179,36 @@ def logprob(bulks_arr, A, Z, exp_data):
     logp = 0.5*np.sum(res**2)
     return logp
 
-# Run Calibration and Save Results
-#result = sp.least_squares(residuals,x0=bulks,method='trf',args=(A,Z,exp_data),diff_step=1e-4,bounds=(lower_bounds,upper_bounds))
-#with open('optimization_result_FSU_Gh2.pkl', 'wb') as f:
-    #pickle.dump(result, f)
+# Set the Nuclei
+A = [16,40,48,68,90,100,116,132,144,208]
+Z = [8, 20,20,28,40,50, 50, 50, 62, 82]
 
-# Try minimize
-result = sp.minimize(logprob,x0=bulks,method='powell',args=(A,Z,exp_data),bounds=bounds)
-with open('optimization_result_FSU_Gh2.pkl', 'wb') as f:
-    pickle.dump(result, f)
+# Import exp data
+exp_data = np.loadtxt("dat_files/exp_data.txt")
+
+# Set Initial start point
+conv = [500.0, -16.3, 0.150, 0.6, 250.0, 32.0, 80.0, 0.01, 1.5]
+bulks = [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 3.3]
+
+# Run Calibration and Save Results
+# result = sp.least_squares(residuals,x0=bulks,method='lm',args=(A,Z,exp_data),diff_step=1e-4)
+# with open('OptRes_FSU_Gh2_L80_large_rescale.pkl', 'wb') as f:
+#    pickle.dump(result, f)
 
 # Unpack results
-#with open('optimization_result_fp.pkl', 'rb') as f:
-    #result = pickle.load(f)
-#print(result.x)
+# with open('OptRes_FSU_Gh2_L60_rescale.pkl', 'rb') as f:
+#     result = pickle.load(f)
+# print(result.cost)
+# print(np.array(result.x)*np.array(conv))
+# print(np.array(result.x))
 
 # Single Hartree Runs
-#couplings = [110.349, 187.695, 192.927, 0.0, 3.26, -0.003551, 0.0235, 0.0, 0.043377, 0.0, 0.0, -50.0, 0.0, 0.0, 0.0, 496.939, 782.5, 763.0, 980.0] # FSUGarnet
+couplings = [110.349, 187.695, 192.927, 0.0, 3.26, -0.003551, 0.0235, 0.0, 0.043377, 0.0, 0.0, 0.0, 0.0, 5.0, 0.0, 496.939, 782.5, 763.0, 980.0] #FSUGarnet
 #couplings = [108.0943, 183.7893, 80.4656, 0.0, 3.0029, -0.000533, 0.0256, 0.0, 0.000823, 0.0, 0.0, 0.0, 497.479, 782.5, 763.0, 980.0] # FSUGold2
-#couplings = bulks_to_params([493.90, -16.284, 0.152, 0.611, 233.61, 27.319, 53.717, 0.00113, 1.75]) # calibration to Gh2
-#bulks = [4.84917832e+02, -1.63710171e+01,  1.52804365e-01,  6.46278814e-01, 2.40726422e+02,  2.44488842e+01,  5.13966013e+01,  1.04712269e-03, -2.00213491e+01]
+#bulks = result.x
 #couplings = bulks_to_params(bulks)
 nuclei = 9
-#observs = call_hartree(couplings,A[nuclei],Z[nuclei],0.0)
-#GMR = r2dens(A[nuclei],Z[nuclei],couplings)
-#print(GMR)
+observs = call_hartree(couplings,A[nuclei],Z[nuclei],0.0)
 
-# Saved Runs
-#RBM:     502.849  -16.295  0.1525  0.5941  248.354  33.443  61.030  0.0011395
-#LM       502.634  -16.302  0.1495  0.5996  260.543  33.386  64.295  0.0011256
-#LM+GMR   502.187  -16.155  0.1491  0.5906  237.784  32.088  70.094  0.0010013
-#LM Skyrme: 503.11, -16.245, 0.14975, 0.5847, 248.36, 32.47, 55.864, 0.00123593, 0.0529
+
+#[0.98967778 1.00089035 0.99687636 1.02973579 0.98631451 0.99974616 0.85917973 0.86757047 0.69706407 0.88488519 0.287455]
