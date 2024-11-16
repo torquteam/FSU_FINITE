@@ -2040,8 +2040,6 @@ int hartree_method(double fin_couplings[19], int A, int Z, int iterations, int g
     init_meson(npoints_meson,0.0,R_fm,a_fm,meson_fields_unitless,r_init_fm,r_final_fm,gd2,8);
     init_meson(npoints_meson,0.0,R_fm,a_fm,meson_fields_unitless,r_init_fm,r_final_fm,gd2,11);
 
-
-    
     // Get the wave functions and energy spectrum
     energy_spectrum_proton(meson_fields_unitless,npoints_meson,A,ncols_meson);
     energy_spectrum_neutron(meson_fields_unitless,npoints_meson,A,ncols_meson);
