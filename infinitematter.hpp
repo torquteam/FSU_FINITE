@@ -45,5 +45,5 @@ public:
 };
 
 extern "C" {
-int get_parameters(double BA, double p0, double Jtilde, double mstar, double K, double L, double Ksym, double zeta, double xi, double lambda_s, double fw, double fp, double Gt2, double Gh2, double bIV, double masses[4], double fin_couplings[19], bool flag, int gd_sol_type, bool delta_coupling);
+int get_parameters(double BA, double p0, double J0, double mstar, double K, double L, double Ksym, double zeta, double xi, double lambda_s, double fw, double fp, double Gt2, double Gh2, double bIV, double masses[4], double fin_couplings[19], bool flag, int gd_sol_type, bool delta_coupling);
 }

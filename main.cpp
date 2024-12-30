@@ -28,7 +28,6 @@ int main() {
     
     double Observables[7]; 
     double inf_couplings[10]; 
-    //double fin_couplings[19];
     int gridsize = 401;
     srand(time(0));
     
@@ -45,16 +44,16 @@ int main() {
     //double params[8] = {502.2303545, 100.25574844165376, 159.94894689710125, 83.08017667927881, 4.475103985, -0.01870805824, 0.000399945274706, 0.004248329329141};
     
     //FSU BigApple
-    double fin_couplings[19] = {93.5074, 151.6839, 200.5562, 0.0, 5.20326, -0.021739, 0.0007, 0.0, 0.047471, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 492.73, 782.5, 763.0, 980.0};
+    //double fin_couplings[19] = {93.5074, 151.6839, 200.5562, 0.0, 5.20326, -0.021739, 0.0007, 0.0, 0.047471, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 492.73, 782.5, 763.0, 980.0};
     
     // FSU-RBM
     //double fin_couplings[19] = {100.9925, 161.5174, 122.2125, 0.0, 4.3354, -0.017902, 0.001139, 0.0, 0.02547, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 502.8499, 782.5, 763.0, 980.0};
 
     //FSUGarnet
-    //double fin_couplings[19] = {110.349, 187.695, 192.927, 0.0, 3.26, -0.003551, 0.0235, 0.0, 0.043377, 0.0, 0.0, 0.0, 0.0, 4.0, 0.0, 496.939, 782.5, 763.0, 980.0};
-    
-    // FSUGold2
-    //double params[19] = {108.0943, 183.7893, 80.4656, 0.0, 3.0029, -0.000533, 0.0256, 0.0, 0.000823, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 497.479, 782.5, 763.0, 980.0};
+    //double fin_couplings[19] = {110.349, 187.695, 192.927, 800.0, 3.26, -0.003551, 0.0235, 0.0, 0.043377, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 496.939, 782.5, 763.0, 980.0};
+
+    // FSUGold2 (0.232,?)
+    //double fin_couplings[19] = {108.0943, 183.7893, 80.4656, 2000.0, 3.0029, -0.000533, 0.0256, 0.0, 0.000823, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 497.479, 782.5, 763.0, 980.0};
 
     // FSUGold2+R
     //double params[8] = {501.611, 103.760, 169.410, 128.301, 3.79239, -0.010635, 0.01166, 0.0316212};
@@ -62,42 +61,51 @@ int main() {
     // FSUGarnet+R
     //double params[19] = {109.130, 186.481, 142.966, 0.0, 3.25933, -0.003285, 0.02381, 0.0, 0.038274, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 495.633, 782.5, 763.0, 980.0};
 
+    // FSUGold2 L47
+    //double fin_couplings[19] = {108.094300, 183.789300, 307.652249, 0.0, 3.0029, -0.000533, 0.0256, 0.0, 0.045471, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 497.479, 782.5, 763.0, 980.0};
+    
     // DINOa
-    //double fin_couplings[19] = {93.9422, 154.436, 805.891, 1115.15, 4.9860, -0.01370, 0.015, 0.0, 0.0016497, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 490.050, 782.5, 763.0, 980.0};
+    //double fin_couplings[19] = {105.9422, 154.436, 105.891, 1000.0, 4.9860, -0.01370, 0.015, 0.0, 0.0016497, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 490.050, 782.5, 763.0, 980.0};
 
     // DINOb
     //double fin_couplings[19] = {91.0316, 150.824, 877.121, 1252.71, 5.2914, -0.01488, 0.015, 0.0, 0.0014014, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 485.795, 782.5, 763.0, 980.0};
 
     // DINOc
     //double fin_couplings[19] = {90.6481, 151.048, 922.617, 1343.25, 5.3209, -0.01497, 0.015, 0.0, 0.0012312, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 484.162, 782.5, 763.0, 980.0};
-    // gs2   gv2   gp2   gd2   kappa   lambda   zeta   xi   Lambda_v   Lambda_s   fw   fp   GT2   GH2   bIV   ms   mv   mp   md
-
     
+    // FSUTD0
+    //double fin_couplings[19] = {121.876, 204.744, 308.933, 0.0, 2.95569, -0.00667997, 0.015, 0.0, 0.040496, 0.0, 0.0, -80.0, 0.0, 0.0, 0.0, 504.887, 782.5, 763.0, 980.0};
+    
+    // FSUTD1
+    double fin_couplings[19] = {137.752, 216.245, 440.198, 462.522, 3.00645, -0.00735190, 0.015, 0.0, 0.00285816, -0.0005, 5.0812, -23.2207, 0.0, 0.0, 0.0, 523.350, 782.5, 763.0, 980.0};
+    // gs2   gv2   gp2   gd2   kappa   lambda   zeta   xi   Lambda_v   Lambda_s   fw   fp   GT2   GH2   bIV   ms   mv   mp   md
+    /*
     tool1.convert_to_inf_couplings(fin_couplings, inf_couplings);
     bulk1.get_bulkproperties(inf_couplings);
     for (int i=0; i<10; ++i) {
         cout << inf_couplings[i] << "  ";
     }
     cout << endl;
-    
+    */
     /*
     double BA, kf, p0, mstar, K, J, L, Ksym, zeta, xi, lambda_s, fw, fp, Gt2, Gh2, bIV;
     double masses[4];
     //           
     // Experimental Model
-    masses[0] = 502.8499;          
+    double fin_couplings[19];
+    masses[0] = 500.227744;          
     masses[1] = 782.5; 
     masses[2] = 763.0; 
     masses[3] = 980.0;
-    BA = -16.2957;   // Binding energy (MeV) decreases binding proportionally (barely effects charge and skin)
-    kf = 1.31138;                                    // larger values lower binding and (lower skin and charge radii equally)
-    p0 = 0.1525; //2.0/(3.0*pow(pi,2.0))*pow(kf,3.0);        
-    J = 33.4433;        // Symmetry energy at sat (MeV)
-    mstar = 0.5941;      // Effective Mass (MeV)
-    K = 248.3540;             // Compressibility (MeV) 
-    L = 61.0305;               // Derivative of Symmetry Energy at sat (MeV)
-    Ksym = -58.91130412652875;
-    zeta = 0.001139;
+    BA = -16.21581;   // Binding energy (MeV) decreases binding proportionally (barely effects charge and skin)
+    kf = 0.0;                                    // larger values lower binding and (lower skin and charge radii equally)
+    p0 = 0.150809; //2.0/(3.0*pow(pi,2.0))*pow(kf,3.0);        
+    J = 32.77933;        // Symmetry energy at sat (MeV)
+    mstar = 0.6172614;      // Effective Mass (MeV)
+    K = 240.582277;             // Compressibility (MeV) 
+    L = 49.136313;               // Derivative of Symmetry Energy at sat (MeV)
+    Ksym = 0.0;
+    zeta = 0.000667696;
     xi = 0.0;                                            // Self interaction strength for w meson
     fw = 0.0;
     fp = 0.0;
@@ -122,23 +130,24 @@ int main() {
     eosm.get_PNMEOS(inf_couplings,PNM_EOS,npoints);
     //eosm.get_SymmetryEnergy(inf_couplings,Symm_EOS,npoints);
     //dm3.print(Symm_EOS,npoints,3,true,"DINOa_Symm.txt");
-    dm3.print(PNM_EOS,npoints,2,true,"BigApple_PNM.txt");
+    dm3.print(PNM_EOS,npoints,2,true,"BigAppleX_PNM.txt");
     //dm3.cleanup(Symm_EOS,npoints);
     dm3.cleanup(PNM_EOS,npoints);
     */
     
     //hartree_method(fin_couplings,16,8,20,gridsize,3,Observables,1.3,false,false,0.0);
-    //hartree_method(fin_couplings,40,20,20,gridsize,3,Observables,1.2,false,false,0.0);
-    //hartree_method(fin_couplings,48,20,20,gridsize,3,Observables,1.2,false,false,0.0);
+    //hartree_method(fin_couplings,40,20,20,gridsize,3,Observables,1.2,true,false,0.0);
+    //hartree_method(fin_couplings,208,82,20,gridsize,3,Observables,1.2,false,false,0.0);
+    hartree_method(fin_couplings,48,20,20,gridsize,3,Observables,1.2,false,true,0.0);
     //hartree_method(fin_couplings,68,28,20,gridsize,3,Observables,1.2,false,false,0.0);
     //hartree_method(fin_couplings,90,40,20,gridsize,3,Observables,1.2,false,false,0.0);
     //hartree_method(fin_couplings,100,50,20,gridsize,3,Observables,1.4,false,false,0.0);
     //hartree_method(fin_couplings,116,50,20,gridsize,3,Observables,1.2,false,false,0.0);
     //hartree_method(fin_couplings,132,50,20,gridsize,3,Observables,1.2,false,false,0.0);
-    //hartree_method(fin_couplings,144,62,20,gridsize,3,Observables,1.3,true,true,0.0);
-    //hartree_method(fin_couplings,208,82,20,gridsize,3,Observables,1.2,false,false,0.0);
+    //hartree_method(fin_couplings,144,62,20,gridsize,3,Observables,1.3,false,false,0.0);
+    //hartree_method(fin_couplings,208,82,20,gridsize,3,Observables,1.4,false,true,0.0);
     
-    /*
+    /* 0.175
     // MCMC sample for charge radii
     int npoints = 1000;
     int k;
@@ -211,7 +220,7 @@ int main() {
     // ######################### Neutron Star Calcultions ##########################################
     
     // GET EOS FOR INFINITE MATTER
-    
+    /*
     double** CORE_EOS;
     int npoints = 150;
     eosm.get_EOS_NSM(inf_couplings,CORE_EOS,npoints,false,false);
@@ -222,13 +231,14 @@ int main() {
     
     // ADD CRUST
     double** crust; double** EOS;
-    dm3.importdata("dat_files/CRUSTEOS.txt",crust);
+    dm3.importdata("dat_files/CRUSTEOS.txt",crust,0);
     int nrows = dm3.rowcount("dat_files/CRUSTEOS.txt");
+    dm3.print(crust,nrows,5,false,"NA");
     int n = tool1.ThermalCrust(crust,CORE_EOS,EOS,npoints,nrows,true,0,2,6);
     dm3.cleanup(crust,nrows);
     dm3.cleanup(CORE_EOS,npoints);
     dm3.cleanup(EOS,n);          // comment out if using the EOS to calc MR
-    
+    */
     /*
     // convert for RNS/Lorene
     double** array;
@@ -306,7 +316,7 @@ int main() {
 
 
     // MCMC methods
-    //MCMC_NS(1000,10000,"dat_files/invcovmatrix_RBM.txt","dat_files/CRUSTEOS.txt");
+    //MCMC_NS(10000,10000,"BigApple_invcov.txt","dat_files/CRUSTEOS.txt","dat_files/XEFTNM.txt");
     //MCMC_FN(0,0,"dat_files/exp_data.txt");
     //MCMC_Observables("MCMC.txt","dat_files/CRUSTEOS.txt");
     

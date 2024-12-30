@@ -22,6 +22,8 @@ const double e0_unitless = e0_e2permevfm*r0_fm*enscale_mev;
 const double conv_r0_en = r0_fm*fm_to_inversemev*enscale_mev;
 
 const double mNuc_unitless = mNuc_mev/enscale_mev;
+const double gm2 = 0.0;
+const double mRhop_unitless = 980.0/enscale_mev;
 
 // Generic?
 //const double qwp = 0.0713;  // weak vector-charge of the proton
@@ -94,30 +96,55 @@ void meson_der(int npoints, double** &array, double** &store, int ref_col, int c
 }
 
 // compute the scalar potential for a given set of meson fields and densities (0 for neutron and 1 for proton)
-void scalar_potential(double** &meson_fields_unitless, double** densities_unitless, int npoints) {
+void scalar_potential(double** &meson_fields_unitless, double** densities_unitless, int npoints, bool init) {
     double gs_sigma_r_unitless, gd_delta_r_unitless, Sr_n, Sr_p;
-    for (int i=0; i<npoints; ++i) {
+    if (init == true) {
+        for (int i=0; i<npoints; ++i) {
+            gs_sigma_r_unitless = meson_fields_unitless[i][1];
+            gd_delta_r_unitless = meson_fields_unitless[i][4];
+            Sr_n = gs_sigma_r_unitless - 0.5*gd_delta_r_unitless;
+            Sr_p = gs_sigma_r_unitless + 0.5*gd_delta_r_unitless;
+            meson_fields_unitless[i][6] = Sr_n;
+            meson_fields_unitless[i][9] = Sr_p;
+        }
+    } else {
+        for (int i=0; i<npoints; ++i) {
         gs_sigma_r_unitless = meson_fields_unitless[i][1];
         gd_delta_r_unitless = meson_fields_unitless[i][4];
         Sr_n = gs_sigma_r_unitless - 0.5*gd_delta_r_unitless;
         Sr_p = gs_sigma_r_unitless + 0.5*gd_delta_r_unitless;
         meson_fields_unitless[i][6] = Sr_n;
         meson_fields_unitless[i][9] = Sr_p;
+        }
     }
 }
 
 // compute the vector potential for a given set of meson fields and densities (0 for neutron and 1 for proton)
-void vector_potential(double** &meson_fields_unitless, double** densities_unitless, int npoints, double lgmr) {
-    double r_unitless, gw_omega_r_unitless, gp_rho_r_unitless, e_coulomb_r_unitless, Vr_n, Vr_p;
-    for (int i=0; i<npoints; ++i) {
-        r_unitless = meson_fields_unitless[i][0];
-        gw_omega_r_unitless = meson_fields_unitless[i][2];
-        gp_rho_r_unitless = meson_fields_unitless[i][3];
-        e_coulomb_r_unitless = meson_fields_unitless[i][5];
-        Vr_n = gw_omega_r_unitless - 0.5*gp_rho_r_unitless + lgmr*pow(r_unitless,2.0)*pow(conv_r0_en,2.0);
-        Vr_p = gw_omega_r_unitless + 0.5*gp_rho_r_unitless + e_coulomb_r_unitless + lgmr*pow(r_unitless,2.0)*pow(conv_r0_en,2.0);
-        meson_fields_unitless[i][7] = Vr_n;
-        meson_fields_unitless[i][10] = Vr_p;
+void vector_potential(double** &meson_fields_unitless, double** densities_unitless, int npoints, double lgmr, bool init) {
+    double r_unitless, gw_omega_r_unitless, gp_rho_r_unitless, e_coulomb_r_unitless, Vr_n, Vr_p, gm_rho_r_unitless;
+    if (init == true) {
+        for (int i=0; i<npoints; ++i) {
+            r_unitless = meson_fields_unitless[i][0];
+            gw_omega_r_unitless = meson_fields_unitless[i][2];
+            gp_rho_r_unitless = meson_fields_unitless[i][3];
+            e_coulomb_r_unitless = meson_fields_unitless[i][5];
+            Vr_n = gw_omega_r_unitless - 0.5*gp_rho_r_unitless + lgmr*pow(r_unitless,2.0)*pow(conv_r0_en,2.0);
+            Vr_p = gw_omega_r_unitless + 0.5*gp_rho_r_unitless + e_coulomb_r_unitless + lgmr*pow(r_unitless,2.0)*pow(conv_r0_en,2.0);
+            meson_fields_unitless[i][7] = Vr_n;
+            meson_fields_unitless[i][10] = Vr_p;
+        }
+    } else {
+        for (int i=0; i<npoints; ++i) {
+            r_unitless = meson_fields_unitless[i][0];
+            gw_omega_r_unitless = meson_fields_unitless[i][2];
+            gp_rho_r_unitless = meson_fields_unitless[i][3];
+            gm_rho_r_unitless = meson_fields_unitless[i][12];
+            e_coulomb_r_unitless = meson_fields_unitless[i][5];
+            Vr_n = gw_omega_r_unitless - 0.5*gp_rho_r_unitless + lgmr*pow(r_unitless,2.0)*pow(conv_r0_en,2.0) - 0.5*gm_rho_r_unitless;
+            Vr_p = gw_omega_r_unitless + 0.5*gp_rho_r_unitless + e_coulomb_r_unitless + lgmr*pow(r_unitless,2.0)*pow(conv_r0_en,2.0) + 0.5*gm_rho_r_unitless;
+            meson_fields_unitless[i][7] = Vr_n;
+            meson_fields_unitless[i][10] = Vr_p;
+        }
     }
 }
 
@@ -136,8 +163,8 @@ void tensor_potential(double** &meson_fields_unitless, double** densities_unitle
         dgw_omega_dr_r_unitless = temp_array[i][0];
         dgp_rho_dr_r_unitless = temp_array[i][1];
         dIVdens_dr_r_unitless = temp_array[i][3] - temp_array[i][2];
-        Tr_n = fw/(2.0*mNuc_unitless)*dgw_omega_dr_r_unitless - fp/(4.0*mNuc_unitless)*dgp_rho_dr_r_unitless + bIV*dIVdens_dr_r_unitless - 2.0*Gt2*(densities_unitless[i][5] + densities_unitless[i][6]) + 2.0*Gh2*(densities_unitless[i][6] - densities_unitless[i][5]);
-        Tr_p = fw/(2.0*mNuc_unitless)*dgw_omega_dr_r_unitless + fp/(4.0*mNuc_unitless)*dgp_rho_dr_r_unitless + bIV*dIVdens_dr_r_unitless - 2.0*Gt2*(densities_unitless[i][5] + densities_unitless[i][6]) - 2.0*Gh2*(densities_unitless[i][6] - densities_unitless[i][5]);
+        Tr_n = fw/(2.0*mNuc_unitless)*dgw_omega_dr_r_unitless - fp/(4.0*mNuc_unitless)*dgp_rho_dr_r_unitless + bIV*dIVdens_dr_r_unitless/pow(conv_r0_en,4.0) - 2.0*Gt2*(densities_unitless[i][5] + densities_unitless[i][6])/(conv_r0_en,2.0) + 2.0*Gh2*(densities_unitless[i][6] - densities_unitless[i][5])/(conv_r0_en,2.0);
+        Tr_p = fw/(2.0*mNuc_unitless)*dgw_omega_dr_r_unitless + fp/(4.0*mNuc_unitless)*dgp_rho_dr_r_unitless + bIV*dIVdens_dr_r_unitless/pow(conv_r0_en,4.0) - 2.0*Gt2*(densities_unitless[i][5] + densities_unitless[i][6])/(conv_r0_en,2.0) - 2.0*Gh2*(densities_unitless[i][6] - densities_unitless[i][5])/(conv_r0_en,2.0);
         meson_fields_unitless[i][8] = Tr_n;
         meson_fields_unitless[i][11] = Tr_p;
     }
@@ -844,14 +871,14 @@ int shell_fill(int A, int Z, int en_col, int j_col) {
     int nstates;
 
     int nrows_N = dm2.rowcount("neutron_spectrum.txt");
-    int ncols_N = dm2.colcount("neutron_spectrum.txt");
+    int ncols_N = dm2.colcount("neutron_spectrum.txt",0);
     double** neutron_array;
     if (nrows_N == 0) {
         cout << "No states exist." << endl;
         return -1;
     }
 
-    dm2.importdata("neutron_spectrum.txt",neutron_array);
+    dm2.importdata("neutron_spectrum.txt",neutron_array,0);
     dm2.sortasc(neutron_array,0,nrows_N,ncols_N);
 
     ofstream nout("neutron_spectrum.txt");
@@ -885,14 +912,14 @@ int shell_fill(int A, int Z, int en_col, int j_col) {
     dm2.cleanup(neutron_array,nrows_N);
 
     int nrows_P = dm2.rowcount("proton_spectrum.txt");
-    int ncols_P = dm2.colcount("proton_spectrum.txt");
+    int ncols_P = dm2.colcount("proton_spectrum.txt",0);
     double** proton_array;
 
     if (nrows_P == 0) {
         cout << "No states exist." << endl;
         return -1;
     }
-    dm2.importdata("proton_spectrum.txt",proton_array);
+    dm2.importdata("proton_spectrum.txt",proton_array,0);
     dm2.sortasc(proton_array,0,nrows_P,ncols_P);
 
     ofstream pout("proton_spectrum.txt");
@@ -944,8 +971,8 @@ void get_densities(double** meson_fields_unitless, int A, string energy_spectrum
     double** energy_array_proton;
     int n_levels = dm2.rowcount(energy_spectrum_neutron);
     int p_levels = dm2.rowcount(energy_spectrum_proton);
-    dm2.importdata(energy_spectrum_neutron,energy_array_neutron);
-    dm2.importdata(energy_spectrum_proton,energy_array_proton);
+    dm2.importdata(energy_spectrum_neutron,energy_array_neutron,0);
+    dm2.importdata(energy_spectrum_proton,energy_array_proton,0);
     
     // initialize wave function arrays
     double Fn_r_unitless, Gn_r_unitless, Ap_r_unitless, Bp_r_unitless, r_unitless;
@@ -1064,17 +1091,6 @@ void get_densities(double** meson_fields_unitless, int A, string energy_spectrum
     dm2.cleanup3d(Bp_unitless_all,nrows_meson,2);
 }
 
-double greens_meson(double r_unitless, double rp_unitless, double meson_mass_unitless) {
-    double res = 0;
-
-    if (r_unitless>rp_unitless) {
-        res = 1.0/meson_mass_unitless*rp_unitless/r_unitless*exp(-meson_mass_unitless*r_unitless*conv_r0_en)*sinh(meson_mass_unitless*rp_unitless*conv_r0_en);
-    } else {
-        res = 1.0/meson_mass_unitless*rp_unitless/r_unitless*exp(-meson_mass_unitless*rp_unitless*conv_r0_en)*sinh(meson_mass_unitless*r_unitless*conv_r0_en);
-    }
-    return res;
-}
-
 // make sure correct
 double greens_coulomb(double r_unitless, double rp_unitless) {
     double res;
@@ -1085,36 +1101,6 @@ double greens_coulomb(double r_unitless, double rp_unitless) {
         res = rp_unitless;
     }
     return res;
-}
-
-double simpsons(double a, double fa, double b, double fb, double** spline, int low_bound, int up_bound) {
-    double m = (a+b)/2.0;
-    double fm = dm2.splinecalc(spline,low_bound,up_bound,m);
-    double res = (b-a)/6.0*(fa + 4.0*fm + fb);
-    return res;
-}
-
-#define MAX_DEPTH 20  // Maximum depth limit
-double adaptive_simpsons(double a, double fa, double b, double fb, double eps, double S, double m, double fm, double** spline, int low_bound, int up_bound, int depth){
-    if (depth > MAX_DEPTH) {
-        // Reached maximum depth limit, return an error value or handle the case appropriately
-        exit(0);  // Return an error value or handle the case as needed
-    }
-
-    double lm = (a+m)/2.0;
-    double flm = dm2.splinecalc(spline,low_bound,up_bound,lm);
-    double S_left = simpsons(a,fa,m,fm,spline,low_bound,up_bound);
-
-    double rm = (m+b)/2.0;
-    double frm = dm2.splinecalc(spline,low_bound,up_bound,rm);
-    double S_right = simpsons(m,fm,b,fb,spline,low_bound,up_bound);
-
-    double est_err = 0.0667*fabs(S - S_left - S_right);
-    if (est_err < eps) {
-        return S;
-    } else {
-        return adaptive_simpsons(a,fa,m,fm,eps,S_left,lm,flm,spline,low_bound,up_bound,depth+1) + adaptive_simpsons(m,fm,b,fb,eps,S_right,rm,frm,spline,low_bound,up_bound,depth+1);
-    }
 }
 
 // gives integral from a to b 
@@ -1406,6 +1392,63 @@ double rk4_rho(int index_a, int index_b, double** densities, double mRho_unitles
     return res;
 }
 
+// gives integral from a to b 
+double rk4_mrho(int index_a, int index_b, double** densities, int nrows, int ncols, double h_rk4, int integrand) {
+    double res = 0.0;
+    double k1,k2,k3;
+    double vdensn, vdensp;
+    double rp_unitless, rp_unitless_n, dens_eff_n, r_mid, dens_eff_mid;
+    double dens_eff;
+
+    if (integrand == 1) {
+        for (int j=index_a; j<index_b; ++j) {
+            rp_unitless = densities[j][0];
+            vdensn = densities[j][3];
+            vdensp = densities[j][4];
+            dens_eff = 0.5*(vdensp-vdensn);
+
+            rp_unitless_n = densities[j+1][0];
+            vdensn = densities[j+1][3];
+            vdensp = densities[j+1][4];
+            dens_eff_n = 0.5*(vdensp-vdensn);
+
+            r_mid = rp_unitless + h_rk4/2.0;
+            dens_eff_mid = (dens_eff_n-dens_eff)/(rp_unitless_n-rp_unitless)*(r_mid-rp_unitless) + dens_eff;
+            
+            k1 = rp_unitless*dens_eff*exp(mRhop_unitless*rp_unitless*conv_r0_en);
+            k2 = (rp_unitless+h_rk4/2.0)*dens_eff_mid*exp(mRhop_unitless*(rp_unitless+h_rk4/2.0)*conv_r0_en);
+            k3 = (rp_unitless+h_rk4)*dens_eff_n*exp(mRhop_unitless*(rp_unitless+h_rk4)*conv_r0_en);
+            res = res + h_rk4/6.0*(k1 + 4.0*k2 + k3);
+        }
+
+    } else if (integrand == 2) {
+        for (int j=index_a; j<index_b; ++j) {
+            rp_unitless = densities[j][0];
+            vdensn = densities[j][3];
+            vdensp = densities[j][4];
+            dens_eff = 0.5*(vdensp-vdensn);
+
+            rp_unitless_n = densities[j+1][0];
+            vdensn = densities[j+1][3];
+            vdensp = densities[j+1][4];
+            dens_eff_n = 0.5*(vdensp-vdensn);
+
+            r_mid = rp_unitless + h_rk4/2.0;
+            dens_eff_mid = (dens_eff_n-dens_eff)/(rp_unitless_n-rp_unitless)*(r_mid-rp_unitless) + dens_eff;
+
+            k1 = rp_unitless*dens_eff*exp(-mRhop_unitless*rp_unitless*conv_r0_en);
+            k2 = (rp_unitless+h_rk4/2.0)*dens_eff_mid*exp(-mRhop_unitless*(rp_unitless+h_rk4/2.0)*conv_r0_en);
+            k3 = (rp_unitless+h_rk4)*dens_eff_n*exp(-mRhop_unitless*(rp_unitless+h_rk4)*conv_r0_en);
+            res = res + h_rk4/6.0*(k1 + 4.0*k2 + k3);
+        }
+    } else {
+        cout << "invalid integral selection" << endl;
+        exit(0);
+    }
+
+    return res;
+}
+
 double rk4_coulomb(double r_unitless, double** densities, int nrows, double h_rk4) {
     double rp_unitless;
     double vdensp_unitless;
@@ -1455,11 +1498,25 @@ void get_nonlinear_meson_fields(double** &meson_fields_unitless, int npoints_mes
     double h_rk4 = (rp_final_unitless-rp_init_unitless)/(npoints-1);
 
     // get coulomb field
-    #pragma omp parallel num_threads(12)
-    #pragma omp for schedule(static,6) private(r_unitless)
     for (int i=0; i<npoints_meson; ++i) {
         r_unitless = densities[i][0];
         meson_fields_unitless[i][5] = rk4_coulomb(r_unitless,densities,npoints_meson,h_rk4);
+    }
+
+    r_unitless = densities[0][0];
+    I1r = 0.0;
+    I2r = rk4_mrho(0,npoints-1,densities,nrows_dens,ncols_dens,h_rk4,2);
+    I20 = rk4_mrho(0,npoints-1,densities,nrows_dens,ncols_dens,h_rk4,2);
+    meson_fields_unitless[0][0] = r_unitless;
+    meson_fields_unitless[0][12] = gm2/(2.0*mRhop_unitless*r_unitless*pow(conv_r0_en,2.0))*(exp(-mRhop_unitless*r_unitless*conv_r0_en)*(I1r - I20) + exp(mRhop_unitless*r_unitless*conv_r0_en)*I2r);
+
+    for (int i=1; i<npoints; ++i) {
+        r_unitless = densities[i][0];
+        meson_fields_unitless[i][0] = r_unitless;
+
+        I1r = I1r + rk4_mrho((i-1),i,densities,nrows_dens,ncols_dens,h_rk4,1);
+        I2r = rk4_mrho(i,npoints-1,densities,nrows_dens,ncols_dens,h_rk4,2);
+        meson_fields_unitless[i][12] = gm2/(2.0*mRhop_unitless*r_unitless*pow(conv_r0_en,2.0))*(exp(-mRhop_unitless*r_unitless*conv_r0_en)*(I1r - I20) + exp(mRhop_unitless*r_unitless*conv_r0_en)*I2r);
     }
 
     // Nonlinear convergence
@@ -1472,7 +1529,7 @@ void get_nonlinear_meson_fields(double** &meson_fields_unitless, int npoints_mes
     double mRho_unitless = mRho_mev/enscale_mev;
     double mSigma_unitless = mSigma_mev/enscale_mev;
     double mDelta_unitless = mDelta_mev/enscale_mev;
-    
+
     #pragma omp parallel sections private(r_unitless,I1r,I2r,I20)
     {
         #pragma omp section
@@ -1564,8 +1621,8 @@ void get_nonlinear_meson_fields(double** &meson_fields_unitless, int npoints_mes
     }
 
     // assign potentials
-    scalar_potential(meson_fields_unitless,densities,npoints);
-    vector_potential(meson_fields_unitless,densities,npoints,lgmr);
+    scalar_potential(meson_fields_unitless,densities,npoints,false);
+    vector_potential(meson_fields_unitless,densities,npoints,lgmr,false);
     tensor_potential(meson_fields_unitless,densities,npoints,fw,fp,bIV,Gt2,Gh2);
 
     dm2.cleanup(old_meson_fields,npoints_meson);
@@ -1580,8 +1637,8 @@ double get_BA(double** meson_field_unitless, double** densities_unitless, string
     double en_neutrons = 0;
     double en_protons = 0;
 
-    dm2.importdata(n_energies,n_spectrum);
-    dm2.importdata(p_energies,p_spectrum);
+    dm2.importdata(n_energies,n_spectrum,0);
+    dm2.importdata(p_energies,p_spectrum,0);
     double nrows = dm2.rowcount(n_energies);
     double prows = dm2.rowcount(p_energies);
 
@@ -1603,7 +1660,7 @@ double get_BA(double** meson_field_unitless, double** densities_unitless, string
     double en_mesons_integrand, en_coulomb_integrand;
     double** integrand;
     dm2.create(integrand,npoints_meson,2);
-    double gs_sigma_r_unitless, gw_omega_r_unitless, gp_rho_r_unitless, gd_delta_r_unitless, e_coulomb_r_unitless, ns_density_r_unitless, ps_density_r_unitless, nv_density_r_unitless, pv_density_r_unitless, nt_density_r_unitless, pt_density_r_unitless;
+    double gs_sigma_r_unitless, gw_omega_r_unitless, gp_rho_r_unitless, gd_delta_r_unitless, e_coulomb_r_unitless, ns_density_r_unitless, ps_density_r_unitless, nv_density_r_unitless, pv_density_r_unitless, nt_density_r_unitless, pt_density_r_unitless, gm_rho_r_unitless;
     double div_nt_density_r_unitless, div_pt_density_r_unitless; 
     double kappa_unitless = kappa/enscale_mev;
     //ofstream out("dtensor.txt");
@@ -1618,20 +1675,21 @@ double get_BA(double** meson_field_unitless, double** densities_unitless, string
         ps_density_r_unitless = densities_unitless[i][2];
         nv_density_r_unitless = densities_unitless[i][3];
         pv_density_r_unitless = densities_unitless[i][4];
-        nt_density_r_unitless = densities_unitless[i][3];
-        pt_density_r_unitless = densities_unitless[i][4];
+        nt_density_r_unitless = densities_unitless[i][5];
+        pt_density_r_unitless = densities_unitless[i][6];
         div_nt_density_r_unitless = densities_unitless[i][9];
         div_pt_density_r_unitless = densities_unitless[i][10];
+        gm_rho_r_unitless = meson_field_unitless[i][12];
 
-        
         en_mesons_integrand = gs_sigma_r_unitless*(ns_density_r_unitless+ps_density_r_unitless) + 0.5*gd_delta_r_unitless*(ps_density_r_unitless - ns_density_r_unitless) - gw_omega_r_unitless*(nv_density_r_unitless+pv_density_r_unitless)
                             - 0.5*gp_rho_r_unitless*(pv_density_r_unitless-nv_density_r_unitless) - 1.0/6.0*kappa_unitless*pow(conv_r0_en,3.0)*pow(gs_sigma_r_unitless,3.0) - 1.0/12.0*lambda*pow(conv_r0_en,3.0)*pow(gs_sigma_r_unitless,4.0)
                             - 2.0*lambda_s*pow(conv_r0_en,3.0)*pow(gs_sigma_r_unitless,2.0)*pow(gd_delta_r_unitless,2.0) + 1.0/12.0*zeta*pow(gw_omega_r_unitless,4.0)*pow(conv_r0_en,3.0)
                             + 2.0*lambda_v*pow(gw_omega_r_unitless,2.0)*pow(gp_rho_r_unitless,2.0)*pow(conv_r0_en,3.0) + 1.0/12.0*xi*pow(gp_rho_r_unitless,4.0)*pow(conv_r0_en,3.0)
                             + 0.5/mNuc_unitless*fw*gw_omega_r_unitless*(div_nt_density_r_unitless+div_pt_density_r_unitless)/conv_r0_en
                             + 0.25/mNuc_unitless*fp*gp_rho_r_unitless*(div_pt_density_r_unitless-div_nt_density_r_unitless)/conv_r0_en
-                            + 2.0*Gt2*pow(nt_density_r_unitless+pt_density_r_unitless,2.0) + 2.0*Gh2*pow(pt_density_r_unitless-nt_density_r_unitless,2.0);
-    
+                            + 2.0*Gt2*pow(nt_density_r_unitless+pt_density_r_unitless,2.0)/pow(conv_r0_en,3.0) + 2.0*Gh2*pow(pt_density_r_unitless-nt_density_r_unitless,2.0)/pow(conv_r0_en,3.0)
+                            - 0.5*gm_rho_r_unitless*(pv_density_r_unitless-nv_density_r_unitless);
+
         en_coulomb_integrand = - e_coulomb_r_unitless*pv_density_r_unitless;
         integrand[i][0] = r_unitless;
         integrand[i][1] = (en_mesons_integrand+en_coulomb_integrand)*pow(r_unitless,2.0);
@@ -1689,19 +1747,19 @@ void subtract_restmass(string proton_spectrum, string neutron_spectrum) {
     double** n_array;
     double** p_array;
 
-    dm2.importdata(neutron_spectrum,n_array);
-    dm2.importdata(proton_spectrum,p_array);
+    dm2.importdata(neutron_spectrum,n_array,0);
+    dm2.importdata(proton_spectrum,p_array,0);
     double nrows = dm2.rowcount(neutron_spectrum);
     double prows = dm2.rowcount(proton_spectrum);
 
     for (int i=0; i<nrows; ++i) {
-        //n_array[i][0] = n_array[i][0] - mNuc_mev;
-        n_array[i][0] = n_array[i][0]/enscale_mev;
+        n_array[i][0] = n_array[i][0] - mNuc_mev;
+        //n_array[i][0] = n_array[i][0]/enscale_mev;
     }
 
     for (int i=0; i<prows; ++i) {
-        //p_array[i][0] = p_array[i][0] - mNuc_mev;
-        p_array[i][0] = p_array[i][0]/enscale_mev;
+        p_array[i][0] = p_array[i][0] - mNuc_mev;
+        //p_array[i][0] = p_array[i][0]/enscale_mev;
     }
 
     ofstream nout("neutron_spectrum.txt");
@@ -1905,8 +1963,6 @@ double get_WEAK_CHARGE_densities_v2(double** &densities_svtnp_unitless, int Z, i
     double** q_charge_weak_factors;
     dm2.create(q_charge_weak_factors,npoints,4);
 
-    //#pragma omp parallel num_threads(12)
-    //#pragma omp for schedule(static,1) private(q_unitless)
     for (int i=0; i<npoints; ++i) {
         q_unitless = 1e-15 + 0.01*i;
         q_charge_weak_factors[i][0] = q_unitless;
@@ -2004,12 +2060,12 @@ int hartree_method(double fin_couplings[19], int A, int Z, int iterations, int g
     double a_fm = 0.65; // wood saxon parameter
     double** densities_svtnp_unitless; double** meson_fields_unitless;
     int ncols_dens = 11; // (r,sn,sp,vn,vp,tn,tp,ch,wk,dtn,dtp)
-    int ncols_meson = 12; // (r,sigma,omega,rho,delta,coulomb,Sn(r),Vn(r),Tn(r),Sp(r),Vp(r),Tp(r))
+    int ncols_meson = 13; // (r,sigma,omega,rho,delta,coulomb,Sn(r),Vn(r),Tn(r),Sp(r),Vp(r),Tp(r),rhop)
     int npoints_meson = gridsize;
     double BA_mev_last = 0;
     int exit_code = 0;
-    int interation_limit = 100;
-    int iter_MAX = 500; int count = 0;
+    int interation_limit = 800;
+    int iter_MAX = 800; int count = 0;
     string cont;
     double gs2, gw2, gp2, gd2, kappa, lambda, zeta, xi, lambda_v, lambda_s, fw, fp, Gt2, Gh2, bIV, mSigma_mev, mOmega_mev, mRho_mev, mDelta_mev, qwn, BA_mev, Fch_Fwk; 
     double Radii2_N_P_fm2[2]; double Radii2_C_W_fm2[2];
@@ -2025,6 +2081,8 @@ int hartree_method(double fin_couplings[19], int A, int Z, int iterations, int g
     mSigma_mev = fin_couplings[15]; mOmega_mev = fin_couplings[16]; mRho_mev = fin_couplings[17]; mDelta_mev = fin_couplings[18];
     fw = fw/sqrt(gw2);
     fp = fp/sqrt(gp2);
+    Gt2 = Gt2*pow(enscale_mev,2.0);
+    Gh2 = Gh2*pow(enscale_mev,2.0);
     
     // Create Initial Meson Fields
     //dm2.importdata("meson_fields_pre.txt",meson_fields_unitless);
@@ -2033,10 +2091,11 @@ int hartree_method(double fin_couplings[19], int A, int Z, int iterations, int g
     init_meson(npoints_meson,40.5,R_fm,a_fm,meson_fields_unitless,r_init_fm,r_final_fm,gs2,1);
     init_meson(npoints_meson,25.0,R_fm,a_fm,meson_fields_unitless,r_init_fm,r_final_fm,gw2,2);
     init_meson(npoints_meson,-0.5,R_fm,a_fm,meson_fields_unitless,r_init_fm,r_final_fm,gp2,3);
-    init_meson(npoints_meson,-0.0,R_fm,a_fm,meson_fields_unitless,r_init_fm,r_final_fm,gd2,4);
+    init_meson(npoints_meson,0.0,R_fm,a_fm,meson_fields_unitless,r_init_fm,r_final_fm,gd2,4);
+    init_meson(npoints_meson,0.0,R_fm,a_fm,meson_fields_unitless,r_init_fm,r_final_fm,gm2,12);
     init_coulomb(npoints_meson,R_fm,meson_fields_unitless,r_init_fm,r_final_fm,Z,5);
-    scalar_potential(meson_fields_unitless,densities_svtnp_unitless,npoints_meson);
-    vector_potential(meson_fields_unitless,densities_svtnp_unitless,npoints_meson,lgmr);
+    scalar_potential(meson_fields_unitless,densities_svtnp_unitless,npoints_meson,true);
+    vector_potential(meson_fields_unitless,densities_svtnp_unitless,npoints_meson,lgmr,true);
     init_meson(npoints_meson,0.0,R_fm,a_fm,meson_fields_unitless,r_init_fm,r_final_fm,gd2,8);
     init_meson(npoints_meson,0.0,R_fm,a_fm,meson_fields_unitless,r_init_fm,r_final_fm,gd2,11);
 
@@ -2048,7 +2107,6 @@ int hartree_method(double fin_couplings[19], int A, int Z, int iterations, int g
         dm2.cleanup(meson_fields_unitless,npoints_meson);
         return -1;
     }
-
     // Start the self consistent hartree method
     double lg = 0.0;
     for (int i=0; i<iterations; ++i) {
@@ -2109,7 +2167,7 @@ int hartree_method(double fin_couplings[19], int A, int Z, int iterations, int g
             dm2.cleanup(densities_svtnp_unitless,npoints_meson);
             return -1;
         }   
-        //cout << setprecision(8) << "iteration " << i+1 << "  " << fabs(BA_mev) << "  " << densities_svtnp_unitless[0][4]/pow(r0_fm,3.0) << endl;
+        cout << setprecision(8) << "iteration " << i+1 << "  " << fabs(BA_mev) << "  " << densities_svtnp_unitless[0][4]/pow(r0_fm,3.0) << endl;
         dm2.cleanup(densities_svtnp_unitless,npoints_meson);
         
     }
@@ -2144,6 +2202,7 @@ int hartree_method(double fin_couplings[19], int A, int Z, int iterations, int g
     cout << "Rwk - Rch: " << sqrt(Radii2_C_W_fm2[1]) - sqrt(Radii2_C_W_fm2[0]) << endl;
     cout << "Fch - Fwk: " << Fch_Fwk << endl;
     cout << "Rch approx: " << sqrt(Radii2_N_P_fm2[1] + pow(0.84,2.0)) << endl;
+    cout << "Charge density at origin: " << densities_svtnp_unitless[0][7]*pow(r0_fm,-3.0) << endl;
     cout << "-----------------------------------" << endl;
     
     Observables[0] = BA_mev; Observables[1] = sqrt(Radii2_N_P_fm2[0]);
@@ -2161,7 +2220,16 @@ int hartree_method(double fin_couplings[19], int A, int Z, int iterations, int g
         dm2.convert_array(meson_fields_unitless,npoints_meson,ncols_meson,5,enscale_mev);
         dm2.convert_array(meson_fields_unitless,npoints_meson,ncols_meson,6,1.0);
         dm2.convert_array(meson_fields_unitless,npoints_meson,ncols_meson,7,1.0);
+        dm2.convert_array(meson_fields_unitless,npoints_meson,ncols_meson,12,enscale_mev);
         dm2.print(meson_fields_unitless,npoints_meson,ncols_meson,true,"meson_fields.txt"); 
+    }
+    
+    ofstream out("meson_fields_Ca48.txt");
+    for (int i=0; i<npoints_meson; ++i) {
+        for (int j : {0,1,2,3,4,5,12}) {
+            out << fixed << setprecision(12) << meson_fields_unitless[i][j] << "  ";
+        }
+        out << endl;
     }
     
     // print densities

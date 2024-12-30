@@ -88,8 +88,8 @@ def bulks_to_params(bulks):
     J = bulks[5]*32.0
     L = bulks[6]*80.0
     zeta = bulks[7]*0.01
-    #Gh2 = bulks[8]*2.0
-    #Ksym = bulks[7]*100.0
+    #Ksym = bulks[8]*100.0
+    #Gh2 = bulks[9]*2.0
     #fp = bulks[8]*(-100.0)
     #bIV = bulks[7]*0.5
     #Gt2 = bulks[9]*0.5
@@ -104,10 +104,10 @@ def bulks_to_params(bulks):
     fp = 0.0
     Gt2 = 0.0
     #L = 60.0
-    Gh2 = 0.0
+    Gh2 = 0.05
     bIV = 0.0    
     masses = [ms,782.5,763.0,980.0]
-    delta_coupling = True
+    delta_coupling = False
 
     # Prepare the input and output arrays
     masses = np.array(masses, dtype=np.double)
@@ -190,23 +190,35 @@ exp_data = np.loadtxt("dat_files/exp_data.txt")
 
 # Set Initial start point
 conv = [500.0, -16.3, 0.150, 0.6, 250.0, 32.0, 80.0, 0.01]
-bulks = [0.98 , 1.0  , 1.0  , 1.0, 0.88  , 1.0 , 0.5 , 0.1]
+bulks = [1.0 , 1.0  , 1.0  , 1.0, 0.88  , 1.0 , 1.0 , 1.0]
 
 # Run Calibration and Save Results
-result = sp.least_squares(residuals,x0=bulks,method='lm',args=(A,Z,exp_data),diff_step=1e-4)
-with open('BigApple.pkl', 'wb') as f:
-   pickle.dump(result, f)
+# result = sp.least_squares(residuals,x0=bulks,method='lm',args=(A,Z,exp_data),diff_step=1e-4)
+# with open('Isovector_tensor.pkl', 'wb') as f:
+#    pickle.dump(result, f)
 
 # Unpack results
-# with open('OptRes_FSU_Gh2_L60_rescale.pkl', 'rb') as f:
-#     result = pickle.load(f)
-# print(result.cost)
-# print(np.array(result.x)*np.array(conv))
-# print(np.array(result.x))
+with open('Isovector_tensor.pkl', 'rb') as f:
+    result = pickle.load(f)
+print(result.cost)
+bulks = np.array(result.x)*np.array(conv)
+print(bulks)
+
+J = np.array(result.jac)
+hess = np.matmul(np.transpose(J),J)
+cov = np.linalg.inv(hess)
+scale = np.diag(conv)
+cov = np.matmul(np.matmul(scale,cov),scale)
+var = np.diagonal(cov)
+std = np.sqrt(var)
+print("LSQ std: ", std)
+invcov = np.linalg.inv(cov)
+for row in invcov:
+    print("  ".join(map(str, row)))
 
 # Single Hartree Runs
 #couplings = [110.349, 187.695, 192.927, 0.0, 3.26, -0.003551, 0.0235, 0.0, 0.043377, 0.0, 0.0, 0.0, 0.0, 4.0, 0.1, 496.939, 782.5, 763.0, 980.0] #FSUGarnet
-#bulks = result.x
-#couplings = bulks_to_params(bulks)
+couplings = [108.094300, 183.789300, 267.652249, 0.0, 3.0029, -0.000533, 0.0256, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 497.479, 782.5, 763.0, 980.0]
+#couplings = bulks_to_params(result.x)
 nuclei = 2
 #observs = call_hartree(couplings,A[nuclei],Z[nuclei],0.0)

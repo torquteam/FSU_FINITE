@@ -11,6 +11,9 @@ double neutron_vectordens(double jn, double nfrac, double Fn_r_unitless, double 
 double proton_vectordens(double jp, double pfrac, double Ap_r_unitless, double Bp_r_unitless, double r_unitless);
 double neutron_tensordens(double jn, double nfrac, double Fn_r_unitless, double Gn_r_unitless, double r_unitless);
 double proton_tensordens(double jp, double pfrac, double Ap_r_unitless, double Bp_r_unitless, double r_unitless);
+void scalar_potential(double** &meson_fields_unitless, double** densities_unitless, int npoints, bool init);
+void vector_potential(double** &meson_fields_unitless, double** densities_unitless, int npoints, double lgmr, bool init);
+void tensor_potential(double** &meson_fields_unitless, double** densities_unitless, int npoints, double fw, double fp, double bIV, double Gt2, double Gh2);
 double dGdr(double r_unitless, double alpha, double En_unitless, double S_r_unitless, double V_r_unitless, double T_r_unitless, double Fn_r_unitless, double Gn_r_unitless);
 double dFdr(double r_unitless, double alpha, double En_unitless, double S_r_unitless, double V_r_unitless, double T_r_unitless, double Fn_r_unitless, double Gn_r_unitless);
 double dBdr(double r_unitless, double alpha, double Ep_unitless, double S_r_unitless, double V_r_unitless, double T_r_unitless, double Ap_r_unitless, double Bp_r_unitless);
@@ -26,7 +29,6 @@ void energy_spectrum_neutron(double** meson_fields_unitless, int nrows_meson, in
 void energy_spectrum_proton(double** meson_fields_unitless,int nrows_meson, int A, int ncols_meson);
 int shell_fill(int A, int Z, int en_col, int j_col);
 void get_densities(double** meson_fields_unitless, int A, string energy_spectrum_neutron, string energy_spectrum_proton, double** &densities_svnp_unitless, int nrows_meson, int ncols_dens, int ncols_meson);
-double greens_meson(double r_unitless, double rp_unitless, double meson_mass_mev);
 double greens_coulomb(double r_unitless, double rp_unitless);
 void get_nonlinear_meson_fields(double** &meson_fields_unitless, int npoints_meson, int A, double** densities, int nrows_dens, int ncols_dens, int sdens_n_col, int vdens_n_col, int sdens_p_col, int vdens_p_col, double gs2, double gw2, double gp2, double gd2, double kappa, double lambda, double zeta, double xi, double lambda_v, double lambda_s, double fw, double fp, double Gt2, double Gh2, double bIV, double mSigma_mev, double mOmega_mev, double mRho_mev, double mDelta_mev, int gridsize_meson, int meson_iterations, int ncols_meson, double lgmr);
 double get_BA(double** meson_field_unitless, double** densities_unitless, string n_energies, string p_energies, int npoints_meson, int npoints_densities, int ncols_density, int A, double kappa, double lambda, double zeta, double xi, double lambda_v, double lambda_s, double fw, double fp, double Gt2, double Gh2);

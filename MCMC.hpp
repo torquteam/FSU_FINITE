@@ -9,11 +9,11 @@ int RBM_generate_fields(int A, int Z, string params_file);
 void get_Observables(string param_set, int A, int Z);
 
 int param_change(int n_params, vector<double>& bulks_0, vector<double>& bulks_p, vector<double>& stds, double mw, double mp, int index, double inf_couplings[10]);
-double compute_prior(double** invcov, double means[7], vector<double>& bulks);
-double compute_lkl(double inf_couplings[10], double** CRUST, int nrowscrust, int flag);
+double compute_prior(double** invcov, double means[8], vector<double>& bulks);
+double compute_lkl(double inf_couplings[10], double** CRUST, int nrowscrust, int flag, double** XEFTdata);
 double metropolis(double lkl0, double lklp, vector<double>& bulks_0, vector<double>& bulks_p, vector<int>& acc_counts, int index, int n_params);
 void adaptive_width(int iter, int n_check, vector<double>& arate, vector<int>& acc_counts, vector<double>& stds, double agoal, int index);
-void MCMC_NS(int nburnin, int nruns, string covdata, string crust);
+void MCMC_NS(int nburnin, int nruns, string covdata, string crust, string XEFT_DATA);
 void RBM_error_check(string RBM_file, int n_params);
 int MCMC_Observables(string MCMC_data, string crust);
 

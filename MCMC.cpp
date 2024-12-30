@@ -147,7 +147,7 @@ int RBM_generate_fields(int A, int Z, string params_file) {
 
     // import parameters to be used in RBM sample
     double** param_set; string** narray; string** parray;
-    dm1.importdata(params_file, param_set);
+    dm1.importdata(params_file, param_set, 0);
     int num_param_sets = dm1.rowcount(params_file);
 
     // variable declarations
@@ -202,7 +202,7 @@ int RBM_generate_fields(int A, int Z, string params_file) {
     ofstream epout("/Users/marcsalinas/Desktop/GIT_REPOS/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data/proton/energies.txt");
     ofstream rvecout("/Users/marcsalinas/Desktop/GIT_REPOS/FSU_FINITE/ReducedBasisMethods/" + to_string(A) + "," + to_string(Z) + "/" + to_string(A) + "," + to_string(Z) + ",Data/rvec.txt");
     
-    dm1.importdata("Fn.txt",Fn_unitless);
+    dm1.importdata("Fn.txt",Fn_unitless, 0);
     rvecout << 0.0 << endl;
     for (int i=1; i<gridsize; ++i) {
         rvecout << scientific << setprecision(5) << Fn_unitless[i][0] << endl;
@@ -240,10 +240,10 @@ int RBM_generate_fields(int A, int Z, string params_file) {
         nstates_p = dm1.rowcount("proton_spectrum.txt");
         dm1.importdata_string("neutron_spectrum.txt",narray);
         dm1.importdata_string("proton_spectrum.txt",parray);
-        dm1.importdata("Fn.txt",Fn_unitless);
-        dm1.importdata("Gn.txt",Gn_unitless);
-        dm1.importdata("Ap.txt",Ap_unitless);
-        dm1.importdata("Bp.txt",Bp_unitless);
+        dm1.importdata("Fn.txt",Fn_unitless, 0);
+        dm1.importdata("Gn.txt",Gn_unitless, 0);
+        dm1.importdata("Ap.txt",Ap_unitless, 0);
+        dm1.importdata("Bp.txt",Bp_unitless, 0);
 
         // check for level crossing neutrons
         int lvl_count = 0;
@@ -308,7 +308,7 @@ int RBM_generate_fields(int A, int Z, string params_file) {
             bout << endl;
         }
 
-        dm1.importdata("meson_fields.txt",meson_fields_unitless);
+        dm1.importdata("meson_fields.txt",meson_fields_unitless,0);
         dm1.convert_array(meson_fields_unitless,npoints_meson,ncols_meson,0,1.0/r0_fm);
         dm1.convert_array(meson_fields_unitless,npoints_meson,ncols_meson,1,1.0/enscale_mev);
         dm1.convert_array(meson_fields_unitless,npoints_meson,ncols_meson,2,1.0/enscale_mev);
@@ -421,7 +421,7 @@ double sample_param_space(int num_sets, string startfile) {
     ofstream out("param_sets.txt");
 
     double** start_data;
-    dm1.importdata(startfile,start_data);
+    dm1.importdata(startfile,start_data,0);
 
     for (int i=0; i<num_sets; ++i) {
         // Generate a random set of couplings and make sure gp2 and lambda_v > 0
@@ -465,7 +465,7 @@ void get_Observables(string param_set, int A, int Z) {
     double** param_set_arr;
     string** narray; string** parray; string** nref; string** pref;
     double** Fn_wf; double** Ap_wf;
-    dm1.importdata(param_set,param_set_arr);
+    dm1.importdata(param_set,param_set_arr,0);
     int n_sets = dm1.rowcount(param_set);
     double fin_couplings[19];
     double Observables[7];
@@ -541,8 +541,8 @@ void get_Observables(string param_set, int A, int Z) {
         nstates_p = dm1.rowcount("proton_spectrum.txt");
         dm1.importdata_string("neutron_spectrum.txt",narray);
         dm1.importdata_string("proton_spectrum.txt",parray);
-        dm1.importdata("Fn.txt",Fn_wf);
-        dm1.importdata("Ap.txt",Ap_wf);
+        dm1.importdata("Fn.txt",Fn_wf,0);
+        dm1.importdata("Ap.txt",Ap_wf,0);
 
         // check for level crossing neutrons
         int lvl_count = 0;
@@ -639,7 +639,7 @@ void get_Observables(string param_set, int A, int Z) {
 
 void RBM_error_check(string RBM_file, int n_params) {
     double** RBM_data;
-    dm1.importdata(RBM_file,RBM_data);
+    dm1.importdata(RBM_file,RBM_data,0);
     int nrows = dm1.rowcount(RBM_file);
     int A[10] = {16,40,48,68,90,100,116,132,144,208};
     int Z[10] = {8,20,20,28,40,50,50,50,62,82};
@@ -700,9 +700,9 @@ void RBM_error_check(string RBM_file, int n_params) {
 // MCMC for Neutron Stars
 // ################################################################################################
 // ################################################################################################
-// bulks has to be of form [BA, kf, mstar/m, K, J, L, zeta]
+// bulks has to be of form [ms, BA, p0, mstar/m, K, J, L, zeta]
 int param_change(int n_params, vector<double>& bulks_0, vector<double>& bulks_p, vector<double>& stds, double mw, double mp, int index, double inf_couplings[10]) {
-    double ms = bulks_0[7];
+    double ms = bulks_0[0];
     double md = 980.0;
     double masses[4] = {ms,mw,mp,md};
     double fin_couplings[19];
@@ -714,7 +714,7 @@ int param_change(int n_params, vector<double>& bulks_0, vector<double>& bulks_p,
     bulks_p[index] = rand_normal(bulks_0[index], stds[index]);
 
     masses[0] = bulks_p[7];
-    int flag = get_parameters(bulks_p[0],bulks_p[1],bulks_p[4],bulks_p[2]*mNuc_mev,bulks_p[3],bulks_p[5],0,bulks_p[6],0.0,0.0,0.0,0.0,0.0,0.0,0.0,masses,fin_couplings,true,1,false);
+    int flag = get_parameters(bulks_p[1],bulks_p[2],bulks_p[5],bulks_p[3]*mNuc_mev,bulks_p[4],bulks_p[6],0,bulks_p[7],0.0,0.0,0.0,0.0,0.0,0.0,0.0,masses,fin_couplings,true,1,false);
     if (flag == -1) {
         toolmc.convert_to_inf_couplings(fin_couplings,inf_couplings);
         return -1;
@@ -738,7 +738,7 @@ double compute_prior(double** invcov, double means[8], vector<double>& bulks) {
     return exp(-chisq/2.0);
 }
 
-double compute_lkl(double inf_couplings[10], double** CRUST, int nrowscrust, int flag) {
+double compute_lkl(double inf_couplings[10], double** CRUST, int nrowscrust, int flag, double** XEFTdata) {
     double lkl = 1.0;
     double chisq = 0.0;
     double Mmax_exp = 2.2;
@@ -752,17 +752,31 @@ double compute_lkl(double inf_couplings[10], double** CRUST, int nrowscrust, int
         return 0.0;
     }
 
-    eosmc.get_EOS_NSM(inf_couplings,COREEOS,npoints,false,false);
-    int n = toolmc.ThermalCrust(CRUST,COREEOS,NS_EOS,npoints,nrowscrust,false,0,2,6);
-    nm1.pretovconv(NS_EOS,1,2,cv,cv,n);
-    TOV_out = nm1.multitov(1e-4,NS_EOS,n,4,1,2,3,200,"NA",2.0*cv);
-    double Mmax_th = dm1.findmax_vec(TOV_out,4,TOV_out.size(),5);
-    cout << Mmax_th << endl;
-    chisq = pow(Mmax_th - Mmax_exp, 2.0)/pow(0.05,2.0);
-    lkl = lkl*exp(-chisq/2.0);
+    //eosmc.get_EOS_NSM(inf_couplings,COREEOS,npoints,false,false);
+    //int n = toolmc.ThermalCrust(CRUST,COREEOS,NS_EOS,npoints,nrowscrust,false,0,2,6);
+    //nm1.pretovconv(NS_EOS,1,2,cv,cv,n);
+    //TOV_out = nm1.multitov(1e-4,NS_EOS,n,4,1,2,3,200,"NA",2.0*cv);
+    //double Mmax_th = dm1.findmax_vec(TOV_out,4,TOV_out.size(),5);
+    //cout << Mmax_th << endl;
+    //chisq = pow(Mmax_th - Mmax_exp, 2.0)/pow(0.05,2.0);
+    //lkl = lkl*exp(-chisq/2.0);
 
-    dm1.cleanup(COREEOS,npoints);
-    dm1.cleanup(NS_EOS,n);
+    //dm1.cleanup(COREEOS,npoints);
+    //dm1.cleanup(NS_EOS,n);
+
+    double** EOSNM;
+    double en, dens, enX, err;
+    eosmc.get_PNMEOS(inf_couplings,EOSNM,500);   // get the PNM EOS t=1
+    for (int i=0; i<5; ++i) {
+        dens = XEFTdata[i][0];
+        enX = XEFTdata[i][1];
+        err = XEFTdata[i][2];
+        en = dm1.interpolate(500,2,EOSNM,dens,0,1,true);
+        
+        chisq = chisq + pow((enX-en)/(err*1.2),2.0);
+    }
+    dm1.cleanup(EOSNM,500);
+    lkl = lkl*exp(-chisq/2.0);
     return lkl;
 }
 
@@ -791,11 +805,12 @@ void adaptive_width(int iter, int n_check, vector<double>& arate, vector<int>& a
         } else if (arate[index] > agoal) {
             stds[index] = 1.1*stds[index];
         }
-        cout << arate[index] << "  " << stds[index] << endl;
+        //cout << arate[index] << "  " << stds[index] << endl;
     }
 }
 
-void MCMC_NS(int nburnin, int nruns, string covdata, string crust) {
+// bulks has to be of form [ms, BA, p0, mstar/m, K, J, L, zeta]
+void MCMC_NS(int nburnin, int nruns, string covdata, string crust, string XEFT_DATA) {
     srand(time(0));
     int n_params = 8;
     double inf_couplings[10]; double fin_couplings[19];
@@ -809,24 +824,28 @@ void MCMC_NS(int nburnin, int nruns, string covdata, string crust) {
     int flag;
 
     // initialization
-    vector<double> bulks_0 = {-16.272,0.1527,0.5844,244.046,33.57,49.82,0.00389,500.0};
-    vector<double> bulks_p = {-16.272,0.1527,0.5844,244.046,33.57,49.82,0.00389,500.0};
-    vector<double> stds = {0.0146,0.0012,0.0032,2.159,0.479,6.12,0.0011,1.0};
+    vector<double> bulks_0 = {500.956051, -16.205718, 0.15080974, 0.61552777, 241.0764831, 32.80044821, 49.18770459, 0.00064755159};
+    vector<double> bulks_p = {500.956051, -16.205718, 0.15080974, 0.61552777, 241.0764831, 32.80044821, 49.18770459, 0.00064755159};
+    vector<double> stds = {0.5,0.014,0.0004,0.002,1.0,0.1,0.2,0.00005};
     vector<int> acc_counts = {0,0,0,0,0,0,0,0};
     vector<double> arate = {0,0,0,0,0,0,0,0};
-    double prior_means[8] = {-16.27550113678805, 0.15004790714657257, 0.598661002256021, 230.77327244908972, 37.94451864647914, 123.55145494700821, 0.028198928263439435, 493.6076641346023};
-    double** invcov; double** CRUST;
-    dm1.importdata(covdata,invcov);
-    dm1.importdata(crust,CRUST);
+
+    double prior_means[8] = {498.449461, -16.2694175, 0.150132661, 0.601705100, 241.355175, 32.6963907, 48.9500810, 0.000670045727};
+    double** invcov; double** CRUST; double** XEFT_arr;
+    dm1.importdata(covdata,invcov,10);
+    dm1.importdata(crust,CRUST,0);
+    dm1.importdata(XEFT_DATA,XEFT_arr,0);
     int nrowscrust = dm1.rowcount(crust);
+    int nrowsXEFT = dm1.rowcount(XEFT_DATA);
     
     // MCMC start
     double prior = compute_prior(invcov,prior_means,bulks_0);
-    masses[0] = bulks_0[7];
-    flag = get_parameters(bulks_0[0],bulks_0[1],bulks_0[4],bulks_0[2]*mNuc_mev,bulks_0[3],bulks_0[5],0,bulks_0[6],0.0,0.0,0.0,0.0,0.0,0.0,0.0,masses,fin_couplings,true,1,false);
+    masses[0] = bulks_0[0];
+    flag = get_parameters(bulks_0[1],bulks_0[2],bulks_0[5],bulks_0[3]*mNuc_mev,bulks_0[4],bulks_0[6],0,bulks_0[7],0.0,0.0,0.0,0.0,0.0,0.0,0.0,masses,fin_couplings,true,1,false);
     toolmc.convert_to_inf_couplings(fin_couplings,inf_couplings);
-    double lkl0 = compute_lkl(inf_couplings,CRUST,nrowscrust,flag);
+    double lkl0 = compute_lkl(inf_couplings,CRUST,nrowscrust,flag,XEFT_arr);
     double post0 = prior*lkl0;
+    cout << "prior, lkl: " << prior << "  " << lkl0 << endl;
 
 
     for (int i=0; i<nburnin; ++i) {
@@ -837,9 +856,9 @@ void MCMC_NS(int nburnin, int nruns, string covdata, string crust) {
 
             // get posterior
             prior = compute_prior(invcov,prior_means,bulks_p);
-            lklp = compute_lkl(inf_couplings,CRUST,nrowscrust,flag);
+            lklp = compute_lkl(inf_couplings,CRUST,nrowscrust,flag,XEFT_arr);
             postp = prior*lklp;
-            cout << post0 << "  " << postp << endl;
+            cout << "post0, postp: " << post0 << "  " << postp << endl;
             
             // metropolis hastings step
             post0 = metropolis(post0,postp,bulks_0,bulks_p,acc_counts,j,n_params);
@@ -861,14 +880,14 @@ void MCMC_NS(int nburnin, int nruns, string covdata, string crust) {
 
             // get posterior
             prior = compute_prior(invcov,prior_means,bulks_p);
-            lklp = compute_lkl(inf_couplings,CRUST,nrowscrust,flag);
+            lklp = compute_lkl(inf_couplings,CRUST,nrowscrust,flag,XEFT_arr);
             postp = prior*lklp;
             
             // metropolis hastings step
             post0 = metropolis(post0,postp,bulks_0,bulks_p,acc_counts,j,n_params);
         }
         for (int k=0; k<n_params; ++k) {
-            aout << bulks_0[k] << "  ";
+            aout << setprecision(10) << bulks_0[k] << "  ";
         }
         aout << endl;
         cout << i+1 << " completed" << endl;
@@ -876,18 +895,19 @@ void MCMC_NS(int nburnin, int nruns, string covdata, string crust) {
 
     dm1.cleanup(invcov,n_params);
     dm1.cleanup(CRUST,nrowscrust);
+    dm1.cleanup(XEFT_arr,nrowsXEFT);
 }
 
 int MCMC_Observables(string MCMC_data, string crust) {
     // import raw data
     double** bulks;
-    dm1.importdata(MCMC_data,bulks);
+    dm1.importdata(MCMC_data,bulks,0);
     int nrows = dm1.rowcount(MCMC_data);
     double inf_couplings[10]; double fin_couplings[19];
     double ms = 500.0; double mw = 782.5; double mp = 763.0; double md = 980.0;
     double masses[4] = {ms,mw,mp,md};  
     double** CRUST;
-    dm1.importdata(crust,CRUST);
+    dm1.importdata(crust,CRUST,0);
     int nrowscrust = dm1.rowcount(crust);
     ofstream out("MCMC_complete.txt");
 
@@ -1025,7 +1045,7 @@ void MCMC_FN(int nburnin, int nruns, string exp_file) {
     ofstream aout("MCMC.txt");
     int flag;
     double** exp_data;
-    dm1.importdata(exp_file,exp_data);
+    dm1.importdata(exp_file,exp_data,0);
 
     // initialization
     vector<double> bulks_0 = {-16.26995407,1.312671339,0.5843732534,244.3419784,33.23473693,45.74291391,0.0,0.00356977081667,504.97};

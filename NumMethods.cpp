@@ -85,49 +85,55 @@ string data2 :: filetype(string txtfile) {
 
 //----------------------------------------------------------------------------------------
 
-// find number of columns in data
-int data2 :: colcount(string txtfile) {
+// Find number of columns in data, accounting for skipped lines
+int data2 :: colcount(string txtfile, int skipLines) {
     string line;
     ifstream file(txtfile);
-    if (!file) {                    // Throw error if file isn't found
-        cout << "Colcount: Error opening file from path: " << txtfile << endl;
+
+    if (!file) { // Throw error if file isn't found
+        cerr << "Colcount: Error opening file from path: " << txtfile << endl;
         file.close();
         exit(0);
-    } else {
-        if (filetype(txtfile) == "TXT") {
-            int numcols=0;
-            getline(file,line);
-            stringstream iss(line);
-            do {
-                std::string sub;
-                iss >> sub;
-                if (sub.length()) {
-                    ++numcols;
-                }
-            }
-        while(iss);
-        return numcols;
-        } else {
+    }
+
+    // Skip the specified number of lines
+    for (int i = 0; i < skipLines && file.good(); ++i) {
+        file.ignore(numeric_limits<streamsize>::max(), '\n');
+    }
+
+    if (filetype(txtfile) == "TXT") {
+        // Determine number of columns for a TXT file
+        if (getline(file, line)) { // Get the first non-skipped line
             int numcols = 0;
-            while(getline(file,line)) {
-                stringstream linestream(line);
-                string value;
-                while(getline(linestream,value,',')) {
-                    ++numcols;
-                }
-                return numcols;
+            stringstream iss(line);
+            string sub;
+            while (iss >> sub) { // Count words separated by whitespace
+                ++numcols;
             }
+            return numcols;
+        }
+    } else { // For CSV files
+        if (getline(file, line)) { // Get the first non-skipped line
+            int numcols = 0;
+            stringstream linestream(line);
+            string value;
+            while (getline(linestream, value, ',')) { // Count values separated by commas
+                ++numcols;
+            }
+            return numcols;
         }
     }
+
+    cerr << "Colcount: Error determining column count, file might be empty or improperly formatted." << endl;
     return 0;
 }
 
 //----------------------------------------------------------------------------------------
 
 // import data into an array
-void data2 :: importdata(string txtfile, double ** &array) {
-    int numrows = rowcount(txtfile);            // Get the number of rows
-    int numcols = colcount(txtfile);            // Get the number of cols
+void data2 :: importdata(string txtfile, double ** &array, int skipLines) {
+    int numrows = rowcount(txtfile) - skipLines;            // Get the number of rows
+    int numcols = colcount(txtfile, skipLines);            // Get the number of cols
     string type = filetype(txtfile);            // Get the file type
     ifstream in(txtfile);
     
@@ -137,6 +143,10 @@ void data2 :: importdata(string txtfile, double ** &array) {
         array[i] = new double[numcols];
     }
     
+    for (int i = 0; i < skipLines && in.good(); ++i) {
+        in.ignore(numeric_limits<streamsize>::max(), '\n');
+    }
+
     if (type == "TXT") {                        // Import data for txt
         for (int j=0; j<numrows; ++j) {
             for (int i=0; i<numcols; ++i) {
@@ -530,7 +540,7 @@ double data2 :: transpose_file(string file) {
     double** temp_array_t;
     int nrows = rowcount(file);
     int ncols = colcount(file);
-    importdata(file,temp_array);
+    importdata(file,temp_array,0);
     create(temp_array_t,ncols,nrows);
 
     

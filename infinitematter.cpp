@@ -946,7 +946,7 @@ int equationofstate :: get_PNMEOS(double couplings[10], double** &eos, int npoin
         en = get_en(k,t,gss,gww,gpp,gdd,couplings);
         eos[i][0] = dens*conv_mev4;
         eos[i][1] = en/dens - mNuc;
-        cout << gdd << "  " << gss << "  " << gpp << "  " << gww << "  " << eos[i][1] << endl;
+        //cout << gdd << "  " << gss << "  " << gpp << "  " << gww << "  " << eos[i][1] << endl;
 
         k = k + ssize;
     }
@@ -1319,7 +1319,7 @@ void bulks :: get_bulkproperties(double couplings[10]) {
 // returns finite nuclei parameters (15 parameters)
 // (gs2,gw2,gp2,gd2,kappa,lambda,zeta,lambda_v,lambda_s,fw,fp,ms,mw,mp,md)
 extern "C" {
-int get_parameters(double BA, double p0, double Jtilde, double mstar, double K, double L, double Ksym, double zeta, double xi, double lambda_s, double fw, double fp, double Gt2, double Gh2, double bIV, double masses[4], double fin_couplings[19], bool flag, int gd_sol_type, bool delta_coupling) {
+int get_parameters(double BA, double p0, double J, double mstar, double K, double L, double Ksym, double zeta, double xi, double lambda_s, double fw, double fp, double Gt2, double Gh2, double bIV, double masses[4], double fin_couplings[19], bool flag, int gd_sol_type, bool delta_coupling) {
     double a1,a2,a3,b1,c1,c2,c3,g1,integral,tau;
     double kf,gss,gww,gwomw2,en,sdensn,sdensp,sdens,gsoms2,kappa,lambda,gpomp2,lambda_v,gdomd2;
 
@@ -1366,17 +1366,17 @@ int get_parameters(double BA, double p0, double Jtilde, double mstar, double K, 
     
     //double J = get_J_given_Jtilde(Jtilde,kf,BA,mstar,gsoms2,gwomw2,kappa,lambda,zeta,xi,lambda_s,L,Ksym,gd_sol_type,delta_coupling);
     //double J = 50.0;
-    double J = Jtilde;
+    double J0 = J;
     //cout << "J: " << J << endl;
     
     if (delta_coupling == true) {
-        gdomd2 = tool.get_gdomd2(kf,J,L,Ksym,gss,gww,gsoms2,gwomw2,kappa,lambda,zeta,lambda_s,gd_sol_type);
+        gdomd2 = tool.get_gdomd2(kf,J0,L,Ksym,gss,gww,gsoms2,gwomw2,kappa,lambda,zeta,lambda_s,gd_sol_type);
     } else {
         gdomd2 = 0.0;
     }
     
-    gpomp2 = tool.get_gpomp2(kf,J,L,gss,gww,gsoms2,gwomw2,gdomd2,kappa,lambda,zeta,lambda_s);
-    lambda_v = tool.get_lambda_v(kf,J,gss,gww,gdomd2,gpomp2,lambda_s);
+    gpomp2 = tool.get_gpomp2(kf,J0,L,gss,gww,gsoms2,gwomw2,gdomd2,kappa,lambda,zeta,lambda_s);
+    lambda_v = tool.get_lambda_v(kf,J0,gss,gww,gdomd2,gpomp2,lambda_s);
     
     fin_couplings[0] = gsoms2*pow(masses[0],2.0);
     fin_couplings[1] = gwomw2*pow(masses[1],2.0);

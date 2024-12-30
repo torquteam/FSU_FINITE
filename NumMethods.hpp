@@ -18,8 +18,8 @@ class data2 {
 public:
     int rowcount(string txtfile);
     string filetype(string txtfile);
-    int colcount(string txtfile);
-    void importdata(string txtfile, double **&array);
+    int colcount(string txtfile, int skipLines=0);
+    void importdata(string txtfile, double **&array, int skipLines);
     void importdata_string(string txtfile, string ** &array);
     void print(double **&array, int numrows, int numcols, bool file, string filename);
     double interpolate(int numrows, int numcols, double** array, double point, int pointcol, int ycol, bool sortflag);
